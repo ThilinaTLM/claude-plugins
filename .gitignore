@@ -1,11 +1,6 @@
 # Build outputs
 cli/dist/
-
-# Dependencies
-node_modules/
-
-# Claude Code files
-CLAUDE.md
+cli/node_modules/
 
 # OS files
 .DS_Store
