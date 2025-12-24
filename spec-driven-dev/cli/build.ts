@@ -11,19 +11,21 @@ function getCurrentPlatform(): BuildTarget {
   const platform = process.platform;
   const arch = process.arch;
 
+  // Always output as 'spec' (no platform suffix) for current platform builds
+  const outfile = platform === "win32" ? "dist/spec.exe" : "dist/spec";
+
   if (platform === "linux" && arch === "x64") {
-    return { target: "bun-linux-x64", outfile: "dist/spec-linux-x64" };
+    return { target: "bun-linux-x64", outfile };
   } else if (platform === "linux" && arch === "arm64") {
-    return { target: "bun-linux-arm64", outfile: "dist/spec-linux-arm64" };
+    return { target: "bun-linux-arm64", outfile };
   } else if (platform === "darwin" && arch === "arm64") {
-    return { target: "bun-darwin-arm64", outfile: "dist/spec-darwin-arm64" };
+    return { target: "bun-darwin-arm64", outfile };
   } else if (platform === "darwin" && arch === "x64") {
-    return { target: "bun-darwin-x64", outfile: "dist/spec-darwin-x64" };
+    return { target: "bun-darwin-x64", outfile };
   } else if (platform === "win32") {
-    return { target: "bun-windows-x64", outfile: "dist/spec-windows-x64.exe" };
+    return { target: "bun-windows-x64", outfile };
   }
-  // Default to current platform binary
-  return { target: "bun-linux-x64", outfile: "dist/spec" };
+  return { target: "bun-linux-x64", outfile };
 }
 
 const allPlatforms: BuildTarget[] = [

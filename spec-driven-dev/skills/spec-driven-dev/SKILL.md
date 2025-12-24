@@ -200,7 +200,7 @@ Execute tasks sequentially:
 5. Mark subtask `done: true`
 6. Commit checkpoint
 
-**Session continuity:** Use `spec resume {feature}` to load spec + tasks, show progress, and identify next task.
+**Session continuity:** Use `${CLAUDE_PLUGIN_ROOT}/cli/dist/spec resume {feature}` to load spec + tasks, show progress, and identify next task.
 
 **When blocked:** Use `AskUserQuestion` to get user input on implementation decisions rather than making assumptions.
 
@@ -274,23 +274,23 @@ Deprecated in favor of REQ-5.
 
 ## CLI Commands
 
-Run with Bun in development or use compiled binary:
+The CLI is automatically built when the plugin is installed. Run commands using:
 
 ```bash
-cd cli && bun run dev [command]
-# or
-./cli/dist/spec-linux-x64 [command]
+${CLAUDE_PLUGIN_ROOT}/cli/dist/spec [command]
 ```
+
+**Note:** Requires [Bun](https://bun.sh) to be installed for the initial build.
 
 | Command | Description |
 |---------|-------------|
-| `spec init [name]` | Initialize `specs/` structure with templates |
-| `spec status` | Show all features and their progress |
-| `spec resume {feature}` | Show progress + next task + minimal context |
-| `spec next {feature}` | Show only next task (minimal output for AI) |
-| `spec mark {feature} {task-id}` | Mark task/subtask complete |
-| `spec validate {path}` | Check spec completeness, task coverage, dependencies |
-| `spec compact {file} [-o out]` | Generate token-optimized version |
+| `${CLAUDE_PLUGIN_ROOT}/cli/dist/spec init [name]` | Initialize `specs/` structure with templates |
+| `${CLAUDE_PLUGIN_ROOT}/cli/dist/spec status` | Show all features and their progress |
+| `${CLAUDE_PLUGIN_ROOT}/cli/dist/spec resume {feature}` | Show progress + next task + minimal context |
+| `${CLAUDE_PLUGIN_ROOT}/cli/dist/spec next {feature}` | Show only next task (minimal output for AI) |
+| `${CLAUDE_PLUGIN_ROOT}/cli/dist/spec mark {feature} {task-id}` | Mark task/subtask complete |
+| `${CLAUDE_PLUGIN_ROOT}/cli/dist/spec validate {path}` | Check spec completeness, task coverage, dependencies |
+| `${CLAUDE_PLUGIN_ROOT}/cli/dist/spec compact {file} [-o out]` | Generate token-optimized version |
 
 ### AI-Optimized CLI Usage
 
@@ -298,25 +298,25 @@ All commands support `--json` for machine-readable output and `--quiet`/`-q` for
 
 **Get structured data:**
 ```bash
-spec status --json              # All features as JSON
-spec resume {feature} --json    # Progress + next task as JSON
-spec next {feature} --json      # Only next task as JSON
-spec validate {path} --json     # Validation result as JSON
+${CLAUDE_PLUGIN_ROOT}/cli/dist/spec status --json              # All features as JSON
+${CLAUDE_PLUGIN_ROOT}/cli/dist/spec resume {feature} --json    # Progress + next task as JSON
+${CLAUDE_PLUGIN_ROOT}/cli/dist/spec next {feature} --json      # Only next task as JSON
+${CLAUDE_PLUGIN_ROOT}/cli/dist/spec validate {path} --json     # Validation result as JSON
 ```
 
 **Minimal output for token efficiency:**
 ```bash
-spec status -q                  # Just feature names + percentages
-spec resume {feature} -q        # Just next task ID + files
-spec next {feature}             # Already minimal (no headers)
-spec next {feature} --files-only  # Just file paths to load
+${CLAUDE_PLUGIN_ROOT}/cli/dist/spec status -q                  # Just feature names + percentages
+${CLAUDE_PLUGIN_ROOT}/cli/dist/spec resume {feature} -q        # Just next task ID + files
+${CLAUDE_PLUGIN_ROOT}/cli/dist/spec next {feature}             # Already minimal (no headers)
+${CLAUDE_PLUGIN_ROOT}/cli/dist/spec next {feature} --files-only  # Just file paths to load
 ```
 
 **Update progress programmatically:**
 ```bash
-spec mark {feature} {task-id}           # Mark all subtasks in task complete
-spec mark {feature} {task-id} --subtask 0  # Mark first subtask complete
-spec mark {feature} {task-id} --json    # Get JSON result
+${CLAUDE_PLUGIN_ROOT}/cli/dist/spec mark {feature} {task-id}           # Mark all subtasks in task complete
+${CLAUDE_PLUGIN_ROOT}/cli/dist/spec mark {feature} {task-id} --subtask 0  # Mark first subtask complete
+${CLAUDE_PLUGIN_ROOT}/cli/dist/spec mark {feature} {task-id} --json    # Get JSON result
 ```
 
 ## Tool Usage
