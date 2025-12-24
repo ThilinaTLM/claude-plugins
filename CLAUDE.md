@@ -72,14 +72,30 @@ spec-driven-dev/
 
 ### Core Libraries
 
-- **spec-parser.ts**: `parseTasksFile()`, `getNextTask()`, `countCheckboxes()`
-- **validator.ts**: Validates spec.md sections (Purpose, User Stories, Requirements), YAML structure, dependencies
-- **compactor.ts**: Token reduction via compact notation (GIVEN/WHEN/THEN → shorthand), removes rationale sections
-- **progress.ts**: Calculates completion from subtask done/total counts
+- **spec-parser.ts**: `parseTasksFile()`, `parseTasksContent()`, `getNextTask()`, `countCheckboxes()` - Parses YAML tasks into Phase[] structure
+- **validator.ts**: Validates spec.md sections (Purpose, User Stories, Requirements), YAML structure, dependency references
+- **compactor.ts**: Token reduction (~60%) via compact notation (GIVEN/WHEN/THEN → shorthand), removes rationale sections
+- **progress.ts**: `calculateProgressFromCounts()` - Computes completion percentages from subtask done/total counts
+
+### CLI Command Pattern
+
+Each command in `cli/src/commands/` follows the citty pattern:
+```typescript
+export const commandName = defineCommand({
+  meta: { name: "...", description: "..." },
+  args: { /* positional and flag args */ },
+  async run({ args }) { /* implementation */ },
+});
+```
+Commands support `--json` for machine output and `--quiet`/`-q` for minimal output.
+
+### Plugin Integration
+
+The skill at `skills/spec-driven-dev/SKILL.md` is loaded by Claude Code when the plugin is installed. It provides workflow guidance for spec-driven development, not programmatic functionality. The CLI provides the actual tooling.
 
 ### Technology Stack
 
 - **Runtime**: Bun (native TypeScript execution)
-- **CLI Framework**: citty
-- **Data Format**: YAML for task/config files
-- **Build**: Bun compile (produces standalone executables)
+- **CLI Framework**: citty (lightweight command framework)
+- **Data Format**: YAML for task/config files (via `yaml` package)
+- **Build**: Bun compile (produces standalone executables per platform)
