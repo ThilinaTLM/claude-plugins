@@ -1,6 +1,6 @@
 # Build outputs
-cli/dist/
-cli/node_modules/
+spec-driven-dev/cli/dist/
+spec-driven-dev/cli/node_modules/
 
 # OS files
 .DS_Store

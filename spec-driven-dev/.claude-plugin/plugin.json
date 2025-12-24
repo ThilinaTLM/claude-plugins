@@ -1,0 +1,10 @@
+{
+  "name": "spec-driven-dev",
+  "version": "1.0.0",
+  "description": "Specification-driven development workflow with CLI and skill for AI agents",
+  "author": {
+    "name": "TLM"
+  },
+  "license": "MIT",
+  "keywords": ["specifications", "ai-agents", "workflow", "multi-session"]
+}
