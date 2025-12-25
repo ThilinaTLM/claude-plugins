@@ -2,12 +2,16 @@
 
 A Claude Code plugin for specification-driven development workflow. Designed for AI agents managing complex, multi-session software development tasks.
 
+**Version:** 2.0.0
+
 ## Features
 
 - **Structured specifications** - Define requirements (WHAT) separately from implementation (HOW)
 - **Task tracking** - YAML-based task breakdown with dependencies and progress tracking
 - **Cross-session continuity** - Resume work seamlessly across multiple sessions
 - **Token optimization** - Compact notation reduces context usage by ~60%
+- **Auto-detection** - CLI automatically finds project root from any subdirectory
+- **JSON-first output** - All commands output JSON by default for AI consumption
 
 ## Requirements
 
@@ -47,7 +51,7 @@ ${CLAUDE_PLUGIN_ROOT}/cli/dist/spec validate {path}    # Validate spec completen
 ${CLAUDE_PLUGIN_ROOT}/cli/dist/spec compact {file}     # Generate token-optimized version
 ```
 
-All commands support `--json` for machine-readable output and `-q` for minimal output.
+All commands output JSON by default. Use `-q` for minimal output.
 
 ## Workflow
 
