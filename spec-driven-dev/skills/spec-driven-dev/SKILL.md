@@ -294,29 +294,27 @@ ${CLAUDE_PLUGIN_ROOT}/cli/dist/spec [command]
 
 ### AI-Optimized CLI Usage
 
-All commands support `--json` for machine-readable output and `--quiet`/`-q` for minimal output.
+All commands output JSON by default, optimized for programmatic parsing.
 
 **Get structured data:**
 ```bash
-${CLAUDE_PLUGIN_ROOT}/cli/dist/spec status --json              # All features as JSON
-${CLAUDE_PLUGIN_ROOT}/cli/dist/spec resume {feature} --json    # Progress + next task as JSON
-${CLAUDE_PLUGIN_ROOT}/cli/dist/spec next {feature} --json      # Only next task as JSON
-${CLAUDE_PLUGIN_ROOT}/cli/dist/spec validate {path} --json     # Validation result as JSON
+${CLAUDE_PLUGIN_ROOT}/cli/dist/spec status              # All features as JSON
+${CLAUDE_PLUGIN_ROOT}/cli/dist/spec resume {feature}    # Progress + next task as JSON
+${CLAUDE_PLUGIN_ROOT}/cli/dist/spec next {feature}      # Only next task as JSON
+${CLAUDE_PLUGIN_ROOT}/cli/dist/spec validate {path}     # Validation result as JSON
 ```
 
 **Minimal output for token efficiency:**
 ```bash
-${CLAUDE_PLUGIN_ROOT}/cli/dist/spec status -q                  # Just feature names + percentages
-${CLAUDE_PLUGIN_ROOT}/cli/dist/spec resume {feature} -q        # Just next task ID + files
-${CLAUDE_PLUGIN_ROOT}/cli/dist/spec next {feature}             # Already minimal (no headers)
-${CLAUDE_PLUGIN_ROOT}/cli/dist/spec next {feature} --files-only  # Just file paths to load
+${CLAUDE_PLUGIN_ROOT}/cli/dist/spec status -q                    # Just feature names + percentages
+${CLAUDE_PLUGIN_ROOT}/cli/dist/spec resume {feature} -q          # Just next task ID + files
+${CLAUDE_PLUGIN_ROOT}/cli/dist/spec next {feature} --filesOnly   # Just file paths to load
 ```
 
-**Update progress programmatically:**
+**Update progress:**
 ```bash
-${CLAUDE_PLUGIN_ROOT}/cli/dist/spec mark {feature} {task-id}           # Mark all subtasks in task complete
-${CLAUDE_PLUGIN_ROOT}/cli/dist/spec mark {feature} {task-id} --subtask 0  # Mark first subtask complete
-${CLAUDE_PLUGIN_ROOT}/cli/dist/spec mark {feature} {task-id} --json    # Get JSON result
+${CLAUDE_PLUGIN_ROOT}/cli/dist/spec mark {feature} {task-id}             # Mark all subtasks complete
+${CLAUDE_PLUGIN_ROOT}/cli/dist/spec mark {feature} {task-id} --subtask 0 # Mark first subtask complete
 ```
 
 ## Tool Usage
