@@ -1,0 +1,26 @@
+{
+  "name": "tlmtech",
+  "owner": {
+    "name": "ThilinaTLM"
+  },
+  "metadata": {
+    "description": "Claude Code plugins by ThilinaTLM",
+    "version": "1.0.0"
+  },
+  "plugins": [
+    {
+      "name": "spec-driven-dev",
+      "source": "./spec-driven-dev",
+      "description": "Specification-driven development workflow with CLI and skill for AI agents",
+      "version": "1.0.0",
+      "author": {
+        "name": "ThilinaTLM"
+      },
+      "license": "MIT",
+      "keywords": ["specifications", "ai-agents", "workflow", "multi-session"],
+      "category": "productivity",
+      "repository": "https://github.com/ThilinaTLM/claude-plugin",
+      "homepage": "https://github.com/ThilinaTLM/claude-plugin/tree/main/spec-driven-dev"
+    }
+  ]
+}

@@ -4,7 +4,27 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Repository Overview
 
-This is a **Claude Code plugin repository** containing plugins by TLM. Each subdirectory is a standalone plugin that can be installed independently.
+This is a **Claude Code plugin marketplace** (`tlmtech`) by ThilinaTLM. The marketplace manifest is at `.claude-plugin/marketplace.json`.
+
+### Marketplace Structure
+
+```
+claude-plugin/
+├── .claude-plugin/
+│   └── marketplace.json      # Marketplace manifest
+├── spec-driven-dev/          # Plugin directory
+│   ├── .claude-plugin/
+│   │   └── plugin.json       # Plugin manifest
+│   └── ...
+└── README.md
+```
+
+### Installation
+
+```bash
+/plugin marketplace add ThilinaTLM/claude-plugin
+/plugin install spec-driven-dev@tlmtech
+```
 
 ### Plugins
 

@@ -1,23 +1,34 @@
 # TLM Claude Code Plugins
 
-A collection of Claude Code plugins for enhanced AI-assisted development workflows.
-
-## Plugins
-
-| Plugin | Description | Install |
-|--------|-------------|---------|
-| [spec-driven-dev](./spec-driven-dev) | Specification-driven development workflow with CLI and skill | `claude plugins install <path>/spec-driven-dev` |
+A Claude Code plugin marketplace by ThilinaTLM.
 
 ## Installation
 
-Install a specific plugin by pointing to its directory:
+### Add the Marketplace
 
 ```bash
-# Local installation
-claude plugins install /path/to/repo/spec-driven-dev
+/plugin marketplace add ThilinaTLM/claude-plugin
+```
 
-# From git (if published)
-claude plugins install github:tlm/claude-plugins/spec-driven-dev
+### Install Plugins
+
+```bash
+/plugin install spec-driven-dev@tlmtech
+```
+
+## Available Plugins
+
+| Plugin | Description | Version |
+|--------|-------------|---------|
+| [spec-driven-dev](./spec-driven-dev) | Specification-driven development workflow with CLI and skill for AI agents | 1.0.0 |
+
+## Local Development
+
+For local testing, you can add the marketplace from a local path:
+
+```bash
+/plugin marketplace add /path/to/claude-plugin
+/plugin install spec-driven-dev@tlmtech
 ```
 
 ## Contributing
