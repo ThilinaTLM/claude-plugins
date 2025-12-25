@@ -3,6 +3,7 @@ import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { countCheckboxes } from "../lib/spec-parser";
 import { calculateProgressFromCounts } from "../lib/progress";
+import { getSpecsDir } from "../lib/project-root";
 import { printHeader, printDivider, info, error } from "../ui/output";
 import type { FeatureStatus, TaskProgress } from "../types";
 
@@ -44,29 +45,52 @@ export const statusCommand = defineCommand({
     description: "Show status of all spec-driven features",
   },
   args: {
-    json: {
+    root: {
+      type: "string",
+      alias: "r",
+      description: "Project root directory (default: auto-detect)",
+    },
+    plain: {
       type: "boolean",
-      description: "Output as JSON",
-      required: false,
+      description: "Human-readable output instead of JSON",
     },
     quiet: {
       type: "boolean",
       alias: "q",
       description: "Minimal output (feature names + progress only)",
-      required: false,
     },
   },
   async run({ args }) {
-    const useJson = args.json as boolean;
+    const usePlain = args.plain as boolean;
     const quiet = args.quiet as boolean;
-    const specDir = resolve(process.cwd(), "specs");
+    const { specsDir: specDir, projectRoot, autoDetected } = getSpecsDir(args.root as string | undefined);
 
     if (!existsSync(specDir)) {
-      if (useJson) {
-        console.log(JSON.stringify({ error: "No specs/ directory found" }));
+      const errorData = {
+        error: "No specs/ directory found",
+        searchedPath: specDir,
+        cwd: process.cwd(),
+        projectRoot,
+        autoDetected,
+        suggestions: [
+          "Run from project root containing specs/ directory",
+          "Use --root flag: spec --root /path/to/project status",
+          "Initialize specs: spec init",
+        ],
+      };
+      if (!usePlain) {
+        console.log(JSON.stringify(errorData, null, 2));
       } else {
         error("No specs/ directory found.");
-        info("Run 'spec init' to initialize spec-driven development.");
+        info(`Searched in: ${specDir}`);
+        if (autoDetected && projectRoot) {
+          info(`Auto-detected project root: ${projectRoot}`);
+        }
+        console.log();
+        info("Suggestions:");
+        info("  • Run from project root containing specs/ directory");
+        info("  • Use --root flag: spec --root /path/to/project status");
+        info("  • Initialize specs: spec init");
       }
       process.exit(1);
     }
@@ -124,22 +148,27 @@ export const statusCommand = defineCommand({
       };
     }
 
-    // Output
-    if (useJson) {
+    // Output - JSON is default
+    if (!usePlain && !quiet) {
       console.log(JSON.stringify(data, null, 2));
       return;
     }
 
-    // Quiet mode - minimal output
+    // Quiet mode - minimal output (works in both plain and JSON mode)
     if (quiet) {
-      for (const status of data.features) {
-        const pct = status.progress ? `${status.progress.percent}%` : "0%";
-        console.log(`${status.name} ${pct}`);
+      if (!usePlain) {
+        // JSON quiet mode
+        console.log(JSON.stringify({ features: data.features.map(f => ({ name: f.name, percent: f.progress?.percent ?? 0 })) }));
+      } else {
+        for (const status of data.features) {
+          const pct = status.progress ? `${status.progress.percent}%` : "0%";
+          console.log(`${status.name} ${pct}`);
+        }
       }
       return;
     }
 
-    // Human-readable output
+    // Human-readable output (--plain flag)
     printHeader("SPEC-DRIVEN DEVELOPMENT STATUS");
 
     printDivider("ACTIVE FEATURES");

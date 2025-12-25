@@ -13,41 +13,49 @@ export const validateCommand = defineCommand({
       description: "Path to spec directory (e.g., .spec/specs/my-feature/)",
       required: true,
     },
-    json: {
+    plain: {
       type: "boolean",
-      description: "Output as JSON",
-      required: false,
+      description: "Human-readable output instead of JSON",
     },
     quiet: {
       type: "boolean",
       alias: "q",
       description: "Minimal output (pass/fail + error count only)",
-      required: false,
     },
   },
   async run({ args }) {
     const specDir = args.specDir as string;
-    const useJson = args.json as boolean;
+    const usePlain = args.plain as boolean;
     const quiet = args.quiet as boolean;
 
     const result = validateFeature(specDir);
 
-    if (useJson) {
+    // JSON is default
+    if (!usePlain && !quiet) {
       console.log(JSON.stringify(result, null, 2));
       process.exit(result.ok ? 0 : 1);
     }
 
     // Quiet mode
     if (quiet) {
-      if (result.ok) {
-        console.log(`PASS ${result.warnings.length > 0 ? `(${result.warnings.length} warnings)` : ""}`);
+      if (!usePlain) {
+        // JSON quiet mode
+        console.log(JSON.stringify({
+          ok: result.ok,
+          errorCount: result.errors.length,
+          warningCount: result.warnings.length,
+        }));
       } else {
-        console.log(`FAIL (${result.errors.length} errors)`);
+        if (result.ok) {
+          console.log(`PASS ${result.warnings.length > 0 ? `(${result.warnings.length} warnings)` : ""}`);
+        } else {
+          console.log(`FAIL (${result.errors.length} errors)`);
+        }
       }
       process.exit(result.ok ? 0 : 1);
     }
 
-    // Human-readable output
+    // Human-readable output (--plain flag)
     console.log(`Validating: ${specDir}`);
     console.log("=".repeat(50));
 

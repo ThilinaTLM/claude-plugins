@@ -14,6 +14,17 @@ const main = defineCommand({
     version: "1.0.0",
     description: "Spec-driven development CLI for managing specifications",
   },
+  args: {
+    root: {
+      type: "string",
+      alias: "r",
+      description: "Project root directory (default: auto-detect by walking up to find specs/)",
+    },
+    plain: {
+      type: "boolean",
+      description: "Human-readable output instead of JSON (JSON is default)",
+    },
+  },
   subCommands: {
     init: initCommand,
     status: statusCommand,

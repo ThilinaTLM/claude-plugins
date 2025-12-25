@@ -18,15 +18,23 @@ export const compactCommand = defineCommand({
       type: "string",
       alias: "o",
       description: "Output file (defaults to stdout)",
-      required: false,
+    },
+    plain: {
+      type: "boolean",
+      description: "Human-readable output instead of JSON",
     },
   },
   async run({ args }) {
     const inputPath = args.file as string;
     const outputPath = args.output as string | undefined;
+    const usePlain = args.plain as boolean;
 
     if (!existsSync(inputPath)) {
-      error(`File not found: ${inputPath}`);
+      if (!usePlain) {
+        console.log(JSON.stringify({ error: `File not found: ${inputPath}` }));
+      } else {
+        error(`File not found: ${inputPath}`);
+      }
       process.exit(1);
     }
 
@@ -41,7 +49,25 @@ export const compactCommand = defineCommand({
     // Calculate reduction
     const reduction = ((originalTokens - compactedTokens) / originalTokens) * 100;
 
-    // Output
+    // JSON output (default)
+    if (!usePlain) {
+      const result = {
+        content: outputPath ? undefined : compacted,
+        outputPath: outputPath || null,
+        stats: {
+          originalTokens,
+          compactedTokens,
+          reductionPercent: parseFloat(reduction.toFixed(1)),
+        },
+      };
+      if (outputPath) {
+        writeFileSync(outputPath, compacted);
+      }
+      console.log(JSON.stringify(result, null, 2));
+      return;
+    }
+
+    // Plain output
     if (outputPath) {
       writeFileSync(outputPath, compacted);
       success(`Compacted spec written to: ${outputPath}`);

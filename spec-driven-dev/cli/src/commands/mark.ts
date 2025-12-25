@@ -1,8 +1,9 @@
 import { defineCommand } from "citty";
-import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync, readdirSync } from "node:fs";
 import { resolve } from "node:path";
 import { parse as parseYaml, stringify as stringifyYaml } from "yaml";
-import { success, error } from "../ui/output";
+import { getFeaturesDir } from "../lib/project-root";
+import { success, error, info } from "../ui/output";
 
 interface SubtaskYaml {
   text: string;
@@ -52,44 +53,88 @@ export const markCommand = defineCommand({
     subtask: {
       type: "string",
       description: "Subtask index (0-based). If not specified, marks all subtasks complete",
-      required: false,
     },
-    json: {
+    root: {
+      type: "string",
+      alias: "r",
+      description: "Project root directory (default: auto-detect)",
+    },
+    plain: {
       type: "boolean",
-      description: "Output as JSON",
-      required: false,
+      description: "Human-readable output instead of JSON",
     },
     quiet: {
       type: "boolean",
       alias: "q",
       description: "Minimal output",
-      required: false,
     },
   },
   async run({ args }) {
     const feature = args.feature as string;
     const taskId = args.taskId as string;
     const subtaskIndex = args.subtask !== undefined ? parseInt(args.subtask as string, 10) : null;
-    const useJson = args.json as boolean;
+    const usePlain = args.plain as boolean;
     const quiet = args.quiet as boolean;
 
-    const featuresDir = resolve(process.cwd(), "specs/features");
+    const { featuresDir, specsDir, projectRoot, autoDetected } = getFeaturesDir(args.root as string | undefined);
     const featureDir = resolve(featuresDir, feature);
     const tasksPath = resolve(featureDir, "tasks.yaml");
 
+    // Check if specs directory exists first
+    const specsExists = existsSync(specsDir);
+
     // Validate feature exists
     if (!existsSync(featureDir)) {
-      if (useJson) {
-        console.log(JSON.stringify({ error: `Feature '${feature}' not found` }));
+      // Get available features for better error message
+      const availableFeatures = existsSync(featuresDir)
+        ? readdirSync(featuresDir, { withFileTypes: true })
+            .filter((d) => d.isDirectory())
+            .map((d) => d.name)
+        : [];
+
+      const errorData = {
+        error: `Feature '${feature}' not found`,
+        searchedPath: featureDir,
+        specsFound: specsExists,
+        availableFeatures,
+        cwd: process.cwd(),
+        projectRoot,
+        autoDetected,
+        suggestions: specsExists
+          ? [`Available features: ${availableFeatures.join(", ") || "(none)"}`]
+          : [
+              "Run from project root containing specs/ directory",
+              `Use --root flag: spec --root /path/to/project mark ${feature} ${taskId}`,
+              "Initialize specs: spec init",
+            ],
+      };
+
+      if (!usePlain) {
+        console.log(JSON.stringify(errorData, null, 2));
       } else {
         error(`Feature '${feature}' not found`);
+        info(`Searched in: ${featureDir}`);
+        if (!specsExists) {
+          info(`No specs/ directory found at: ${specsDir}`);
+          console.log();
+          info("Suggestions:");
+          info("  • Run from project root containing specs/ directory");
+          info(`  • Use --root flag: spec --root /path/to/project mark ${feature} ${taskId}`);
+          info("  • Initialize specs: spec init");
+        } else {
+          console.log();
+          console.log("Available features:");
+          for (const f of availableFeatures) {
+            info(`  ${f}`);
+          }
+        }
       }
       process.exit(1);
     }
 
     // Validate tasks.yaml exists
     if (!existsSync(tasksPath)) {
-      if (useJson) {
+      if (!usePlain) {
         console.log(JSON.stringify({ error: "No tasks.yaml found" }));
       } else {
         error("No tasks.yaml found");
@@ -102,7 +147,7 @@ export const markCommand = defineCommand({
     const data = parseYaml(content) as TasksYaml;
 
     if (!data || !data.phases) {
-      if (useJson) {
+      if (!usePlain) {
         console.log(JSON.stringify({ error: "Invalid tasks.yaml structure" }));
       } else {
         error("Invalid tasks.yaml structure");
@@ -123,7 +168,7 @@ export const markCommand = defineCommand({
     }
 
     if (!foundTask) {
-      if (useJson) {
+      if (!usePlain) {
         console.log(JSON.stringify({ error: `Task '${taskId}' not found` }));
       } else {
         error(`Task '${taskId}' not found`);
@@ -136,7 +181,7 @@ export const markCommand = defineCommand({
     if (subtaskIndex !== null) {
       // Mark specific subtask
       if (subtaskIndex < 0 || subtaskIndex >= foundTask.subtasks.length) {
-        if (useJson) {
+        if (!usePlain) {
           console.log(
             JSON.stringify({
               error: `Subtask index ${subtaskIndex} out of range (0-${foundTask.subtasks.length - 1})`,
@@ -173,11 +218,17 @@ export const markCommand = defineCommand({
       allComplete: foundTask.subtasks.every((s) => s.done),
     };
 
-    if (useJson) {
+    // JSON is default
+    if (!usePlain && !quiet) {
       console.log(JSON.stringify(result, null, 2));
     } else if (quiet) {
-      console.log(markedCount);
+      if (!usePlain) {
+        console.log(JSON.stringify({ markedCount }));
+      } else {
+        console.log(markedCount);
+      }
     } else {
+      // Plain human-readable output
       if (markedCount === 0) {
         console.log(`Task ${taskId}: Already complete`);
       } else {

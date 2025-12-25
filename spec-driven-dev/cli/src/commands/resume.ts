@@ -3,6 +3,7 @@ import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { parseTasksFile, getNextTask, countCheckboxes } from "../lib/spec-parser";
 import { calculateProgressFromCounts } from "../lib/progress";
+import { getFeaturesDir } from "../lib/project-root";
 import { printHeader, printDivider, info, warn, error } from "../ui/output";
 
 export const resumeCommand = defineCommand({
@@ -16,22 +17,28 @@ export const resumeCommand = defineCommand({
       description: "Feature name to resume",
       required: false,
     },
-    json: {
+    root: {
+      type: "string",
+      alias: "r",
+      description: "Project root directory (default: auto-detect)",
+    },
+    plain: {
       type: "boolean",
-      description: "Output as JSON",
-      required: false,
+      description: "Human-readable output instead of JSON",
     },
     quiet: {
       type: "boolean",
       alias: "q",
       description: "Minimal output (next task ID + files only)",
-      required: false,
     },
   },
   async run({ args }) {
-    const useJson = args.json as boolean;
+    const usePlain = args.plain as boolean;
     const quiet = args.quiet as boolean;
-    const featuresDir = resolve(process.cwd(), "specs/features");
+    const { featuresDir, specsDir, projectRoot, autoDetected } = getFeaturesDir(args.root as string | undefined);
+
+    // Check if specs directory exists first
+    const specsExists = existsSync(specsDir);
 
     // If no feature specified, list available features
     if (!args.feature) {
@@ -41,8 +48,13 @@ export const resumeCommand = defineCommand({
             .map((d) => d.name)
         : [];
 
-      if (useJson) {
-        console.log(JSON.stringify({ availableFeatures: features }));
+      if (!usePlain) {
+        console.log(JSON.stringify({
+          availableFeatures: features,
+          specsDir,
+          projectRoot,
+          autoDetected,
+        }));
         return;
       }
 
@@ -63,17 +75,46 @@ export const resumeCommand = defineCommand({
     const featureDir = resolve(featuresDir, feature);
 
     if (!existsSync(featureDir)) {
-      if (useJson) {
-        console.log(JSON.stringify({ error: `Feature '${feature}' not found` }));
-      } else {
-        error(`Feature '${feature}' not found at ${featureDir}`);
-        console.log();
-        console.log("Available features:");
-        if (existsSync(featuresDir)) {
-          const features = readdirSync(featuresDir, { withFileTypes: true })
+      // Get available features for better error message
+      const availableFeatures = existsSync(featuresDir)
+        ? readdirSync(featuresDir, { withFileTypes: true })
             .filter((d) => d.isDirectory())
-            .map((d) => d.name);
-          for (const f of features) {
+            .map((d) => d.name)
+        : [];
+
+      const errorData = {
+        error: `Feature '${feature}' not found`,
+        searchedPath: featureDir,
+        specsFound: specsExists,
+        availableFeatures,
+        cwd: process.cwd(),
+        projectRoot,
+        autoDetected,
+        suggestions: specsExists
+          ? [`Available features: ${availableFeatures.join(", ") || "(none)"}`]
+          : [
+              "Run from project root containing specs/ directory",
+              `Use --root flag: spec --root /path/to/project resume ${feature}`,
+              "Initialize specs: spec init",
+            ],
+      };
+
+      if (!usePlain) {
+        console.log(JSON.stringify(errorData, null, 2));
+      } else {
+        error(`Feature '${feature}' not found`);
+        info(`Searched in: ${featureDir}`);
+        if (!specsExists) {
+          info(`No specs/ directory found at: ${specsDir}`);
+          console.log();
+          info("Suggestions:");
+          info("  • Run from project root containing specs/ directory");
+          info(`  • Use --root flag: spec --root /path/to/project resume ${feature}`);
+          info("  • Initialize specs: spec init");
+        } else {
+          console.log();
+          console.log("Available features:");
+          for (const f of availableFeatures) {
             info(`  ${f}`);
           }
         }
@@ -141,26 +182,34 @@ export const resumeCommand = defineCommand({
       (f) => f.endsWith(".md") || f.endsWith(".yaml")
     );
 
-    // Output
-    if (useJson) {
+    // Output - JSON is default
+    if (!usePlain && !quiet) {
       console.log(JSON.stringify(data, null, 2));
       return;
     }
 
     // Quiet mode - minimal output
     if (quiet) {
-      if (data.nextTask) {
-        console.log(`${data.nextTask.id}: ${data.nextTask.title}`);
-        if (data.nextTask.files.length > 0) {
-          console.log(`Files: ${data.nextTask.files.join(", ")}`);
-        }
+      if (!usePlain) {
+        // JSON quiet mode
+        console.log(JSON.stringify({
+          nextTask: data.nextTask ? { id: data.nextTask.id, title: data.nextTask.title, files: data.nextTask.files } : null,
+          allComplete: !data.nextTask,
+        }));
       } else {
-        console.log("All tasks complete");
+        if (data.nextTask) {
+          console.log(`${data.nextTask.id}: ${data.nextTask.title}`);
+          if (data.nextTask.files.length > 0) {
+            console.log(`Files: ${data.nextTask.files.join(", ")}`);
+          }
+        } else {
+          console.log("All tasks complete");
+        }
       }
       return;
     }
 
-    // Human-readable output
+    // Human-readable output (--plain flag)
     printHeader(`RESUME: ${feature}`);
 
     if (data.checkpoint) {
