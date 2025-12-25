@@ -63,7 +63,7 @@ bun run build:all               # Build for all platforms (linux/darwin/windows,
 | `spec validate {path}` | Check spec completeness, task coverage, dependencies |
 | `spec compact {file} [-o out]` | Generate token-optimized version (~60% reduction) |
 
-**Flags:** All commands support `--json` for machine-readable output and `--quiet`/`-q` for minimal output.
+**Output:** All commands output JSON by default. Use `--plain` for human-readable output, `--quiet`/`-q` for minimal output, `--root` to specify project root.
 
 ### Architecture
 
@@ -92,6 +92,7 @@ spec-driven-dev/
 
 ### Core Libraries
 
+- **project-root.ts**: `findProjectRoot()`, `getSpecsDir()`, `getFeaturesDir()` - Auto-detects project root by walking up directories to find `specs/`
 - **spec-parser.ts**: `parseTasksFile()`, `parseTasksContent()`, `getNextTask()`, `countCheckboxes()` - Parses YAML tasks into Phase[] structure
 - **validator.ts**: Validates spec.md sections (Purpose, User Stories, Requirements), YAML structure, dependency references
 - **compactor.ts**: Token reduction (~60%) via compact notation (GIVEN/WHEN/THEN → shorthand), removes rationale sections
@@ -107,7 +108,7 @@ export const commandName = defineCommand({
   async run({ args }) { /* implementation */ },
 });
 ```
-Commands support `--json` for machine output and `--quiet`/`-q` for minimal output.
+Commands output JSON by default. Use `--plain` for human-readable output.
 
 ### Plugin Integration
 
