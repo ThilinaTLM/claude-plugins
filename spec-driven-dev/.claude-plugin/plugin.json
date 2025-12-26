@@ -1,9 +1,9 @@
 {
   "name": "spec-driven-dev",
-  "version": "1.0.0",
+  "version": "1.3.0",
   "description": "Specification-driven development workflow skill for AI agents",
   "author": {
-    "name": "TLM"
+    "name": "Thilina Lakshan"
   },
   "license": "MIT",
   "keywords": ["specifications", "ai-agents", "workflow", "multi-session"]

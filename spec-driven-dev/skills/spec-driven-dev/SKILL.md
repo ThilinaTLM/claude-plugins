@@ -199,14 +199,26 @@ phases:
 
 Execute tasks sequentially:
 
-1. Load task from tasks.yaml
-2. Load referenced files (use `Task` with `subagent_type=Explore` if you need broader context)
-3. Implement changes
-4. Run tests/validation
-5. Mark subtask `done: true`
-6. Commit checkpoint
+```bash
+# 1. Get files to load
+spec next {spec} --filesOnly
 
-**Session continuity:** Use `spec resume {spec}` to load spec + tasks, show progress, and identify next task.
+# 2. Read files and implement changes
+
+# 3. Run tests/validation
+
+# 4. Mark complete
+spec mark {spec} {task-id} -q
+```
+
+For broader context, use `Task` with `subagent_type=Explore` to understand related code.
+
+**Session continuity:**
+```bash
+spec summary {spec} -q          # Quick orientation
+spec path {spec} -q             # Check what's parallelizable/blocked
+spec next {spec} --context min  # Get next task (familiar spec)
+```
 
 **When blocked:** Use `AskUserQuestion` to get user input on implementation decisions rather than making assumptions.
 
@@ -214,8 +226,15 @@ Execute tasks sequentially:
 
 When spec is complete:
 
-1. Run `spec archive {spec}` to move it to `.specs/archived/`
-2. Update project.md if conventions changed
+```bash
+# 1. Verify completion
+spec summary {spec} -q          # Check allComplete: true
+
+# 2. Archive
+spec archive {spec}             # Move to .specs/archived/
+```
+
+3. Update project.md if conventions changed
 
 ## Token Optimization
 
@@ -283,42 +302,56 @@ Deprecated in favor of REQ-5.
 |---------|-------------|
 | `spec init [name]` | Initialize `.specs/` structure with templates |
 | `spec status` | Show all specs and their progress |
-| `spec resume {spec}` | Show progress + next task + minimal context |
+| `spec summary {spec}` | Compact overview for context priming (phase, progress, current/next task) |
+| `spec resume {spec}` | Show progress + next task + checkpoint context |
 | `spec next {spec}` | Show only next task (minimal output for AI) |
+| `spec path {spec}` | Critical path analysis, parallelizable tasks, blocked tasks |
 | `spec mark {spec} {task-id}` | Mark task/subtask complete |
 | `spec archive {spec}` | Archive a completed spec to `.specs/archived/` |
 | `spec validate {path}` | Check spec completeness, task coverage, dependencies |
 | `spec compact {file} [-o out]` | Generate token-optimized version |
 
-### AI-Optimized CLI Usage
+### CLI Integration Patterns
 
-All commands output JSON by default, optimized for programmatic parsing.
+All commands output JSON by default. Use `-q` for minimal output, `--plain` for human-readable.
 
-**Get structured data:**
+**Session Start (minimal context):**
 ```bash
-spec status            # All specs as JSON
-spec resume {spec}     # Progress + next task as JSON
-spec next {spec}       # Only next task as JSON
-spec validate {path}   # Validation result as JSON
+spec summary {spec} -q          # Quick orientation: phase, progress, current task
+spec path {spec} -q             # Check dependencies before starting work
 ```
 
-**Minimal output for token efficiency:**
+**Task Implementation:**
 ```bash
-spec status -q                  # Just spec names + percentages
-spec resume {spec} -q           # Just next task ID + files
-spec next {spec} --filesOnly    # Just file paths to load
+spec next {spec} --filesOnly    # Get just file paths to load
+spec next {spec} --context min  # Task ID + files (familiar spec)
+spec next {spec} --context full # Full details + notes (unfamiliar task)
 ```
 
-**Update progress:**
+**Progress Updates:**
 ```bash
-spec mark {spec} {task-id}             # Mark all subtasks complete
-spec mark {spec} {task-id} --subtask 0 # Mark first subtask complete
+spec mark {spec} {task-id} -q            # Mark all subtasks complete
+spec mark {spec} {task-id} --subtask 0   # Mark first subtask only
 ```
 
-**Archive completed specs:**
+**Session End / Checkpoint:**
 ```bash
-spec archive {spec}   # Move to .specs/archived/
+spec resume {spec} --since last          # Get changes since last checkpoint
+spec summary {spec} -q                   # Check if allComplete: true
+spec archive {spec}                      # Archive when complete
 ```
+
+### Context Level Reference
+
+| Situation | Command | Output |
+|-----------|---------|--------|
+| Quick status check | `spec summary -q` | Single-line JSON: phase, percent, current task |
+| Get files to load | `spec next --filesOnly` | Just `{"files": [...]}` |
+| Unfamiliar task | `spec next --context full` | Full task + notes + all subtasks |
+| Continuing work | `spec next --context min` | Just task ID, title, files |
+| Check blocking | `spec path -q` | Critical path + parallelizable tasks |
+| Session handoff | `spec resume --context standard` | Balanced detail for next session |
+| Checkpoint data | `spec resume --since last` | Diff since last checkpoint |
 
 ## Tool Usage
 
@@ -339,3 +372,16 @@ spec archive {spec}   # Move to .specs/archived/
 5. **Compact for continuation** - Use token-optimized format between sessions
 6. **Separate concerns** - Spec (what) vs Plan (how) vs Tasks (when)
 7. **Version specs** - Use git, specs are source of truth
+
+## Quick Reference
+
+```
+SESSION START:      spec summary {spec} -q
+CHECK DEPENDENCIES: spec path {spec} -q
+GET TASK FILES:     spec next {spec} --filesOnly
+FULL TASK CONTEXT:  spec next {spec} --context full
+MARK COMPLETE:      spec mark {spec} {id} -q
+CHECKPOINT DATA:    spec resume {spec} --since last
+VERIFY COMPLETION:  spec summary {spec} -q  (check allComplete)
+ARCHIVE:            spec archive {spec}
+```
