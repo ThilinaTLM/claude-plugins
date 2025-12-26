@@ -1,4 +1,6 @@
 // Task types
+export type SubtaskType = "impl" | "test" | "doc" | "review" | "refactor";
+
 export interface Task {
   id: string; // e.g., "1.1", "2.3"
   title: string;
@@ -14,6 +16,7 @@ export interface Task {
 export interface Subtask {
   text: string;
   completed: boolean;
+  type: SubtaskType;
 }
 
 export interface TaskFlags {

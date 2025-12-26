@@ -5,14 +5,16 @@ import { compactCommand } from "./commands/compact";
 import { initCommand } from "./commands/init";
 import { markCommand } from "./commands/mark";
 import { nextCommand } from "./commands/next";
+import { pathCommand } from "./commands/path";
 import { resumeCommand } from "./commands/resume";
 import { statusCommand } from "./commands/status";
+import { summaryCommand } from "./commands/summary";
 import { validateCommand } from "./commands/validate";
 
 const main = defineCommand({
   meta: {
     name: "spec",
-    version: "3.0.0",
+    version: "3.1.0",
     description: "Spec-driven development CLI for managing specifications",
   },
   args: {
@@ -30,11 +32,13 @@ const main = defineCommand({
     init: initCommand,
     status: statusCommand,
     resume: resumeCommand,
-    validate: validateCommand,
-    compact: compactCommand,
     next: nextCommand,
+    summary: summaryCommand,
+    path: pathCommand,
     mark: markCommand,
     archive: archiveCommand,
+    validate: validateCommand,
+    compact: compactCommand,
   },
 });
 

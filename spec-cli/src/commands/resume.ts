@@ -1,7 +1,9 @@
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { resolve } from "node:path";
 import { defineCommand } from "citty";
-import { parseCommonArgs } from "../lib/args";
+import { type ContextLevel, parseContextArgs } from "../lib/args";
+import { parseCheckpoint } from "../lib/checkpoint-parser";
+import { calculateDiff, parseSinceArg } from "../lib/diff";
 import { calculateProgressFromCounts } from "../lib/progress";
 import { getActiveDir } from "../lib/project-root";
 import { getAvailableSpecs, lookupSpec, outputSpecNotFoundError } from "../lib/spec-lookup";
@@ -33,15 +35,24 @@ export const resumeCommand = defineCommand({
       alias: "q",
       description: "Minimal output (next task ID + files only)",
     },
+    context: {
+      type: "string",
+      alias: "c",
+      description: "Context level: min (task only), standard (default), full (with all phases)",
+    },
+    since: {
+      type: "string",
+      description: "Show diff since date (YYYY-MM-DD) or 'last' for most recent checkpoint",
+    },
   },
   async run({ args }) {
-    const commonArgs = parseCommonArgs(args);
-    const { plain: usePlain, quiet } = commonArgs;
-    const { specsDir, projectRoot, autoDetected } = getActiveDir(commonArgs.root);
+    const contextArgs = parseContextArgs(args);
+    const { plain: usePlain, quiet, context, since } = contextArgs;
+    const { specsDir, projectRoot, autoDetected } = getActiveDir(contextArgs.root);
 
     // If no spec specified, list available specs
     if (!args.feature) {
-      const specs = getAvailableSpecs(commonArgs.root);
+      const specs = getAvailableSpecs(contextArgs.root);
 
       if (!usePlain) {
         console.log(
@@ -69,7 +80,7 @@ export const resumeCommand = defineCommand({
     }
 
     const spec = args.feature as string;
-    const lookup = lookupSpec(spec, commonArgs.root);
+    const lookup = lookupSpec(spec, contextArgs.root);
 
     if (!lookup.found) {
       outputSpecNotFoundError(lookup.errorData, usePlain);
@@ -77,69 +88,150 @@ export const resumeCommand = defineCommand({
 
     const { specDir } = lookup;
 
-    // Build data structure
+    // Parse tasks first for all modes
+    const tasksPath = resolve(specDir, "tasks.yaml");
+    let phases: ReturnType<typeof parseTasksFile> = [];
+    let progress: { done: number; total: number; remaining: number; percent: number } | null = null;
+
+    if (existsSync(tasksPath)) {
+      const tasksContent = readFileSync(tasksPath, "utf-8");
+      const { total, done } = countCheckboxes(tasksContent);
+      if (total > 0) {
+        progress = calculateProgressFromCounts(total, done);
+      }
+      phases = parseTasksFile(tasksPath);
+    }
+
+    const nextTask = getNextTask(phases);
+    const allComplete = !nextTask;
+
+    // Handle --since (diff mode)
+    if (since) {
+      const sinceDate = parseSinceArg(since, specDir);
+      if (!sinceDate) {
+        const errorData = {
+          error: "Invalid --since value",
+          provided: since,
+          expected: "YYYY-MM-DD or 'last'",
+        };
+        if (!usePlain) {
+          console.log(JSON.stringify(errorData, null, 2));
+        } else {
+          console.error(`Invalid --since value: ${since}. Expected YYYY-MM-DD or 'last'`);
+        }
+        process.exit(1);
+      }
+
+      const diff = calculateDiff(phases, specDir, sinceDate, progress);
+
+      if (!usePlain) {
+        console.log(JSON.stringify({ spec, ...diff }, null, 2));
+      } else {
+        printHeader(`CHANGES SINCE: ${sinceDate}`);
+        if (diff.completed.length > 0) {
+          info(`Completed: ${diff.completed.join(", ")}`);
+        }
+        if (diff.inProgress.length > 0) {
+          info(`In progress: ${diff.inProgress.join(", ")}`);
+        }
+        if (diff.progressDelta) {
+          info(
+            `Progress: ${diff.progressDelta.from}% → ${diff.progressDelta.to}% (${diff.progressDelta.delta})`,
+          );
+        }
+        if (diff.filesModified.length > 0) {
+          info(`Files: ${diff.filesModified.join(", ")}`);
+        }
+      }
+      return;
+    }
+
+    // Build data structure based on context level
+    type TaskData = {
+      id: string;
+      title: string;
+      files: string[];
+      depends: string[];
+      subtasks: { text: string; completed: boolean; type: string }[];
+      notes?: string;
+    };
+
     const data: {
       spec: string;
-      progress: { done: number; total: number; remaining: number; percent: number } | null;
-      nextTask: {
-        id: string;
-        title: string;
-        files: string[];
-        depends: string[];
-        subtasks: { text: string; completed: boolean }[];
+      context: ContextLevel;
+      progress: typeof progress;
+      nextTask: TaskData | null;
+      checkpoint: {
+        date: string | null;
+        summary: string | null;
+        accomplished: string[];
+        blockers: string[];
+        nextSteps: string[];
       } | null;
-      checkpoint: { content: string; date: string | null } | null;
+      phases?: { number: number; name: string; taskCount: number }[];
       specFiles: string[];
       allComplete: boolean;
       archiveSuggestion?: string;
     } = {
       spec,
-      progress: null,
+      context,
+      progress,
       nextTask: null,
       checkpoint: null,
       specFiles: [],
-      allComplete: false,
+      allComplete,
     };
 
-    // Get checkpoint
+    // Get checkpoint (structured parsing)
     const checkpointPath = resolve(specDir, "checkpoint.md");
-    if (existsSync(checkpointPath)) {
+    if (existsSync(checkpointPath) && context !== "min") {
       const content = readFileSync(checkpointPath, "utf-8");
-      const dateMatch = content.match(/\d{4}-\d{2}-\d{2}/);
+      const parsed = parseCheckpoint(content);
       data.checkpoint = {
-        content,
-        date: dateMatch ? dateMatch[0] : null,
+        date: parsed.date,
+        summary: parsed.summary,
+        accomplished: parsed.accomplished,
+        blockers: parsed.blockers,
+        nextSteps: parsed.nextSteps,
       };
     }
 
-    // Parse tasks.yaml for progress
-    const tasksPath = resolve(specDir, "tasks.yaml");
-    if (existsSync(tasksPath)) {
-      const tasksContent = readFileSync(tasksPath, "utf-8");
-      const { total, done } = countCheckboxes(tasksContent);
-      if (total > 0) {
-        const progress = calculateProgressFromCounts(total, done);
-        data.progress = progress;
+    // Add next task
+    if (nextTask) {
+      data.nextTask = {
+        id: nextTask.id,
+        title: nextTask.title,
+        files: nextTask.files,
+        depends: context === "min" ? [] : nextTask.depends,
+        subtasks:
+          context === "min"
+            ? []
+            : nextTask.subtasks.map((s) => ({
+                text: s.text,
+                completed: s.completed,
+                type: s.type,
+              })),
+      };
+      if (context === "full" && nextTask.notes) {
+        data.nextTask.notes = nextTask.notes;
       }
-
-      const phases = parseTasksFile(tasksPath);
-      const nextTask = getNextTask(phases);
-      if (nextTask) {
-        data.nextTask = {
-          id: nextTask.id,
-          title: nextTask.title,
-          files: nextTask.files,
-          depends: nextTask.depends,
-          subtasks: nextTask.subtasks,
-        };
-      } else {
-        data.allComplete = true;
-        data.archiveSuggestion = `spec archive ${spec}`;
-      }
+    } else {
+      data.archiveSuggestion = `spec archive ${spec}`;
     }
 
-    // List spec files
-    data.specFiles = readdirSync(specDir).filter((f) => f.endsWith(".md") || f.endsWith(".yaml"));
+    // Add phases for full context
+    if (context === "full") {
+      data.phases = phases.map((p) => ({
+        number: p.number,
+        name: p.name,
+        taskCount: p.tasks.length,
+      }));
+    }
+
+    // List spec files (except for min context)
+    if (context !== "min") {
+      data.specFiles = readdirSync(specDir).filter((f) => f.endsWith(".md") || f.endsWith(".yaml"));
+    }
 
     // Output - JSON is default
     if (!usePlain && !quiet) {
@@ -184,7 +276,21 @@ export const resumeCommand = defineCommand({
 
     if (data.checkpoint) {
       printDivider("LAST SESSION");
-      console.log(data.checkpoint.content);
+      if (data.checkpoint.summary) {
+        info(data.checkpoint.summary);
+      }
+      if (data.checkpoint.accomplished.length > 0) {
+        console.log("  Accomplished:");
+        for (const item of data.checkpoint.accomplished) {
+          console.log(`    ✓ ${item}`);
+        }
+      }
+      if (data.checkpoint.blockers.length > 0) {
+        console.log("  Blockers:");
+        for (const item of data.checkpoint.blockers) {
+          console.log(`    ⚠ ${item}`);
+        }
+      }
     }
 
     printDivider("PROGRESS");
@@ -206,20 +312,32 @@ export const resumeCommand = defineCommand({
       if (data.nextTask.depends.length > 0) {
         console.log(`  Depends: ${data.nextTask.depends.join(", ")}`);
       }
-      console.log();
-      console.log("  Subtasks:");
-      for (const subtask of data.nextTask.subtasks) {
-        const check = subtask.completed ? "[x]" : "[ ]";
-        console.log(`    - ${check} ${subtask.text}`);
+      if (data.nextTask.subtasks.length > 0) {
+        console.log();
+        console.log("  Subtasks:");
+        for (const subtask of data.nextTask.subtasks) {
+          const check = subtask.completed ? "[x]" : "[ ]";
+          const typeTag = subtask.type !== "impl" ? ` [${subtask.type}]` : "";
+          console.log(`    - ${check} ${subtask.text}${typeTag}`);
+        }
       }
     } else {
       info("All tasks complete!");
       info(`Suggestion: ${data.archiveSuggestion}`);
     }
 
-    printDivider("SPEC FILES");
-    for (const f of data.specFiles) {
-      info(`${f}`);
+    if (data.specFiles.length > 0) {
+      printDivider("SPEC FILES");
+      for (const f of data.specFiles) {
+        info(`${f}`);
+      }
+    }
+
+    if (context === "full" && data.phases) {
+      printDivider("ALL PHASES");
+      for (const phase of data.phases) {
+        console.log(`  Phase ${phase.number}: ${phase.name} (${phase.taskCount} tasks)`);
+      }
     }
 
     console.log();

@@ -1,6 +1,41 @@
 import { readFileSync } from "node:fs";
-import type { Phase, PhaseYaml, Subtask, Task, TaskFlags, TaskYaml, TasksYaml } from "../types";
+import type {
+  Phase,
+  PhaseYaml,
+  Subtask,
+  SubtaskType,
+  Task,
+  TaskFlags,
+  TaskYaml,
+  TasksYaml,
+} from "../types";
 import { parseYamlSafe } from "./safe-io";
+
+/**
+ * Infer subtask type from text patterns
+ */
+export function inferSubtaskType(text: string): SubtaskType {
+  const lower = text.toLowerCase();
+
+  // Test patterns
+  if (/^(test|tests|testing|verify|validate|spec)[:.\s-]/i.test(text)) return "test";
+  if (lower.includes("write test") || lower.includes("add test") || lower.includes("unit test"))
+    return "test";
+
+  // Doc patterns
+  if (/^(doc|docs|document|documentation|readme)[:.\s-]/i.test(text)) return "doc";
+  if (lower.includes("write doc") || lower.includes("add doc") || lower.includes("update readme"))
+    return "doc";
+
+  // Review patterns
+  if (/^(review|code review|pr|pull request)[:.\s-]/i.test(text)) return "review";
+
+  // Refactor patterns
+  if (/^(refactor|cleanup|clean up|reorganize)[:.\s-]/i.test(text)) return "refactor";
+  if (lower.includes("refactor") || lower.includes("clean up")) return "refactor";
+
+  return "impl";
+}
 
 /**
  * Parse a tasks.yaml file and extract task information
@@ -48,6 +83,7 @@ function convertTask(task: TaskYaml, phaseNumber: number): Task {
       (s): Subtask => ({
         text: s.text,
         completed: s.done,
+        type: inferSubtaskType(s.text || ""),
       }),
     ),
     estimate: task.estimate,

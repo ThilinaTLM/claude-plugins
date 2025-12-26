@@ -1,7 +1,7 @@
 import { existsSync } from "node:fs";
 import { resolve } from "node:path";
 import { defineCommand } from "citty";
-import { parseCommonArgs } from "../lib/args";
+import { type ContextLevel, parseContextArgs } from "../lib/args";
 import { getActiveDir } from "../lib/project-root";
 import { getAvailableSpecs, lookupSpec, outputSpecNotFoundError } from "../lib/spec-lookup";
 import { getNextTask, parseTasksFile } from "../lib/spec-parser";
@@ -36,17 +36,22 @@ export const nextCommand = defineCommand({
       alias: "q",
       description: "Minimal output (task ID only)",
     },
+    context: {
+      type: "string",
+      alias: "c",
+      description: "Context level: min (task only), standard (default), full (with notes)",
+    },
   },
   async run({ args }) {
-    const commonArgs = parseCommonArgs(args);
-    const { plain: usePlain } = commonArgs;
+    const contextArgs = parseContextArgs(args);
+    const { plain: usePlain, context } = contextArgs;
     const filesOnly = args.filesOnly as boolean;
     const quiet = args.quiet as boolean;
-    const { specsDir, projectRoot, autoDetected } = getActiveDir(commonArgs.root);
+    const { specsDir, projectRoot, autoDetected } = getActiveDir(contextArgs.root);
 
     // If no spec specified, list available specs
     if (!args.feature) {
-      const specs = getAvailableSpecs(commonArgs.root);
+      const specs = getAvailableSpecs(contextArgs.root);
 
       if (!usePlain) {
         console.log(JSON.stringify({ availableSpecs: specs, specsDir, projectRoot, autoDetected }));
@@ -58,7 +63,7 @@ export const nextCommand = defineCommand({
     }
 
     const spec = args.feature as string;
-    const lookup = lookupSpec(spec, commonArgs.root);
+    const lookup = lookupSpec(spec, contextArgs.root);
 
     if (!lookup.found) {
       outputSpecNotFoundError(lookup.errorData, usePlain);
@@ -118,16 +123,39 @@ export const nextCommand = defineCommand({
 
     // JSON mode (default)
     if (!usePlain) {
+      // Build task data based on context level
+      const taskData: {
+        id: string;
+        title: string;
+        files: string[];
+        depends?: string[];
+        subtasks?: { text: string; completed: boolean; type: string }[];
+        notes?: string;
+      } = {
+        id: nextTask.id,
+        title: nextTask.title,
+        files: nextTask.files,
+      };
+
+      // Add more data based on context level
+      if (context !== "min") {
+        taskData.depends = nextTask.depends;
+        taskData.subtasks = nextTask.subtasks.map((s) => ({
+          text: s.text,
+          completed: s.completed,
+          type: s.type,
+        }));
+      }
+
+      if (context === "full" && nextTask.notes) {
+        taskData.notes = nextTask.notes;
+      }
+
       console.log(
         JSON.stringify(
           {
-            task: {
-              id: nextTask.id,
-              title: nextTask.title,
-              files: nextTask.files,
-              depends: nextTask.depends,
-              subtasks: nextTask.subtasks,
-            },
+            context,
+            task: taskData,
             allComplete: false,
           },
           null,
@@ -142,13 +170,19 @@ export const nextCommand = defineCommand({
     if (nextTask.files.length > 0) {
       console.log(`Files: ${nextTask.files.join(", ")}`);
     }
-    if (nextTask.depends.length > 0) {
-      console.log(`Depends: ${nextTask.depends.join(", ")}`);
+    if (context !== "min") {
+      if (nextTask.depends.length > 0) {
+        console.log(`Depends: ${nextTask.depends.join(", ")}`);
+      }
+      console.log("Subtasks:");
+      for (const subtask of nextTask.subtasks) {
+        const check = subtask.completed ? "[x]" : "[ ]";
+        const typeTag = subtask.type !== "impl" ? ` [${subtask.type}]` : "";
+        console.log(`  ${check} ${subtask.text}${typeTag}`);
+      }
     }
-    console.log("Subtasks:");
-    for (const subtask of nextTask.subtasks) {
-      const check = subtask.completed ? "[x]" : "[ ]";
-      console.log(`  ${check} ${subtask.text}`);
+    if (context === "full" && nextTask.notes) {
+      console.log(`Notes: ${nextTask.notes}`);
     }
   },
 });
