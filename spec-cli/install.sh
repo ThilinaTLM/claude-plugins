@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-REPO="tlmtech/claude-plugins"
+REPO="ThilinaTLM/claude-plugins"
 INSTALL_DIR="${HOME}/.local/bin"
 BINARY_NAME="spec"
 
