@@ -1,7 +1,7 @@
 {
   "name": "spec-driven-dev",
-  "version": "3.0.0",
-  "description": "Specification-driven development workflow with CLI and skill for AI agents",
+  "version": "1.0.0",
+  "description": "Specification-driven development workflow skill for AI agents",
   "author": {
     "name": "TLM"
   },

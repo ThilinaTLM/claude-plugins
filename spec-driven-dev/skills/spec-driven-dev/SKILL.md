@@ -7,6 +7,16 @@ description: Specification-driven development workflow for AI agents. Use when t
 
 Manage complex development tasks through structured specifications that persist across sessions and minimize context overhead.
 
+## Prerequisites
+
+Install the `spec` CLI:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/tlmtech/claude-plugins/main/spec-cli/install.sh | bash
+```
+
+This installs the `spec` command to `~/.local/bin/`.
+
 ## When to Use
 
 - Feature too large for single chat session
@@ -196,7 +206,7 @@ Execute tasks sequentially:
 5. Mark subtask `done: true`
 6. Commit checkpoint
 
-**Session continuity:** Use `${CLAUDE_PLUGIN_ROOT}/cli/dist/spec resume {spec}` to load spec + tasks, show progress, and identify next task.
+**Session continuity:** Use `spec resume {spec}` to load spec + tasks, show progress, and identify next task.
 
 **When blocked:** Use `AskUserQuestion` to get user input on implementation decisions rather than making assumptions.
 
@@ -204,7 +214,7 @@ Execute tasks sequentially:
 
 When spec is complete:
 
-1. Run `${CLAUDE_PLUGIN_ROOT}/cli/dist/spec archive {spec}` to move it to `.specs/archived/`
+1. Run `spec archive {spec}` to move it to `.specs/archived/`
 2. Update project.md if conventions changed
 
 ## Token Optimization
@@ -269,24 +279,16 @@ Deprecated in favor of REQ-5.
 
 ## CLI Commands
 
-The CLI is automatically built when the plugin is installed. Run commands using:
-
-```bash
-${CLAUDE_PLUGIN_ROOT}/cli/dist/spec [command]
-```
-
-**Note:** Requires [Bun](https://bun.sh) to be installed for the initial build.
-
 | Command | Description |
 |---------|-------------|
-| `${CLAUDE_PLUGIN_ROOT}/cli/dist/spec init [name]` | Initialize `.specs/` structure with templates |
-| `${CLAUDE_PLUGIN_ROOT}/cli/dist/spec status` | Show all specs and their progress |
-| `${CLAUDE_PLUGIN_ROOT}/cli/dist/spec resume {spec}` | Show progress + next task + minimal context |
-| `${CLAUDE_PLUGIN_ROOT}/cli/dist/spec next {spec}` | Show only next task (minimal output for AI) |
-| `${CLAUDE_PLUGIN_ROOT}/cli/dist/spec mark {spec} {task-id}` | Mark task/subtask complete |
-| `${CLAUDE_PLUGIN_ROOT}/cli/dist/spec archive {spec}` | Archive a completed spec to `.specs/archived/` |
-| `${CLAUDE_PLUGIN_ROOT}/cli/dist/spec validate {path}` | Check spec completeness, task coverage, dependencies |
-| `${CLAUDE_PLUGIN_ROOT}/cli/dist/spec compact {file} [-o out]` | Generate token-optimized version |
+| `spec init [name]` | Initialize `.specs/` structure with templates |
+| `spec status` | Show all specs and their progress |
+| `spec resume {spec}` | Show progress + next task + minimal context |
+| `spec next {spec}` | Show only next task (minimal output for AI) |
+| `spec mark {spec} {task-id}` | Mark task/subtask complete |
+| `spec archive {spec}` | Archive a completed spec to `.specs/archived/` |
+| `spec validate {path}` | Check spec completeness, task coverage, dependencies |
+| `spec compact {file} [-o out]` | Generate token-optimized version |
 
 ### AI-Optimized CLI Usage
 
@@ -294,28 +296,28 @@ All commands output JSON by default, optimized for programmatic parsing.
 
 **Get structured data:**
 ```bash
-${CLAUDE_PLUGIN_ROOT}/cli/dist/spec status            # All specs as JSON
-${CLAUDE_PLUGIN_ROOT}/cli/dist/spec resume {spec}     # Progress + next task as JSON
-${CLAUDE_PLUGIN_ROOT}/cli/dist/spec next {spec}       # Only next task as JSON
-${CLAUDE_PLUGIN_ROOT}/cli/dist/spec validate {path}   # Validation result as JSON
+spec status            # All specs as JSON
+spec resume {spec}     # Progress + next task as JSON
+spec next {spec}       # Only next task as JSON
+spec validate {path}   # Validation result as JSON
 ```
 
 **Minimal output for token efficiency:**
 ```bash
-${CLAUDE_PLUGIN_ROOT}/cli/dist/spec status -q                  # Just spec names + percentages
-${CLAUDE_PLUGIN_ROOT}/cli/dist/spec resume {spec} -q           # Just next task ID + files
-${CLAUDE_PLUGIN_ROOT}/cli/dist/spec next {spec} --filesOnly    # Just file paths to load
+spec status -q                  # Just spec names + percentages
+spec resume {spec} -q           # Just next task ID + files
+spec next {spec} --filesOnly    # Just file paths to load
 ```
 
 **Update progress:**
 ```bash
-${CLAUDE_PLUGIN_ROOT}/cli/dist/spec mark {spec} {task-id}             # Mark all subtasks complete
-${CLAUDE_PLUGIN_ROOT}/cli/dist/spec mark {spec} {task-id} --subtask 0 # Mark first subtask complete
+spec mark {spec} {task-id}             # Mark all subtasks complete
+spec mark {spec} {task-id} --subtask 0 # Mark first subtask complete
 ```
 
 **Archive completed specs:**
 ```bash
-${CLAUDE_PLUGIN_ROOT}/cli/dist/spec archive {spec}   # Move to .specs/archived/
+spec archive {spec}   # Move to .specs/archived/
 ```
 
 ## Tool Usage
