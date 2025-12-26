@@ -16,6 +16,18 @@ A Claude Code plugin marketplace by ThilinaTLM.
 /plugin install spec-driven-dev@tlmtech
 ```
 
+### Install spec-cli (Optional)
+
+The `spec` CLI tool can be installed separately for command-line spec management:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/ThilinaTLM/claude-plugins/main/spec-cli/install.sh | bash
+```
+
+Supports: Linux (x64, arm64), macOS (x64, arm64)
+
+Installs to `~/.local/bin/spec`. Ensure `~/.local/bin` is in your PATH.
+
 ## Available Plugins
 
 | Plugin | Description | Version |
