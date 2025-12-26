@@ -1,5 +1,6 @@
 #!/usr/bin/env bun
 import { defineCommand, runMain } from "citty";
+import pkg from "../package.json";
 import { archiveCommand } from "./commands/archive";
 import { compactCommand } from "./commands/compact";
 import { initCommand } from "./commands/init";
@@ -14,7 +15,7 @@ import { validateCommand } from "./commands/validate";
 const main = defineCommand({
   meta: {
     name: "spec",
-    version: "3.1.0",
+    version: pkg.version,
     description: "Spec-driven development CLI for managing specifications",
   },
   args: {
