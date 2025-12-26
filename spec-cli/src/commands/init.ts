@@ -1,8 +1,8 @@
-import { defineCommand } from "citty";
-import { existsSync, mkdirSync, writeFileSync, appendFileSync, readFileSync } from "node:fs";
+import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { basename, resolve } from "node:path";
+import { defineCommand } from "citty";
 import { PROJECT_MD } from "../templates";
-import { success, error, info } from "../ui/output";
+import { error, info, success } from "../ui/output";
 
 export const initCommand = defineCommand({
   meta: {
@@ -40,7 +40,7 @@ export const initCommand = defineCommand({
       if (!gitignoreContent.includes(".specs/archived")) {
         appendFileSync(
           gitignorePath,
-          "\n# Archived specs (optional, can be large)\n# .specs/archived/\n"
+          "\n# Archived specs (optional, can be large)\n# .specs/archived/\n",
         );
       }
     }

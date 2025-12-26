@@ -1,5 +1,5 @@
 import { existsSync } from "node:fs";
-import { resolve, dirname, parse } from "node:path";
+import { dirname, parse, resolve } from "node:path";
 
 /**
  * Walk up directories to find a project root containing .specs/ directory.

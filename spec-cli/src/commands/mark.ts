@@ -1,38 +1,11 @@
-import { defineCommand } from "citty";
-import { existsSync, readFileSync, writeFileSync, readdirSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
+import { defineCommand } from "citty";
 import { parse as parseYaml, stringify as stringifyYaml } from "yaml";
-import { getActiveDir } from "../lib/project-root";
-import { success, error, info } from "../ui/output";
-
-interface SubtaskYaml {
-  text: string;
-  done: boolean;
-}
-
-interface TaskYaml {
-  id: string;
-  title: string;
-  files?: string[];
-  depends?: string[];
-  estimate?: string;
-  notes?: string;
-  parallel?: boolean;
-  blocked?: boolean;
-  subtasks: SubtaskYaml[];
-}
-
-interface PhaseYaml {
-  id: number;
-  name: string;
-  checkpoint?: string;
-  tasks: TaskYaml[];
-}
-
-interface TasksYaml {
-  feature?: string;
-  phases: PhaseYaml[];
-}
+import { parseCommonArgs } from "../lib/args";
+import { lookupSpec, outputSpecNotFoundError } from "../lib/spec-lookup";
+import type { PhaseYaml, SubtaskYaml, TaskYaml, TasksYaml } from "../types";
+import { error, info, success } from "../ui/output";
 
 export const markCommand = defineCommand({
   meta: {
@@ -72,65 +45,19 @@ export const markCommand = defineCommand({
   async run({ args }) {
     const spec = args.feature as string;
     const taskId = args.taskId as string;
-    const subtaskIndex = args.subtask !== undefined ? parseInt(args.subtask as string, 10) : null;
-    const usePlain = args.plain as boolean;
-    const quiet = args.quiet as boolean;
-
-    const { activeDir, specsDir, projectRoot, autoDetected } = getActiveDir(args.root as string | undefined);
-    const specDir = resolve(activeDir, spec);
-    const tasksPath = resolve(specDir, "tasks.yaml");
-
-    // Check if specs directory exists first
-    const specsExists = existsSync(specsDir);
+    const subtaskIndex =
+      args.subtask !== undefined ? Number.parseInt(args.subtask as string, 10) : null;
+    const commonArgs = parseCommonArgs(args);
+    const { plain: usePlain, quiet } = commonArgs;
 
     // Validate spec exists
-    if (!existsSync(specDir)) {
-      // Get available specs for better error message
-      const availableSpecs = existsSync(activeDir)
-        ? readdirSync(activeDir, { withFileTypes: true })
-            .filter((d) => d.isDirectory())
-            .map((d) => d.name)
-        : [];
+    const lookup = lookupSpec(spec, commonArgs.root);
 
-      const errorData = {
-        error: `Spec '${spec}' not found`,
-        searchedPath: specDir,
-        specsFound: specsExists,
-        availableSpecs,
-        cwd: process.cwd(),
-        projectRoot,
-        autoDetected,
-        suggestions: specsExists
-          ? [`Available specs: ${availableSpecs.join(", ") || "(none)"}`]
-          : [
-              "Run from project root containing .specs/ directory",
-              `Use --root flag: spec --root /path/to/project mark ${spec} ${taskId}`,
-              "Initialize specs: spec init",
-            ],
-      };
-
-      if (!usePlain) {
-        console.log(JSON.stringify(errorData, null, 2));
-      } else {
-        error(`Spec '${spec}' not found`);
-        info(`Searched in: ${specDir}`);
-        if (!specsExists) {
-          info(`No .specs/ directory found at: ${specsDir}`);
-          console.log();
-          info("Suggestions:");
-          info("  - Run from project root containing .specs/ directory");
-          info(`  - Use --root flag: spec --root /path/to/project mark ${spec} ${taskId}`);
-          info("  - Initialize specs: spec init");
-        } else {
-          console.log();
-          console.log("Available specs:");
-          for (const s of availableSpecs) {
-            info(`  ${s}`);
-          }
-        }
-      }
-      process.exit(1);
+    if (!lookup.found) {
+      outputSpecNotFoundError(lookup.errorData, usePlain);
     }
+
+    const { specDir, tasksPath } = lookup;
 
     // Validate tasks.yaml exists
     if (!existsSync(tasksPath)) {
@@ -185,7 +112,7 @@ export const markCommand = defineCommand({
           console.log(
             JSON.stringify({
               error: `Subtask index ${subtaskIndex} out of range (0-${foundTask.subtasks.length - 1})`,
-            })
+            }),
           );
         } else {
           error(`Subtask index ${subtaskIndex} out of range (0-${foundTask.subtasks.length - 1})`);
@@ -213,8 +140,8 @@ export const markCommand = defineCommand({
     // Check if entire spec is complete (all subtasks in all tasks done)
     const specComplete = data.phases.every((phase: PhaseYaml) =>
       (phase.tasks || []).every((task: TaskYaml) =>
-        task.subtasks.every((s: SubtaskYaml) => s.done)
-      )
+        task.subtasks.every((s: SubtaskYaml) => s.done),
+      ),
     );
 
     // Output result
@@ -241,7 +168,11 @@ export const markCommand = defineCommand({
       console.log(JSON.stringify(result, null, 2));
     } else if (quiet) {
       if (!usePlain) {
-        const quietResult: { markedCount: number; specComplete?: boolean; archiveSuggestion?: string } = { markedCount };
+        const quietResult: {
+          markedCount: number;
+          specComplete?: boolean;
+          archiveSuggestion?: string;
+        } = { markedCount };
         if (specComplete) {
           quietResult.specComplete = true;
           quietResult.archiveSuggestion = result.archiveSuggestion;
@@ -262,7 +193,7 @@ export const markCommand = defineCommand({
       }
       if (specComplete) {
         console.log();
-        success(`All tasks complete!`);
+        success("All tasks complete!");
         info(`Suggestion: spec archive ${spec}`);
       }
     }

@@ -2,11 +2,13 @@ import { existsSync, readFileSync, statSync } from "node:fs";
 import { resolve } from "node:path";
 import { parse as parseYaml } from "yaml";
 import {
+  type PhaseYaml,
+  type TasksYaml,
   type ValidationResult,
-  createValidationResult,
   addError,
-  addWarning,
   addInfo,
+  addWarning,
+  createValidationResult,
 } from "../types";
 
 /**
@@ -14,7 +16,7 @@ import {
  */
 export function validateSpecMd(path: string, result: ValidationResult): void {
   if (!existsSync(path)) {
-    addError(result, `Missing required file: spec.md`, path);
+    addError(result, "Missing required file: spec.md", path);
     return;
   }
 
@@ -50,34 +52,6 @@ export function validateSpecMd(path: string, result: ValidationResult): void {
 
   const wordCount = content.split(/\s+/).length;
   addInfo(result, `spec.md: ${wordCount} words`, path);
-}
-
-/**
- * YAML structure for tasks.yaml validation
- */
-interface TasksYaml {
-  feature?: string;
-  phases?: PhaseYaml[];
-}
-
-interface PhaseYaml {
-  id?: number;
-  name?: string;
-  checkpoint?: string;
-  tasks?: TaskYaml[];
-}
-
-interface TaskYaml {
-  id?: string | number;
-  title?: string;
-  files?: string[];
-  depends?: string[];
-  subtasks?: SubtaskYaml[];
-}
-
-interface SubtaskYaml {
-  text?: string;
-  done?: boolean;
 }
 
 /**

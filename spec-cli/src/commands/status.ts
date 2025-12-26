@@ -1,11 +1,11 @@
-import { defineCommand } from "citty";
-import { existsSync, readdirSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { resolve } from "node:path";
-import { countCheckboxes } from "../lib/spec-parser";
+import { defineCommand } from "citty";
 import { calculateProgressFromCounts } from "../lib/progress";
 import { getSpecsDir } from "../lib/project-root";
-import { printHeader, printDivider, info, error } from "../ui/output";
+import { countCheckboxes } from "../lib/spec-parser";
 import type { FeatureStatus, TaskProgress } from "../types";
+import { error, info, printDivider, printHeader } from "../ui/output";
 
 function getSpecStatus(specDir: string): FeatureStatus {
   const name = specDir.split("/").pop() || "";
@@ -63,7 +63,11 @@ export const statusCommand = defineCommand({
   async run({ args }) {
     const usePlain = args.plain as boolean;
     const quiet = args.quiet as boolean;
-    const { specsDir: specDir, projectRoot, autoDetected } = getSpecsDir(args.root as string | undefined);
+    const {
+      specsDir: specDir,
+      projectRoot,
+      autoDetected,
+    } = getSpecsDir(args.root as string | undefined);
 
     if (!existsSync(specDir)) {
       const errorData = {
@@ -154,7 +158,11 @@ export const statusCommand = defineCommand({
     if (quiet) {
       if (!usePlain) {
         // JSON quiet mode
-        console.log(JSON.stringify({ specs: data.specs.map(s => ({ name: s.name, percent: s.progress?.percent ?? 0 })) }));
+        console.log(
+          JSON.stringify({
+            specs: data.specs.map((s) => ({ name: s.name, percent: s.progress?.percent ?? 0 })),
+          }),
+        );
       } else {
         for (const status of data.specs) {
           const pct = status.progress ? `${status.progress.percent}%` : "0%";

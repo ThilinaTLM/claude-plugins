@@ -1,7 +1,7 @@
-import { defineCommand } from "citty";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { defineCommand } from "citty";
 import { compactSpec, estimateTokens } from "../lib/compactor";
-import { success, error } from "../ui/output";
+import { error, success } from "../ui/output";
 
 export const compactCommand = defineCommand({
   meta: {
@@ -57,7 +57,7 @@ export const compactCommand = defineCommand({
         stats: {
           originalTokens,
           compactedTokens,
-          reductionPercent: parseFloat(reduction.toFixed(1)),
+          reductionPercent: Number.parseFloat(reduction.toFixed(1)),
         },
       };
       if (outputPath) {

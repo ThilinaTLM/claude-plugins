@@ -1,38 +1,6 @@
 import { readFileSync } from "node:fs";
-import { parse as parseYaml } from "yaml";
-import type { Task, Subtask, TaskFlags, Phase } from "../types";
-
-/**
- * Raw YAML structure for tasks.yaml
- */
-interface TasksYaml {
-  feature?: string;
-  phases: PhaseYaml[];
-}
-
-interface PhaseYaml {
-  id: number;
-  name: string;
-  checkpoint?: string;
-  tasks: TaskYaml[];
-}
-
-interface TaskYaml {
-  id: string;
-  title: string;
-  files?: string[];
-  depends?: string[];
-  estimate?: string;
-  notes?: string;
-  parallel?: boolean;
-  blocked?: boolean;
-  subtasks: SubtaskYaml[];
-}
-
-interface SubtaskYaml {
-  text: string;
-  done: boolean;
-}
+import type { Phase, PhaseYaml, Subtask, Task, TaskFlags, TaskYaml, TasksYaml } from "../types";
+import { parseYamlSafe } from "./safe-io";
 
 /**
  * Parse a tasks.yaml file and extract task information
@@ -43,15 +11,17 @@ export function parseTasksFile(path: string): Phase[] {
 }
 
 /**
- * Parse YAML content and convert to Phase[] structure
+ * Parse YAML content and convert to Phase[] structure.
+ * Returns empty array for invalid YAML (graceful degradation).
  */
 export function parseTasksContent(content: string): Phase[] {
-  const data = parseYaml(content) as TasksYaml;
+  const result = parseYamlSafe<TasksYaml>(content);
 
-  if (!data || !data.phases) {
+  if (!result.ok || !result.value || !result.value.phases) {
     return [];
   }
 
+  const data = result.value;
   return data.phases.map((phase) => ({
     number: phase.id,
     name: phase.name,
@@ -78,7 +48,7 @@ function convertTask(task: TaskYaml, phaseNumber: number): Task {
       (s): Subtask => ({
         text: s.text,
         completed: s.done,
-      })
+      }),
     ),
     estimate: task.estimate,
     notes: task.notes,
@@ -102,15 +72,17 @@ export function getNextTask(phases: Phase[]): Task | null {
 }
 
 /**
- * Count all subtasks in a tasks.yaml file content
+ * Count all subtasks in a tasks.yaml file content.
+ * Returns zeros for invalid YAML (graceful degradation).
  */
 export function countCheckboxes(content: string): { total: number; done: number } {
-  const data = parseYaml(content) as TasksYaml;
+  const result = parseYamlSafe<TasksYaml>(content);
 
-  if (!data || !data.phases) {
+  if (!result.ok || !result.value || !result.value.phases) {
     return { total: 0, done: 0 };
   }
 
+  const data = result.value;
   let total = 0;
   let done = 0;
 

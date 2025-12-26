@@ -1,9 +1,11 @@
-import { defineCommand } from "citty";
-import { existsSync, readdirSync } from "node:fs";
+import { existsSync } from "node:fs";
 import { resolve } from "node:path";
-import { parseTasksFile, getNextTask } from "../lib/spec-parser";
+import { defineCommand } from "citty";
+import { parseCommonArgs } from "../lib/args";
 import { getActiveDir } from "../lib/project-root";
-import { error, info } from "../ui/output";
+import { getAvailableSpecs, lookupSpec, outputSpecNotFoundError } from "../lib/spec-lookup";
+import { getNextTask, parseTasksFile } from "../lib/spec-parser";
+import { error } from "../ui/output";
 
 export const nextCommand = defineCommand({
   meta: {
@@ -36,21 +38,15 @@ export const nextCommand = defineCommand({
     },
   },
   async run({ args }) {
-    const usePlain = args.plain as boolean;
+    const commonArgs = parseCommonArgs(args);
+    const { plain: usePlain } = commonArgs;
     const filesOnly = args.filesOnly as boolean;
     const quiet = args.quiet as boolean;
-    const { activeDir, specsDir, projectRoot, autoDetected } = getActiveDir(args.root as string | undefined);
-
-    // Check if specs directory exists first
-    const specsExists = existsSync(specsDir);
+    const { specsDir, projectRoot, autoDetected } = getActiveDir(commonArgs.root);
 
     // If no spec specified, list available specs
     if (!args.feature) {
-      const specs = existsSync(activeDir)
-        ? readdirSync(activeDir, { withFileTypes: true })
-            .filter((d) => d.isDirectory())
-            .map((d) => d.name)
-        : [];
+      const specs = getAvailableSpecs(commonArgs.root);
 
       if (!usePlain) {
         console.log(JSON.stringify({ availableSpecs: specs, specsDir, projectRoot, autoDetected }));
@@ -62,50 +58,13 @@ export const nextCommand = defineCommand({
     }
 
     const spec = args.feature as string;
-    const specDir = resolve(activeDir, spec);
+    const lookup = lookupSpec(spec, commonArgs.root);
 
-    if (!existsSync(specDir)) {
-      // Get available specs for better error message
-      const availableSpecs = existsSync(activeDir)
-        ? readdirSync(activeDir, { withFileTypes: true })
-            .filter((d) => d.isDirectory())
-            .map((d) => d.name)
-        : [];
-
-      const errorData = {
-        error: `Spec '${spec}' not found`,
-        searchedPath: specDir,
-        specsFound: specsExists,
-        availableSpecs,
-        cwd: process.cwd(),
-        projectRoot,
-        autoDetected,
-        suggestions: specsExists
-          ? [`Available specs: ${availableSpecs.join(", ") || "(none)"}`]
-          : [
-              "Run from project root containing .specs/ directory",
-              `Use --root flag: spec --root /path/to/project next ${spec}`,
-              "Initialize specs: spec init",
-            ],
-      };
-
-      if (!usePlain) {
-        console.log(JSON.stringify(errorData, null, 2));
-      } else {
-        error(`Spec '${spec}' not found`);
-        info(`Searched in: ${specDir}`);
-        if (!specsExists) {
-          info(`No .specs/ directory found at: ${specsDir}`);
-          console.log();
-          info("Suggestions:");
-          info("  - Run from project root containing .specs/ directory");
-          info(`  - Use --root flag: spec --root /path/to/project next ${spec}`);
-          info("  - Initialize specs: spec init");
-        }
-      }
-      process.exit(1);
+    if (!lookup.found) {
+      outputSpecNotFoundError(lookup.errorData, usePlain);
     }
 
+    const { specDir } = lookup;
     const tasksPath = resolve(specDir, "tasks.yaml");
     if (!existsSync(tasksPath)) {
       if (!usePlain) {
@@ -121,7 +80,13 @@ export const nextCommand = defineCommand({
 
     if (!nextTask) {
       if (!usePlain) {
-        console.log(JSON.stringify({ task: null, allComplete: true, archiveSuggestion: `spec archive ${spec}` }));
+        console.log(
+          JSON.stringify({
+            task: null,
+            allComplete: true,
+            archiveSuggestion: `spec archive ${spec}`,
+          }),
+        );
       } else {
         console.log("All tasks complete!");
         console.log(`Suggestion: spec archive ${spec}`);
@@ -166,8 +131,8 @@ export const nextCommand = defineCommand({
             allComplete: false,
           },
           null,
-          2
-        )
+          2,
+        ),
       );
       return;
     }

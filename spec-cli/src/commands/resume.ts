@@ -1,10 +1,12 @@
-import { defineCommand } from "citty";
-import { existsSync, readdirSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { resolve } from "node:path";
-import { parseTasksFile, getNextTask, countCheckboxes } from "../lib/spec-parser";
+import { defineCommand } from "citty";
+import { parseCommonArgs } from "../lib/args";
 import { calculateProgressFromCounts } from "../lib/progress";
 import { getActiveDir } from "../lib/project-root";
-import { printHeader, printDivider, info, warn, error } from "../ui/output";
+import { getAvailableSpecs, lookupSpec, outputSpecNotFoundError } from "../lib/spec-lookup";
+import { countCheckboxes, getNextTask, parseTasksFile } from "../lib/spec-parser";
+import { info, printDivider, printHeader, warn } from "../ui/output";
 
 export const resumeCommand = defineCommand({
   meta: {
@@ -33,28 +35,23 @@ export const resumeCommand = defineCommand({
     },
   },
   async run({ args }) {
-    const usePlain = args.plain as boolean;
-    const quiet = args.quiet as boolean;
-    const { activeDir, specsDir, projectRoot, autoDetected } = getActiveDir(args.root as string | undefined);
-
-    // Check if specs directory exists first
-    const specsExists = existsSync(specsDir);
+    const commonArgs = parseCommonArgs(args);
+    const { plain: usePlain, quiet } = commonArgs;
+    const { specsDir, projectRoot, autoDetected } = getActiveDir(commonArgs.root);
 
     // If no spec specified, list available specs
     if (!args.feature) {
-      const specs = existsSync(activeDir)
-        ? readdirSync(activeDir, { withFileTypes: true })
-            .filter((d) => d.isDirectory())
-            .map((d) => d.name)
-        : [];
+      const specs = getAvailableSpecs(commonArgs.root);
 
       if (!usePlain) {
-        console.log(JSON.stringify({
-          availableSpecs: specs,
-          specsDir,
-          projectRoot,
-          autoDetected,
-        }));
+        console.log(
+          JSON.stringify({
+            availableSpecs: specs,
+            specsDir,
+            projectRoot,
+            autoDetected,
+          }),
+        );
         return;
       }
 
@@ -72,55 +69,13 @@ export const resumeCommand = defineCommand({
     }
 
     const spec = args.feature as string;
-    const specDir = resolve(activeDir, spec);
+    const lookup = lookupSpec(spec, commonArgs.root);
 
-    if (!existsSync(specDir)) {
-      // Get available specs for better error message
-      const availableSpecs = existsSync(activeDir)
-        ? readdirSync(activeDir, { withFileTypes: true })
-            .filter((d) => d.isDirectory())
-            .map((d) => d.name)
-        : [];
-
-      const errorData = {
-        error: `Spec '${spec}' not found`,
-        searchedPath: specDir,
-        specsFound: specsExists,
-        availableSpecs,
-        cwd: process.cwd(),
-        projectRoot,
-        autoDetected,
-        suggestions: specsExists
-          ? [`Available specs: ${availableSpecs.join(", ") || "(none)"}`]
-          : [
-              "Run from project root containing .specs/ directory",
-              `Use --root flag: spec --root /path/to/project resume ${spec}`,
-              "Initialize specs: spec init",
-            ],
-      };
-
-      if (!usePlain) {
-        console.log(JSON.stringify(errorData, null, 2));
-      } else {
-        error(`Spec '${spec}' not found`);
-        info(`Searched in: ${specDir}`);
-        if (!specsExists) {
-          info(`No .specs/ directory found at: ${specsDir}`);
-          console.log();
-          info("Suggestions:");
-          info("  - Run from project root containing .specs/ directory");
-          info(`  - Use --root flag: spec --root /path/to/project resume ${spec}`);
-          info("  - Initialize specs: spec init");
-        } else {
-          console.log();
-          console.log("Available specs:");
-          for (const s of availableSpecs) {
-            info(`  ${s}`);
-          }
-        }
-      }
-      process.exit(1);
+    if (!lookup.found) {
+      outputSpecNotFoundError(lookup.errorData, usePlain);
     }
+
+    const { specDir } = lookup;
 
     // Build data structure
     const data: {
@@ -184,9 +139,7 @@ export const resumeCommand = defineCommand({
     }
 
     // List spec files
-    data.specFiles = readdirSync(specDir).filter(
-      (f) => f.endsWith(".md") || f.endsWith(".yaml")
-    );
+    data.specFiles = readdirSync(specDir).filter((f) => f.endsWith(".md") || f.endsWith(".yaml"));
 
     // Output - JSON is default
     if (!usePlain && !quiet) {
@@ -203,7 +156,9 @@ export const resumeCommand = defineCommand({
           allComplete: boolean;
           archiveSuggestion?: string;
         } = {
-          nextTask: data.nextTask ? { id: data.nextTask.id, title: data.nextTask.title, files: data.nextTask.files } : null,
+          nextTask: data.nextTask
+            ? { id: data.nextTask.id, title: data.nextTask.title, files: data.nextTask.files }
+            : null,
           allComplete: data.allComplete,
         };
         if (data.allComplete) {
@@ -234,7 +189,9 @@ export const resumeCommand = defineCommand({
 
     printDivider("PROGRESS");
     if (data.progress) {
-      info(`Tasks: ${data.progress.done}/${data.progress.total} complete (${data.progress.percent}%)`);
+      info(
+        `Tasks: ${data.progress.done}/${data.progress.total} complete (${data.progress.percent}%)`,
+      );
       info(`Remaining: ${data.progress.remaining} tasks`);
     } else {
       warn("No tasks found");

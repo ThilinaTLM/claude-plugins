@@ -78,3 +78,34 @@ export interface FeatureStatus {
   progress: TaskProgress | null;
   lastSession?: string;
 }
+
+// Raw YAML structure types (from tasks.yaml parsing)
+// Fields are optional to handle malformed/incomplete YAML gracefully
+export interface SubtaskYaml {
+  text?: string;
+  done?: boolean;
+}
+
+export interface TaskYaml {
+  id?: string | number;
+  title?: string;
+  files?: string[];
+  depends?: string[];
+  estimate?: string;
+  notes?: string;
+  parallel?: boolean;
+  blocked?: boolean;
+  subtasks?: SubtaskYaml[];
+}
+
+export interface PhaseYaml {
+  id?: number;
+  name?: string;
+  checkpoint?: string;
+  tasks?: TaskYaml[];
+}
+
+export interface TasksYaml {
+  feature?: string;
+  phases?: PhaseYaml[];
+}

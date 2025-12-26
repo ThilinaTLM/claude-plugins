@@ -1,6 +1,6 @@
 import { defineCommand } from "citty";
 import { validateFeature } from "../lib/validator";
-import { success, error, warn, note } from "../ui/output";
+import { error, note, success, warn } from "../ui/output";
 
 export const validateCommand = defineCommand({
   meta: {
@@ -40,14 +40,18 @@ export const validateCommand = defineCommand({
     if (quiet) {
       if (!usePlain) {
         // JSON quiet mode
-        console.log(JSON.stringify({
-          ok: result.ok,
-          errorCount: result.errors.length,
-          warningCount: result.warnings.length,
-        }));
+        console.log(
+          JSON.stringify({
+            ok: result.ok,
+            errorCount: result.errors.length,
+            warningCount: result.warnings.length,
+          }),
+        );
       } else {
         if (result.ok) {
-          console.log(`PASS ${result.warnings.length > 0 ? `(${result.warnings.length} warnings)` : ""}`);
+          console.log(
+            `PASS ${result.warnings.length > 0 ? `(${result.warnings.length} warnings)` : ""}`,
+          );
         } else {
           console.log(`FAIL (${result.errors.length} errors)`);
         }

@@ -16,13 +16,17 @@ function getCurrentPlatform(): BuildTarget {
 
   if (platform === "linux" && arch === "x64") {
     return { target: "bun-linux-x64", outfile };
-  } else if (platform === "linux" && arch === "arm64") {
+  }
+  if (platform === "linux" && arch === "arm64") {
     return { target: "bun-linux-arm64", outfile };
-  } else if (platform === "darwin" && arch === "arm64") {
+  }
+  if (platform === "darwin" && arch === "arm64") {
     return { target: "bun-darwin-arm64", outfile };
-  } else if (platform === "darwin" && arch === "x64") {
+  }
+  if (platform === "darwin" && arch === "x64") {
     return { target: "bun-darwin-x64", outfile };
-  } else if (platform === "win32") {
+  }
+  if (platform === "win32") {
     return { target: "bun-windows-x64", outfile };
   }
   return { target: "bun-linux-x64", outfile };

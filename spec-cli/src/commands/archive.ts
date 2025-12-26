@@ -1,9 +1,11 @@
-import { defineCommand } from "citty";
-import { existsSync, readdirSync, renameSync, mkdirSync } from "node:fs";
+import { existsSync, mkdirSync, renameSync } from "node:fs";
 import { resolve } from "node:path";
-import { parseTasksFile, getNextTask } from "../lib/spec-parser";
-import { getActiveDir, getArchivedDir } from "../lib/project-root";
-import { success, error, info } from "../ui/output";
+import { defineCommand } from "citty";
+import { parseCommonArgs } from "../lib/args";
+import { getArchivedDir } from "../lib/project-root";
+import { lookupSpec, outputSpecNotFoundError } from "../lib/spec-lookup";
+import { getNextTask, parseTasksFile } from "../lib/spec-parser";
+import { error, info, success } from "../ui/output";
 
 export const archiveCommand = defineCommand({
   meta: {
@@ -38,65 +40,20 @@ export const archiveCommand = defineCommand({
   },
   async run({ args }) {
     const specName = args.spec as string;
-    const usePlain = args.plain as boolean;
-    const quiet = args.quiet as boolean;
+    const commonArgs = parseCommonArgs(args);
+    const { plain: usePlain, quiet } = commonArgs;
     const force = args.force as boolean;
 
-    const { activeDir, specsDir, projectRoot, autoDetected } = getActiveDir(args.root as string | undefined);
-    const { archivedDir } = getArchivedDir(args.root as string | undefined);
-
-    // Check if specs directory exists
-    const specsExists = existsSync(specsDir);
+    const { archivedDir } = getArchivedDir(commonArgs.root);
 
     // Validate spec exists in active
-    const specDir = resolve(activeDir, specName);
-    if (!existsSync(specDir)) {
-      // Get available specs for better error message
-      const availableSpecs = existsSync(activeDir)
-        ? readdirSync(activeDir, { withFileTypes: true })
-            .filter((d) => d.isDirectory())
-            .map((d) => d.name)
-        : [];
+    const lookup = lookupSpec(specName, commonArgs.root);
 
-      const errorData = {
-        error: `Spec '${specName}' not found in active specs`,
-        searchedPath: specDir,
-        specsFound: specsExists,
-        availableSpecs,
-        cwd: process.cwd(),
-        projectRoot,
-        autoDetected,
-        suggestions: specsExists
-          ? [`Available specs: ${availableSpecs.join(", ") || "(none)"}`]
-          : [
-              "Run from project root containing .specs/ directory",
-              `Use --root flag: spec --root /path/to/project archive ${specName}`,
-              "Initialize specs: spec init",
-            ],
-      };
-
-      if (!usePlain) {
-        console.log(JSON.stringify(errorData, null, 2));
-      } else {
-        error(`Spec '${specName}' not found in active specs`);
-        info(`Searched in: ${specDir}`);
-        if (!specsExists) {
-          info(`No .specs/ directory found at: ${specsDir}`);
-          console.log();
-          info("Suggestions:");
-          info("  - Run from project root containing .specs/ directory");
-          info(`  - Use --root flag: spec --root /path/to/project archive ${specName}`);
-          info("  - Initialize specs: spec init");
-        } else if (availableSpecs.length > 0) {
-          console.log();
-          console.log("Available specs:");
-          for (const s of availableSpecs) {
-            info(`  ${s}`);
-          }
-        }
-      }
-      process.exit(1);
+    if (!lookup.found) {
+      outputSpecNotFoundError(lookup.errorData, usePlain);
     }
+
+    const { specDir } = lookup;
 
     // Check if spec is 100% complete (unless --force)
     const tasksPath = resolve(specDir, "tasks.yaml");

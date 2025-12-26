@@ -1,13 +1,13 @@
 #!/usr/bin/env bun
 import { defineCommand, runMain } from "citty";
-import { initCommand } from "./commands/init";
-import { statusCommand } from "./commands/status";
-import { resumeCommand } from "./commands/resume";
-import { validateCommand } from "./commands/validate";
-import { compactCommand } from "./commands/compact";
-import { nextCommand } from "./commands/next";
-import { markCommand } from "./commands/mark";
 import { archiveCommand } from "./commands/archive";
+import { compactCommand } from "./commands/compact";
+import { initCommand } from "./commands/init";
+import { markCommand } from "./commands/mark";
+import { nextCommand } from "./commands/next";
+import { resumeCommand } from "./commands/resume";
+import { statusCommand } from "./commands/status";
+import { validateCommand } from "./commands/validate";
 
 const main = defineCommand({
   meta: {
