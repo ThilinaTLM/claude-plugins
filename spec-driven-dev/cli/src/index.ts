@@ -12,14 +12,14 @@ import { archiveCommand } from "./commands/archive";
 const main = defineCommand({
   meta: {
     name: "spec",
-    version: "2.1.0",
+    version: "3.0.0",
     description: "Spec-driven development CLI for managing specifications",
   },
   args: {
     root: {
       type: "string",
       alias: "r",
-      description: "Project root directory (default: auto-detect by walking up to find specs/)",
+      description: "Project root directory (default: auto-detect by walking up to find .specs/)",
     },
     plain: {
       type: "boolean",

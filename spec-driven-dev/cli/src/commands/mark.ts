@@ -103,7 +103,7 @@ export const markCommand = defineCommand({
         suggestions: specsExists
           ? [`Available specs: ${availableSpecs.join(", ") || "(none)"}`]
           : [
-              "Run from project root containing specs/ directory",
+              "Run from project root containing .specs/ directory",
               `Use --root flag: spec --root /path/to/project mark ${spec} ${taskId}`,
               "Initialize specs: spec init",
             ],
@@ -115,10 +115,10 @@ export const markCommand = defineCommand({
         error(`Spec '${spec}' not found`);
         info(`Searched in: ${specDir}`);
         if (!specsExists) {
-          info(`No specs/ directory found at: ${specsDir}`);
+          info(`No .specs/ directory found at: ${specsDir}`);
           console.log();
           info("Suggestions:");
-          info("  - Run from project root containing specs/ directory");
+          info("  - Run from project root containing .specs/ directory");
           info(`  - Use --root flag: spec --root /path/to/project mark ${spec} ${taskId}`);
           info("  - Initialize specs: spec init");
         } else {

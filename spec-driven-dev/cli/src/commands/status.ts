@@ -67,13 +67,13 @@ export const statusCommand = defineCommand({
 
     if (!existsSync(specDir)) {
       const errorData = {
-        error: "No specs/ directory found",
+        error: "No .specs/ directory found",
         searchedPath: specDir,
         cwd: process.cwd(),
         projectRoot,
         autoDetected,
         suggestions: [
-          "Run from project root containing specs/ directory",
+          "Run from project root containing .specs/ directory",
           "Use --root flag: spec --root /path/to/project status",
           "Initialize specs: spec init",
         ],
@@ -81,14 +81,14 @@ export const statusCommand = defineCommand({
       if (!usePlain) {
         console.log(JSON.stringify(errorData, null, 2));
       } else {
-        error("No specs/ directory found.");
+        error("No .specs/ directory found.");
         info(`Searched in: ${specDir}`);
         if (autoDetected && projectRoot) {
           info(`Auto-detected project root: ${projectRoot}`);
         }
         console.log();
         info("Suggestions:");
-        info("  • Run from project root containing specs/ directory");
+        info("  • Run from project root containing .specs/ directory");
         info("  • Use --root flag: spec --root /path/to/project status");
         info("  • Initialize specs: spec init");
       }

@@ -2,7 +2,7 @@
 
 A Claude Code plugin for specification-driven development workflow. Designed for AI agents managing complex, multi-session software development tasks.
 
-**Version:** 2.1.0
+**Version:** 3.0.0
 
 ## Features
 
@@ -42,7 +42,7 @@ The plugin provides:
 ### CLI Commands
 
 ```bash
-${CLAUDE_PLUGIN_ROOT}/cli/dist/spec init [name]           # Initialize specs/ structure
+${CLAUDE_PLUGIN_ROOT}/cli/dist/spec init [name]           # Initialize .specs/ structure
 ${CLAUDE_PLUGIN_ROOT}/cli/dist/spec status                # Show all specs and progress
 ${CLAUDE_PLUGIN_ROOT}/cli/dist/spec resume {spec}         # Resume work on a spec
 ${CLAUDE_PLUGIN_ROOT}/cli/dist/spec next {spec}           # Get next task
@@ -56,16 +56,16 @@ All commands output JSON by default. Use `-q` for minimal output.
 
 ## Workflow
 
-1. **Spec** - Define requirements in `specs/active/{spec}/spec.md`
+1. **Spec** - Define requirements in `.specs/active/{spec}/spec.md`
 2. **Plan** - Create technical approach in `plan.md`
 3. **Tasks** - Break down into actionable items in `tasks.yaml`
 4. **Implement** - Execute tasks with validation
-5. **Archive** - Run `spec archive {spec}` to move to `specs/archived/`
+5. **Archive** - Run `spec archive {spec}` to move to `.specs/archived/`
 
 ## Directory Structure
 
 ```
-specs/
+.specs/
 ├── project.md           # Project conventions
 ├── active/              # Active specifications
 │   └── {spec}/

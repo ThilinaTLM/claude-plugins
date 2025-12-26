@@ -10,7 +10,7 @@ export const validateCommand = defineCommand({
   args: {
     specDir: {
       type: "positional",
-      description: "Path to spec directory (e.g., .spec/specs/my-feature/)",
+      description: "Path to spec directory (e.g., .specs/active/my-feature/)",
       required: true,
     },
     plain: {

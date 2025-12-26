@@ -55,11 +55,12 @@ bun run build:all               # Build for all platforms (linux/darwin/windows,
 
 | Command | Description |
 |---------|-------------|
-| `spec init [name]` | Initialize `specs/` directory structure with templates |
-| `spec status` | Show all features and their progress |
-| `spec resume {feature}` | Show progress + next task + minimal context for continuation |
-| `spec next {feature}` | Show only the next task (minimal output for AI tools) |
-| `spec mark {feature} {task-id}` | Mark task/subtask as complete |
+| `spec init [name]` | Initialize `.specs/` directory structure with templates |
+| `spec status` | Show all specs and their progress |
+| `spec resume {spec}` | Show progress + next task + minimal context for continuation |
+| `spec next {spec}` | Show only the next task (minimal output for AI tools) |
+| `spec mark {spec} {task-id}` | Mark task/subtask as complete |
+| `spec archive {spec}` | Archive completed spec to `.specs/archived/` |
 | `spec validate {path}` | Check spec completeness, task coverage, dependencies |
 | `spec compact {file} [-o out]` | Generate token-optimized version (~60% reduction) |
 
@@ -92,7 +93,7 @@ spec-driven-dev/
 
 ### Core Libraries
 
-- **project-root.ts**: `findProjectRoot()`, `getSpecsDir()`, `getFeaturesDir()` - Auto-detects project root by walking up directories to find `specs/`
+- **project-root.ts**: `findProjectRoot()`, `getSpecsDir()`, `getActiveDir()`, `getArchivedDir()` - Auto-detects project root by walking up directories to find `.specs/`
 - **spec-parser.ts**: `parseTasksFile()`, `parseTasksContent()`, `getNextTask()`, `countCheckboxes()` - Parses YAML tasks into Phase[] structure
 - **validator.ts**: Validates spec.md sections (Purpose, User Stories, Requirements), YAML structure, dependency references
 - **compactor.ts**: Token reduction (~60%) via compact notation (GIVEN/WHEN/THEN → shorthand), removes rationale sections

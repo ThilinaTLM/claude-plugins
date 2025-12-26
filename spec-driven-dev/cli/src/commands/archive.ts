@@ -8,7 +8,7 @@ import { success, error, info } from "../ui/output";
 export const archiveCommand = defineCommand({
   meta: {
     name: "archive",
-    description: "Archive a completed spec to specs/archived/",
+    description: "Archive a completed spec to .specs/archived/",
   },
   args: {
     spec: {
@@ -69,7 +69,7 @@ export const archiveCommand = defineCommand({
         suggestions: specsExists
           ? [`Available specs: ${availableSpecs.join(", ") || "(none)"}`]
           : [
-              "Run from project root containing specs/ directory",
+              "Run from project root containing .specs/ directory",
               `Use --root flag: spec --root /path/to/project archive ${specName}`,
               "Initialize specs: spec init",
             ],
@@ -81,10 +81,10 @@ export const archiveCommand = defineCommand({
         error(`Spec '${specName}' not found in active specs`);
         info(`Searched in: ${specDir}`);
         if (!specsExists) {
-          info(`No specs/ directory found at: ${specsDir}`);
+          info(`No .specs/ directory found at: ${specsDir}`);
           console.log();
           info("Suggestions:");
-          info("  - Run from project root containing specs/ directory");
+          info("  - Run from project root containing .specs/ directory");
           info(`  - Use --root flag: spec --root /path/to/project archive ${specName}`);
           info("  - Initialize specs: spec init");
         } else if (availableSpecs.length > 0) {

@@ -294,7 +294,7 @@ Errors:
 {Why this change is needed}
 
 ## Affected Specs
-- `specs/{feature}/spec.md` - {what changes}
+- `.specs/{feature}/spec.md` - {what changes}
 
 ## Spec Delta
 
@@ -373,7 +373,7 @@ See `tasks.yaml`
 ## Active Features
 | Feature | Status | Spec |
 |---------|--------|------|
-| {name} | {status} | `specs/{name}/` |
+| {name} | {status} | `.specs/{name}/` |
 
 ## Team Contacts
 | Role | Name | For |
@@ -410,7 +410,7 @@ See `tasks.yaml`
 ## Commands to Resume
 ```bash
 # Load feature context
-cat specs/features/{feature}/tasks.yaml
+cat .specs/features/{feature}/tasks.yaml
 
 # Check current branch state
 git status

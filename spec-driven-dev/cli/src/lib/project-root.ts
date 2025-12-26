@@ -2,7 +2,7 @@ import { existsSync } from "node:fs";
 import { resolve, dirname, parse } from "node:path";
 
 /**
- * Walk up directories to find a project root containing specs/ directory.
+ * Walk up directories to find a project root containing .specs/ directory.
  * @param startDir - Starting directory (defaults to process.cwd())
  * @returns Project root path or null if not found
  */
@@ -10,7 +10,7 @@ export function findProjectRoot(startDir?: string): string | null {
   let current = resolve(startDir || process.cwd());
 
   while (true) {
-    const specsPath = resolve(current, "specs");
+    const specsPath = resolve(current, ".specs");
     if (existsSync(specsPath)) {
       return current;
     }
@@ -36,7 +36,7 @@ export function getSpecsDir(explicitRoot?: string): {
 } {
   if (explicitRoot) {
     return {
-      specsDir: resolve(explicitRoot, "specs"),
+      specsDir: resolve(explicitRoot, ".specs"),
       projectRoot: explicitRoot,
       autoDetected: false,
     };
@@ -45,7 +45,7 @@ export function getSpecsDir(explicitRoot?: string): {
   const projectRoot = findProjectRoot();
   if (projectRoot) {
     return {
-      specsDir: resolve(projectRoot, "specs"),
+      specsDir: resolve(projectRoot, ".specs"),
       projectRoot,
       autoDetected: true,
     };
@@ -53,7 +53,7 @@ export function getSpecsDir(explicitRoot?: string): {
 
   // Fallback to cwd - will likely fail but provides better error context
   return {
-    specsDir: resolve(process.cwd(), "specs"),
+    specsDir: resolve(process.cwd(), ".specs"),
     projectRoot: null,
     autoDetected: false,
   };
