@@ -102,12 +102,12 @@ export const statusCommand = defineCommand({
     // Build data structure
     const data: {
       specs: FeatureStatus[];
-      archived: string[];
+      archivedCount: number;
       archiveSuggestions: string[];
       project: { name: string; hasTechStack: boolean } | null;
     } = {
       specs: [],
-      archived: [],
+      archivedCount: 0,
       archiveSuggestions: [],
       project: null,
     };
@@ -131,9 +131,9 @@ export const statusCommand = defineCommand({
     // Collect archived specs
     const archivedDir = resolve(specDir, "archived");
     if (existsSync(archivedDir)) {
-      data.archived = readdirSync(archivedDir, { withFileTypes: true })
-        .filter((d) => d.isDirectory())
-        .map((d) => d.name);
+      data.archivedCount = readdirSync(archivedDir, { withFileTypes: true }).filter((d) =>
+        d.isDirectory(),
+      ).length;
     }
 
     // Collect project info
@@ -188,17 +188,10 @@ export const statusCommand = defineCommand({
     }
 
     printDivider("ARCHIVED");
-    if (data.archived.length === 0) {
+    if (data.archivedCount === 0) {
       info("(none)");
     } else {
-      info(`${data.archived.length} archived spec(s)`);
-      const toShow = data.archived.slice(0, 5);
-      for (const item of toShow) {
-        info(`  - ${item}`);
-      }
-      if (data.archived.length > 5) {
-        info(`  ... and ${data.archived.length - 5} more`);
-      }
+      info(`${data.archivedCount} archived spec(s)`);
     }
 
     printDivider("PROJECT");
