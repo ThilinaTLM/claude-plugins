@@ -2,7 +2,7 @@ import { defineCommand } from "citty";
 import { existsSync, readdirSync } from "node:fs";
 import { resolve } from "node:path";
 import { parseTasksFile, getNextTask } from "../lib/spec-parser";
-import { getFeaturesDir } from "../lib/project-root";
+import { getActiveDir } from "../lib/project-root";
 import { error, info } from "../ui/output";
 
 export const nextCommand = defineCommand({
@@ -13,7 +13,7 @@ export const nextCommand = defineCommand({
   args: {
     feature: {
       type: "positional",
-      description: "Feature name",
+      description: "Spec name",
       required: false,
     },
     root: {
@@ -39,52 +39,52 @@ export const nextCommand = defineCommand({
     const usePlain = args.plain as boolean;
     const filesOnly = args.filesOnly as boolean;
     const quiet = args.quiet as boolean;
-    const { featuresDir, specsDir, projectRoot, autoDetected } = getFeaturesDir(args.root as string | undefined);
+    const { activeDir, specsDir, projectRoot, autoDetected } = getActiveDir(args.root as string | undefined);
 
     // Check if specs directory exists first
     const specsExists = existsSync(specsDir);
 
-    // If no feature specified, list available features
+    // If no spec specified, list available specs
     if (!args.feature) {
-      const features = existsSync(featuresDir)
-        ? readdirSync(featuresDir, { withFileTypes: true })
+      const specs = existsSync(activeDir)
+        ? readdirSync(activeDir, { withFileTypes: true })
             .filter((d) => d.isDirectory())
             .map((d) => d.name)
         : [];
 
       if (!usePlain) {
-        console.log(JSON.stringify({ availableFeatures: features, specsDir, projectRoot, autoDetected }));
+        console.log(JSON.stringify({ availableSpecs: specs, specsDir, projectRoot, autoDetected }));
       } else {
-        console.log("Usage: spec next {feature-name}");
-        console.log("Available:", features.join(", ") || "(none)");
+        console.log("Usage: spec next {spec-name}");
+        console.log("Available:", specs.join(", ") || "(none)");
       }
       return;
     }
 
-    const feature = args.feature as string;
-    const featureDir = resolve(featuresDir, feature);
+    const spec = args.feature as string;
+    const specDir = resolve(activeDir, spec);
 
-    if (!existsSync(featureDir)) {
-      // Get available features for better error message
-      const availableFeatures = existsSync(featuresDir)
-        ? readdirSync(featuresDir, { withFileTypes: true })
+    if (!existsSync(specDir)) {
+      // Get available specs for better error message
+      const availableSpecs = existsSync(activeDir)
+        ? readdirSync(activeDir, { withFileTypes: true })
             .filter((d) => d.isDirectory())
             .map((d) => d.name)
         : [];
 
       const errorData = {
-        error: `Feature '${feature}' not found`,
-        searchedPath: featureDir,
+        error: `Spec '${spec}' not found`,
+        searchedPath: specDir,
         specsFound: specsExists,
-        availableFeatures,
+        availableSpecs,
         cwd: process.cwd(),
         projectRoot,
         autoDetected,
         suggestions: specsExists
-          ? [`Available features: ${availableFeatures.join(", ") || "(none)"}`]
+          ? [`Available specs: ${availableSpecs.join(", ") || "(none)"}`]
           : [
               "Run from project root containing specs/ directory",
-              `Use --root flag: spec --root /path/to/project next ${feature}`,
+              `Use --root flag: spec --root /path/to/project next ${spec}`,
               "Initialize specs: spec init",
             ],
       };
@@ -92,21 +92,21 @@ export const nextCommand = defineCommand({
       if (!usePlain) {
         console.log(JSON.stringify(errorData, null, 2));
       } else {
-        error(`Feature '${feature}' not found`);
-        info(`Searched in: ${featureDir}`);
+        error(`Spec '${spec}' not found`);
+        info(`Searched in: ${specDir}`);
         if (!specsExists) {
           info(`No specs/ directory found at: ${specsDir}`);
           console.log();
           info("Suggestions:");
-          info("  • Run from project root containing specs/ directory");
-          info(`  • Use --root flag: spec --root /path/to/project next ${feature}`);
-          info("  • Initialize specs: spec init");
+          info("  - Run from project root containing specs/ directory");
+          info(`  - Use --root flag: spec --root /path/to/project next ${spec}`);
+          info("  - Initialize specs: spec init");
         }
       }
       process.exit(1);
     }
 
-    const tasksPath = resolve(featureDir, "tasks.yaml");
+    const tasksPath = resolve(specDir, "tasks.yaml");
     if (!existsSync(tasksPath)) {
       if (!usePlain) {
         console.log(JSON.stringify({ error: "No tasks.yaml found", allComplete: false }));
@@ -121,9 +121,10 @@ export const nextCommand = defineCommand({
 
     if (!nextTask) {
       if (!usePlain) {
-        console.log(JSON.stringify({ task: null, allComplete: true }));
+        console.log(JSON.stringify({ task: null, allComplete: true, archiveSuggestion: `spec archive ${spec}` }));
       } else {
         console.log("All tasks complete!");
+        console.log(`Suggestion: spec archive ${spec}`);
       }
       return;
     }

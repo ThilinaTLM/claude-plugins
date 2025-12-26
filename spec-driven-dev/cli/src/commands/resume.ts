@@ -3,7 +3,7 @@ import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { parseTasksFile, getNextTask, countCheckboxes } from "../lib/spec-parser";
 import { calculateProgressFromCounts } from "../lib/progress";
-import { getFeaturesDir } from "../lib/project-root";
+import { getActiveDir } from "../lib/project-root";
 import { printHeader, printDivider, info, warn, error } from "../ui/output";
 
 export const resumeCommand = defineCommand({
@@ -14,7 +14,7 @@ export const resumeCommand = defineCommand({
   args: {
     feature: {
       type: "positional",
-      description: "Feature name to resume",
+      description: "Spec name to resume",
       required: false,
     },
     root: {
@@ -35,22 +35,22 @@ export const resumeCommand = defineCommand({
   async run({ args }) {
     const usePlain = args.plain as boolean;
     const quiet = args.quiet as boolean;
-    const { featuresDir, specsDir, projectRoot, autoDetected } = getFeaturesDir(args.root as string | undefined);
+    const { activeDir, specsDir, projectRoot, autoDetected } = getActiveDir(args.root as string | undefined);
 
     // Check if specs directory exists first
     const specsExists = existsSync(specsDir);
 
-    // If no feature specified, list available features
+    // If no spec specified, list available specs
     if (!args.feature) {
-      const features = existsSync(featuresDir)
-        ? readdirSync(featuresDir, { withFileTypes: true })
+      const specs = existsSync(activeDir)
+        ? readdirSync(activeDir, { withFileTypes: true })
             .filter((d) => d.isDirectory())
             .map((d) => d.name)
         : [];
 
       if (!usePlain) {
         console.log(JSON.stringify({
-          availableFeatures: features,
+          availableSpecs: specs,
           specsDir,
           projectRoot,
           autoDetected,
@@ -58,43 +58,43 @@ export const resumeCommand = defineCommand({
         return;
       }
 
-      console.log("Usage: spec resume {feature-name}");
+      console.log("Usage: spec resume {spec-name}");
       console.log();
-      console.log("Available features:");
-      if (features.length === 0) {
+      console.log("Available specs:");
+      if (specs.length === 0) {
         info("(none)");
       } else {
-        for (const f of features) {
-          info(`  ${f}`);
+        for (const s of specs) {
+          info(`  ${s}`);
         }
       }
       return;
     }
 
-    const feature = args.feature as string;
-    const featureDir = resolve(featuresDir, feature);
+    const spec = args.feature as string;
+    const specDir = resolve(activeDir, spec);
 
-    if (!existsSync(featureDir)) {
-      // Get available features for better error message
-      const availableFeatures = existsSync(featuresDir)
-        ? readdirSync(featuresDir, { withFileTypes: true })
+    if (!existsSync(specDir)) {
+      // Get available specs for better error message
+      const availableSpecs = existsSync(activeDir)
+        ? readdirSync(activeDir, { withFileTypes: true })
             .filter((d) => d.isDirectory())
             .map((d) => d.name)
         : [];
 
       const errorData = {
-        error: `Feature '${feature}' not found`,
-        searchedPath: featureDir,
+        error: `Spec '${spec}' not found`,
+        searchedPath: specDir,
         specsFound: specsExists,
-        availableFeatures,
+        availableSpecs,
         cwd: process.cwd(),
         projectRoot,
         autoDetected,
         suggestions: specsExists
-          ? [`Available features: ${availableFeatures.join(", ") || "(none)"}`]
+          ? [`Available specs: ${availableSpecs.join(", ") || "(none)"}`]
           : [
               "Run from project root containing specs/ directory",
-              `Use --root flag: spec --root /path/to/project resume ${feature}`,
+              `Use --root flag: spec --root /path/to/project resume ${spec}`,
               "Initialize specs: spec init",
             ],
       };
@@ -102,20 +102,20 @@ export const resumeCommand = defineCommand({
       if (!usePlain) {
         console.log(JSON.stringify(errorData, null, 2));
       } else {
-        error(`Feature '${feature}' not found`);
-        info(`Searched in: ${featureDir}`);
+        error(`Spec '${spec}' not found`);
+        info(`Searched in: ${specDir}`);
         if (!specsExists) {
           info(`No specs/ directory found at: ${specsDir}`);
           console.log();
           info("Suggestions:");
-          info("  • Run from project root containing specs/ directory");
-          info(`  • Use --root flag: spec --root /path/to/project resume ${feature}`);
-          info("  • Initialize specs: spec init");
+          info("  - Run from project root containing specs/ directory");
+          info(`  - Use --root flag: spec --root /path/to/project resume ${spec}`);
+          info("  - Initialize specs: spec init");
         } else {
           console.log();
-          console.log("Available features:");
-          for (const f of availableFeatures) {
-            info(`  ${f}`);
+          console.log("Available specs:");
+          for (const s of availableSpecs) {
+            info(`  ${s}`);
           }
         }
       }
@@ -124,7 +124,7 @@ export const resumeCommand = defineCommand({
 
     // Build data structure
     const data: {
-      feature: string;
+      spec: string;
       progress: { done: number; total: number; remaining: number; percent: number } | null;
       nextTask: {
         id: string;
@@ -135,16 +135,19 @@ export const resumeCommand = defineCommand({
       } | null;
       checkpoint: { content: string; date: string | null } | null;
       specFiles: string[];
+      allComplete: boolean;
+      archiveSuggestion?: string;
     } = {
-      feature,
+      spec,
       progress: null,
       nextTask: null,
       checkpoint: null,
       specFiles: [],
+      allComplete: false,
     };
 
     // Get checkpoint
-    const checkpointPath = resolve(featureDir, "checkpoint.md");
+    const checkpointPath = resolve(specDir, "checkpoint.md");
     if (existsSync(checkpointPath)) {
       const content = readFileSync(checkpointPath, "utf-8");
       const dateMatch = content.match(/\d{4}-\d{2}-\d{2}/);
@@ -155,7 +158,7 @@ export const resumeCommand = defineCommand({
     }
 
     // Parse tasks.yaml for progress
-    const tasksPath = resolve(featureDir, "tasks.yaml");
+    const tasksPath = resolve(specDir, "tasks.yaml");
     if (existsSync(tasksPath)) {
       const tasksContent = readFileSync(tasksPath, "utf-8");
       const { total, done } = countCheckboxes(tasksContent);
@@ -174,11 +177,14 @@ export const resumeCommand = defineCommand({
           depends: nextTask.depends,
           subtasks: nextTask.subtasks,
         };
+      } else {
+        data.allComplete = true;
+        data.archiveSuggestion = `spec archive ${spec}`;
       }
     }
 
     // List spec files
-    data.specFiles = readdirSync(featureDir).filter(
+    data.specFiles = readdirSync(specDir).filter(
       (f) => f.endsWith(".md") || f.endsWith(".yaml")
     );
 
@@ -192,10 +198,18 @@ export const resumeCommand = defineCommand({
     if (quiet) {
       if (!usePlain) {
         // JSON quiet mode
-        console.log(JSON.stringify({
+        const quietData: {
+          nextTask: { id: string; title: string; files: string[] } | null;
+          allComplete: boolean;
+          archiveSuggestion?: string;
+        } = {
           nextTask: data.nextTask ? { id: data.nextTask.id, title: data.nextTask.title, files: data.nextTask.files } : null,
-          allComplete: !data.nextTask,
-        }));
+          allComplete: data.allComplete,
+        };
+        if (data.allComplete) {
+          quietData.archiveSuggestion = data.archiveSuggestion;
+        }
+        console.log(JSON.stringify(quietData));
       } else {
         if (data.nextTask) {
           console.log(`${data.nextTask.id}: ${data.nextTask.title}`);
@@ -204,13 +218,14 @@ export const resumeCommand = defineCommand({
           }
         } else {
           console.log("All tasks complete");
+          console.log(`Suggestion: ${data.archiveSuggestion}`);
         }
       }
       return;
     }
 
     // Human-readable output (--plain flag)
-    printHeader(`RESUME: ${feature}`);
+    printHeader(`RESUME: ${spec}`);
 
     if (data.checkpoint) {
       printDivider("LAST SESSION");
@@ -242,6 +257,7 @@ export const resumeCommand = defineCommand({
       }
     } else {
       info("All tasks complete!");
+      info(`Suggestion: ${data.archiveSuggestion}`);
     }
 
     printDivider("SPEC FILES");
@@ -251,7 +267,11 @@ export const resumeCommand = defineCommand({
 
     console.log();
     console.log("═".repeat(60));
-    console.log("To continue: Read tasks.yaml and implement the next task");
+    if (data.allComplete) {
+      console.log(`Ready to archive: ${data.archiveSuggestion}`);
+    } else {
+      console.log("To continue: Read tasks.yaml and implement the next task");
+    }
     console.log("═".repeat(60));
   },
 });

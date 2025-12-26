@@ -7,10 +7,10 @@ import { getSpecsDir } from "../lib/project-root";
 import { printHeader, printDivider, info, error } from "../ui/output";
 import type { FeatureStatus, TaskProgress } from "../types";
 
-function getFeatureStatus(featureDir: string): FeatureStatus {
-  const name = featureDir.split("/").pop() || "";
-  const tasksPath = resolve(featureDir, "tasks.yaml");
-  const checkpointPath = resolve(featureDir, "checkpoint.md");
+function getSpecStatus(specDir: string): FeatureStatus {
+  const name = specDir.split("/").pop() || "";
+  const tasksPath = resolve(specDir, "tasks.yaml");
+  const checkpointPath = resolve(specDir, "checkpoint.md");
 
   let progress: TaskProgress | null = null;
   let lastSession: string | undefined;
@@ -97,43 +97,39 @@ export const statusCommand = defineCommand({
 
     // Build data structure
     const data: {
-      features: FeatureStatus[];
-      changes: FeatureStatus[];
+      specs: FeatureStatus[];
       archived: string[];
+      archiveSuggestions: string[];
       project: { name: string; hasTechStack: boolean } | null;
     } = {
-      features: [],
-      changes: [],
+      specs: [],
       archived: [],
+      archiveSuggestions: [],
       project: null,
     };
 
-    // Collect features
-    const featuresDir = resolve(specDir, "features");
-    if (existsSync(featuresDir)) {
-      const features = readdirSync(featuresDir, { withFileTypes: true })
+    // Collect active specs
+    const activeDir = resolve(specDir, "active");
+    if (existsSync(activeDir)) {
+      const specs = readdirSync(activeDir, { withFileTypes: true })
         .filter((d) => d.isDirectory())
         .map((d) => d.name);
-      for (const feature of features) {
-        data.features.push(getFeatureStatus(resolve(featuresDir, feature)));
+      for (const spec of specs) {
+        const status = getSpecStatus(resolve(activeDir, spec));
+        data.specs.push(status);
+        // Track specs that are 100% complete for archive suggestions
+        if (status.progress && status.progress.percent === 100) {
+          data.archiveSuggestions.push(spec);
+        }
       }
     }
 
-    // Collect changes
-    const changesDir = resolve(specDir, "changes");
-    if (existsSync(changesDir)) {
-      const changes = readdirSync(changesDir, { withFileTypes: true })
+    // Collect archived specs
+    const archivedDir = resolve(specDir, "archived");
+    if (existsSync(archivedDir)) {
+      data.archived = readdirSync(archivedDir, { withFileTypes: true })
         .filter((d) => d.isDirectory())
         .map((d) => d.name);
-      for (const change of changes) {
-        data.changes.push(getFeatureStatus(resolve(changesDir, change)));
-      }
-    }
-
-    // Collect archived
-    const archiveDir = resolve(specDir, "archive");
-    if (existsSync(archiveDir)) {
-      data.archived = readdirSync(archiveDir);
     }
 
     // Collect project info
@@ -158,9 +154,9 @@ export const statusCommand = defineCommand({
     if (quiet) {
       if (!usePlain) {
         // JSON quiet mode
-        console.log(JSON.stringify({ features: data.features.map(f => ({ name: f.name, percent: f.progress?.percent ?? 0 })) }));
+        console.log(JSON.stringify({ specs: data.specs.map(s => ({ name: s.name, percent: s.progress?.percent ?? 0 })) }));
       } else {
-        for (const status of data.features) {
+        for (const status of data.specs) {
           const pct = status.progress ? `${status.progress.percent}%` : "0%";
           console.log(`${status.name} ${pct}`);
         }
@@ -171,24 +167,15 @@ export const statusCommand = defineCommand({
     // Human-readable output (--plain flag)
     printHeader("SPEC-DRIVEN DEVELOPMENT STATUS");
 
-    printDivider("ACTIVE FEATURES");
-    if (data.features.length === 0) {
-      info("(no active features)");
+    printDivider("ACTIVE SPECS");
+    if (data.specs.length === 0) {
+      info("(no active specs)");
     } else {
-      for (const status of data.features) {
+      for (const status of data.specs) {
         const progressStr = formatProgress(status.progress);
         const sessionStr = status.lastSession ? `(last: ${status.lastSession})` : "";
-        console.log(`  ${status.name.padEnd(25)} ${progressStr} ${sessionStr}`);
-      }
-    }
-
-    printDivider("PENDING CHANGES");
-    if (data.changes.length === 0) {
-      info("(no pending changes)");
-    } else {
-      for (const status of data.changes) {
-        const progressStr = status.progress ? formatProgress(status.progress) : "[proposal only]";
-        console.log(`  ${status.name.padEnd(25)} ${progressStr}`);
+        const completeMarker = status.progress?.percent === 100 ? " [COMPLETE]" : "";
+        console.log(`  ${status.name.padEnd(25)} ${progressStr}${completeMarker} ${sessionStr}`);
       }
     }
 
@@ -196,7 +183,7 @@ export const statusCommand = defineCommand({
     if (data.archived.length === 0) {
       info("(none)");
     } else {
-      info(`${data.archived.length} completed changes`);
+      info(`${data.archived.length} archived spec(s)`);
       const toShow = data.archived.slice(0, 5);
       for (const item of toShow) {
         info(`  - ${item}`);
@@ -217,9 +204,16 @@ export const statusCommand = defineCommand({
     console.log();
     console.log("═".repeat(60));
     console.log("Commands:");
-    console.log("  spec resume {feature}  - Resume work on a feature");
+    console.log("  spec resume {spec}     - Resume work on a spec");
     console.log("  spec validate {path}   - Validate spec files");
     console.log("  spec compact {file}    - Generate token-optimized spec");
+    if (data.archiveSuggestions.length > 0) {
+      console.log();
+      console.log("Ready to archive:");
+      for (const spec of data.archiveSuggestions) {
+        console.log(`  spec archive ${spec}`);
+      }
+    }
     console.log("═".repeat(60));
   },
 });

@@ -7,11 +7,12 @@ import { validateCommand } from "./commands/validate";
 import { compactCommand } from "./commands/compact";
 import { nextCommand } from "./commands/next";
 import { markCommand } from "./commands/mark";
+import { archiveCommand } from "./commands/archive";
 
 const main = defineCommand({
   meta: {
     name: "spec",
-    version: "1.0.0",
+    version: "2.1.0",
     description: "Spec-driven development CLI for managing specifications",
   },
   args: {
@@ -33,6 +34,7 @@ const main = defineCommand({
     compact: compactCommand,
     next: nextCommand,
     mark: markCommand,
+    archive: archiveCommand,
   },
 });
 

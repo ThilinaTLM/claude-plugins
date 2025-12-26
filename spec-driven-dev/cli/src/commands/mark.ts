@@ -2,7 +2,7 @@ import { defineCommand } from "citty";
 import { existsSync, readFileSync, writeFileSync, readdirSync } from "node:fs";
 import { resolve } from "node:path";
 import { parse as parseYaml, stringify as stringifyYaml } from "yaml";
-import { getFeaturesDir } from "../lib/project-root";
+import { getActiveDir } from "../lib/project-root";
 import { success, error, info } from "../ui/output";
 
 interface SubtaskYaml {
@@ -42,7 +42,7 @@ export const markCommand = defineCommand({
   args: {
     feature: {
       type: "positional",
-      description: "Feature name",
+      description: "Spec name",
       required: true,
     },
     taskId: {
@@ -70,41 +70,41 @@ export const markCommand = defineCommand({
     },
   },
   async run({ args }) {
-    const feature = args.feature as string;
+    const spec = args.feature as string;
     const taskId = args.taskId as string;
     const subtaskIndex = args.subtask !== undefined ? parseInt(args.subtask as string, 10) : null;
     const usePlain = args.plain as boolean;
     const quiet = args.quiet as boolean;
 
-    const { featuresDir, specsDir, projectRoot, autoDetected } = getFeaturesDir(args.root as string | undefined);
-    const featureDir = resolve(featuresDir, feature);
-    const tasksPath = resolve(featureDir, "tasks.yaml");
+    const { activeDir, specsDir, projectRoot, autoDetected } = getActiveDir(args.root as string | undefined);
+    const specDir = resolve(activeDir, spec);
+    const tasksPath = resolve(specDir, "tasks.yaml");
 
     // Check if specs directory exists first
     const specsExists = existsSync(specsDir);
 
-    // Validate feature exists
-    if (!existsSync(featureDir)) {
-      // Get available features for better error message
-      const availableFeatures = existsSync(featuresDir)
-        ? readdirSync(featuresDir, { withFileTypes: true })
+    // Validate spec exists
+    if (!existsSync(specDir)) {
+      // Get available specs for better error message
+      const availableSpecs = existsSync(activeDir)
+        ? readdirSync(activeDir, { withFileTypes: true })
             .filter((d) => d.isDirectory())
             .map((d) => d.name)
         : [];
 
       const errorData = {
-        error: `Feature '${feature}' not found`,
-        searchedPath: featureDir,
+        error: `Spec '${spec}' not found`,
+        searchedPath: specDir,
         specsFound: specsExists,
-        availableFeatures,
+        availableSpecs,
         cwd: process.cwd(),
         projectRoot,
         autoDetected,
         suggestions: specsExists
-          ? [`Available features: ${availableFeatures.join(", ") || "(none)"}`]
+          ? [`Available specs: ${availableSpecs.join(", ") || "(none)"}`]
           : [
               "Run from project root containing specs/ directory",
-              `Use --root flag: spec --root /path/to/project mark ${feature} ${taskId}`,
+              `Use --root flag: spec --root /path/to/project mark ${spec} ${taskId}`,
               "Initialize specs: spec init",
             ],
       };
@@ -112,20 +112,20 @@ export const markCommand = defineCommand({
       if (!usePlain) {
         console.log(JSON.stringify(errorData, null, 2));
       } else {
-        error(`Feature '${feature}' not found`);
-        info(`Searched in: ${featureDir}`);
+        error(`Spec '${spec}' not found`);
+        info(`Searched in: ${specDir}`);
         if (!specsExists) {
           info(`No specs/ directory found at: ${specsDir}`);
           console.log();
           info("Suggestions:");
-          info("  • Run from project root containing specs/ directory");
-          info(`  • Use --root flag: spec --root /path/to/project mark ${feature} ${taskId}`);
-          info("  • Initialize specs: spec init");
+          info("  - Run from project root containing specs/ directory");
+          info(`  - Use --root flag: spec --root /path/to/project mark ${spec} ${taskId}`);
+          info("  - Initialize specs: spec init");
         } else {
           console.log();
-          console.log("Available features:");
-          for (const f of availableFeatures) {
-            info(`  ${f}`);
+          console.log("Available specs:");
+          for (const s of availableSpecs) {
+            info(`  ${s}`);
           }
         }
       }
@@ -210,22 +210,48 @@ export const markCommand = defineCommand({
     const updatedContent = stringifyYaml(data, { lineWidth: 0 });
     writeFileSync(tasksPath, updatedContent);
 
+    // Check if entire spec is complete (all subtasks in all tasks done)
+    const specComplete = data.phases.every((phase: PhaseYaml) =>
+      (phase.tasks || []).every((task: TaskYaml) =>
+        task.subtasks.every((s: SubtaskYaml) => s.done)
+      )
+    );
+
     // Output result
-    const result = {
+    const result: {
+      taskId: string;
+      markedCount: number;
+      totalSubtasks: number;
+      allComplete: boolean;
+      specComplete: boolean;
+      archiveSuggestion?: string;
+    } = {
       taskId,
       markedCount,
       totalSubtasks: foundTask.subtasks.length,
       allComplete: foundTask.subtasks.every((s) => s.done),
+      specComplete,
     };
+    if (specComplete) {
+      result.archiveSuggestion = `spec archive ${spec}`;
+    }
 
     // JSON is default
     if (!usePlain && !quiet) {
       console.log(JSON.stringify(result, null, 2));
     } else if (quiet) {
       if (!usePlain) {
-        console.log(JSON.stringify({ markedCount }));
+        const quietResult: { markedCount: number; specComplete?: boolean; archiveSuggestion?: string } = { markedCount };
+        if (specComplete) {
+          quietResult.specComplete = true;
+          quietResult.archiveSuggestion = result.archiveSuggestion;
+        }
+        console.log(JSON.stringify(quietResult));
       } else {
         console.log(markedCount);
+        if (specComplete) {
+          console.log(`Spec complete! Suggestion: spec archive ${spec}`);
+        }
       }
     } else {
       // Plain human-readable output
@@ -233,6 +259,11 @@ export const markCommand = defineCommand({
         console.log(`Task ${taskId}: Already complete`);
       } else {
         success(`Task ${taskId}: Marked ${markedCount} subtask(s) complete`);
+      }
+      if (specComplete) {
+        console.log();
+        success(`All tasks complete!`);
+        info(`Suggestion: spec archive ${spec}`);
       }
     }
   },

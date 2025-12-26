@@ -60,19 +60,39 @@ export function getSpecsDir(explicitRoot?: string): {
 }
 
 /**
- * Get the features directory path.
+ * Get the active specs directory path (replaces features/changes).
  * @param explicitRoot - Explicit project root from --root flag
- * @returns Object with featuresDir path and context
+ * @returns Object with activeDir path and context
  */
-export function getFeaturesDir(explicitRoot?: string): {
-  featuresDir: string;
+export function getActiveDir(explicitRoot?: string): {
+  activeDir: string;
   specsDir: string;
   projectRoot: string | null;
   autoDetected: boolean;
 } {
   const { specsDir, projectRoot, autoDetected } = getSpecsDir(explicitRoot);
   return {
-    featuresDir: resolve(specsDir, "features"),
+    activeDir: resolve(specsDir, "active"),
+    specsDir,
+    projectRoot,
+    autoDetected,
+  };
+}
+
+/**
+ * Get the archived specs directory path.
+ * @param explicitRoot - Explicit project root from --root flag
+ * @returns Object with archivedDir path and context
+ */
+export function getArchivedDir(explicitRoot?: string): {
+  archivedDir: string;
+  specsDir: string;
+  projectRoot: string | null;
+  autoDetected: boolean;
+} {
+  const { specsDir, projectRoot, autoDetected } = getSpecsDir(explicitRoot);
+  return {
+    archivedDir: resolve(specsDir, "archived"),
     specsDir,
     projectRoot,
     autoDetected,

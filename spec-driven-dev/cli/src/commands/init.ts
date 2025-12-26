@@ -26,9 +26,8 @@ export const initCommand = defineCommand({
     }
 
     // Create directory structure
-    mkdirSync(resolve(specDir, "features"), { recursive: true });
-    mkdirSync(resolve(specDir, "changes"), { recursive: true });
-    mkdirSync(resolve(specDir, "archive"), { recursive: true });
+    mkdirSync(resolve(specDir, "active"), { recursive: true });
+    mkdirSync(resolve(specDir, "archived"), { recursive: true });
 
     // Write project.md with substitution
     const projectMd = PROJECT_MD.replace(/\{\{PROJECT_NAME\}\}/g, projectName);
@@ -38,10 +37,10 @@ export const initCommand = defineCommand({
     const gitignorePath = resolve(process.cwd(), ".gitignore");
     if (existsSync(gitignorePath)) {
       const gitignoreContent = readFileSync(gitignorePath, "utf-8");
-      if (!gitignoreContent.includes("specs/archive")) {
+      if (!gitignoreContent.includes("specs/archived")) {
         appendFileSync(
           gitignorePath,
-          "\n# Spec archive (optional, can be large)\n# specs/archive/\n"
+          "\n# Archived specs (optional, can be large)\n# specs/archived/\n"
         );
       }
     }
@@ -50,7 +49,7 @@ export const initCommand = defineCommand({
     console.log();
     info("Next steps:");
     info("  1. Edit specs/project.md with your project details");
-    info("  2. Create your first feature: mkdir -p specs/features/{feature-name}");
+    info("  2. Create your first spec: mkdir -p specs/active/{spec-name}");
     info("  3. Add spec.md using the template");
   },
 });

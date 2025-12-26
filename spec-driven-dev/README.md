@@ -2,7 +2,7 @@
 
 A Claude Code plugin for specification-driven development workflow. Designed for AI agents managing complex, multi-session software development tasks.
 
-**Version:** 2.0.0
+**Version:** 2.1.0
 
 ## Features
 
@@ -42,36 +42,37 @@ The plugin provides:
 ### CLI Commands
 
 ```bash
-${CLAUDE_PLUGIN_ROOT}/cli/dist/spec init [name]        # Initialize specs/ structure
-${CLAUDE_PLUGIN_ROOT}/cli/dist/spec status             # Show all features and progress
-${CLAUDE_PLUGIN_ROOT}/cli/dist/spec resume {feature}   # Resume work on a feature
-${CLAUDE_PLUGIN_ROOT}/cli/dist/spec next {feature}     # Get next task
-${CLAUDE_PLUGIN_ROOT}/cli/dist/spec mark {feature} {task-id}  # Mark task complete
-${CLAUDE_PLUGIN_ROOT}/cli/dist/spec validate {path}    # Validate spec completeness
-${CLAUDE_PLUGIN_ROOT}/cli/dist/spec compact {file}     # Generate token-optimized version
+${CLAUDE_PLUGIN_ROOT}/cli/dist/spec init [name]           # Initialize specs/ structure
+${CLAUDE_PLUGIN_ROOT}/cli/dist/spec status                # Show all specs and progress
+${CLAUDE_PLUGIN_ROOT}/cli/dist/spec resume {spec}         # Resume work on a spec
+${CLAUDE_PLUGIN_ROOT}/cli/dist/spec next {spec}           # Get next task
+${CLAUDE_PLUGIN_ROOT}/cli/dist/spec mark {spec} {task-id} # Mark task complete
+${CLAUDE_PLUGIN_ROOT}/cli/dist/spec archive {spec}        # Archive completed spec
+${CLAUDE_PLUGIN_ROOT}/cli/dist/spec validate {path}       # Validate spec completeness
+${CLAUDE_PLUGIN_ROOT}/cli/dist/spec compact {file}        # Generate token-optimized version
 ```
 
 All commands output JSON by default. Use `-q` for minimal output.
 
 ## Workflow
 
-1. **Spec** - Define requirements in `specs/features/{feature}/spec.md`
+1. **Spec** - Define requirements in `specs/active/{spec}/spec.md`
 2. **Plan** - Create technical approach in `plan.md`
 3. **Tasks** - Break down into actionable items in `tasks.yaml`
 4. **Implement** - Execute tasks with validation
-5. **Archive** - Move completed features to `specs/archive/`
+5. **Archive** - Run `spec archive {spec}` to move to `specs/archived/`
 
 ## Directory Structure
 
 ```
 specs/
 ├── project.md           # Project conventions
-├── features/            # Active specifications
-│   └── {feature}/
+├── active/              # Active specifications
+│   └── {spec}/
 │       ├── spec.md      # Requirements
 │       ├── plan.md      # Technical plan
 │       └── tasks.yaml   # Task breakdown
-└── archive/             # Completed features
+└── archived/            # Completed specs
 ```
 
 ## License

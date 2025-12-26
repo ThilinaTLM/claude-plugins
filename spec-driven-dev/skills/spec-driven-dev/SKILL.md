@@ -28,23 +28,19 @@ Manage complex development tasks through structured specifications that persist 
 ```
 specs/
 ├── project.md           # Project-level conventions, stack, patterns
-├── features/            # Active specifications (source of truth)
-│   └── {feature}/
+├── active/              # Active specifications (source of truth)
+│   └── {spec-name}/
 │       ├── spec.md      # Requirements + acceptance criteria
 │       ├── plan.md      # Technical implementation plan
 │       ├── tasks.yaml   # Task breakdown (YAML format)
 │       └── design.md    # Architecture decisions (optional)
-├── changes/             # Proposed changes (deltas)
-│   └── {change-name}/
-│       ├── proposal.md  # What and why
-│       ├── tasks.yaml   # Implementation checklist
-│       └── specs/       # Spec deltas (additions/modifications)
-└── archive/             # Completed changes
+└── archived/            # Completed specs
+    └── {spec-name}/     # Same structure as active/
 ```
 
 ## Phase 1: Specification
 
-Create `specs/features/{feature}/spec.md`:
+Create `specs/active/{spec}/spec.md`:
 
 ```markdown
 # {Feature Name}
@@ -88,7 +84,7 @@ The system MUST {constraint}.
 
 ## Phase 2: Planning
 
-Create `specs/features/{feature}/plan.md`:
+Create `specs/active/{spec}/plan.md`:
 
 ```markdown
 # Implementation Plan: {Feature}
@@ -137,7 +133,7 @@ Use `AskUserQuestion` if exploration reveals architectural decisions that need u
 
 ## Phase 3: Task Breakdown
 
-Create `specs/features/{feature}/tasks.yaml`:
+Create `specs/active/{spec}/tasks.yaml`:
 
 ```yaml
 feature: feature-name
@@ -200,17 +196,16 @@ Execute tasks sequentially:
 5. Mark subtask `done: true`
 6. Commit checkpoint
 
-**Session continuity:** Use `${CLAUDE_PLUGIN_ROOT}/cli/dist/spec resume {feature}` to load spec + tasks, show progress, and identify next task.
+**Session continuity:** Use `${CLAUDE_PLUGIN_ROOT}/cli/dist/spec resume {spec}` to load spec + tasks, show progress, and identify next task.
 
 **When blocked:** Use `AskUserQuestion` to get user input on implementation decisions rather than making assumptions.
 
 ## Phase 5: Archive
 
-When feature complete:
+When spec is complete:
 
-1. Update `specs/features/{feature}/` with final state
-2. Move change folder to `specs/archive/`
-3. Update project.md if conventions changed
+1. Run `${CLAUDE_PLUGIN_ROOT}/cli/dist/spec archive {spec}` to move it to `specs/archived/`
+2. Update project.md if conventions changed
 
 ## Token Optimization
 
@@ -240,7 +235,7 @@ REQ: SHALL issue JWT on success, MUST hash passwords bcrypt
 Save progress atomically:
 
 ```markdown
-<!-- specs/features/{feature}/checkpoint.md -->
+<!-- specs/active/{spec}/checkpoint.md -->
 ## Session: {date}
 - Completed: 1.1, 1.2, 1.3
 - Next: 2.1
@@ -252,7 +247,7 @@ Save progress atomically:
 
 For modifications to existing behavior:
 
-1. Create change proposal in `specs/changes/{name}/`
+1. Create spec in `specs/active/{name}/` with a `delta.md` for changes
 2. Spec delta shows ONLY changes:
 
 ```markdown
@@ -270,7 +265,7 @@ Deprecated in favor of REQ-5.
 ```
 
 3. Tasks reference both existing code AND spec delta
-4. Archive merges delta into canonical spec
+4. Archive when complete: `spec archive {name}`
 
 ## CLI Commands
 
@@ -285,10 +280,11 @@ ${CLAUDE_PLUGIN_ROOT}/cli/dist/spec [command]
 | Command | Description |
 |---------|-------------|
 | `${CLAUDE_PLUGIN_ROOT}/cli/dist/spec init [name]` | Initialize `specs/` structure with templates |
-| `${CLAUDE_PLUGIN_ROOT}/cli/dist/spec status` | Show all features and their progress |
-| `${CLAUDE_PLUGIN_ROOT}/cli/dist/spec resume {feature}` | Show progress + next task + minimal context |
-| `${CLAUDE_PLUGIN_ROOT}/cli/dist/spec next {feature}` | Show only next task (minimal output for AI) |
-| `${CLAUDE_PLUGIN_ROOT}/cli/dist/spec mark {feature} {task-id}` | Mark task/subtask complete |
+| `${CLAUDE_PLUGIN_ROOT}/cli/dist/spec status` | Show all specs and their progress |
+| `${CLAUDE_PLUGIN_ROOT}/cli/dist/spec resume {spec}` | Show progress + next task + minimal context |
+| `${CLAUDE_PLUGIN_ROOT}/cli/dist/spec next {spec}` | Show only next task (minimal output for AI) |
+| `${CLAUDE_PLUGIN_ROOT}/cli/dist/spec mark {spec} {task-id}` | Mark task/subtask complete |
+| `${CLAUDE_PLUGIN_ROOT}/cli/dist/spec archive {spec}` | Archive a completed spec to `specs/archived/` |
 | `${CLAUDE_PLUGIN_ROOT}/cli/dist/spec validate {path}` | Check spec completeness, task coverage, dependencies |
 | `${CLAUDE_PLUGIN_ROOT}/cli/dist/spec compact {file} [-o out]` | Generate token-optimized version |
 
@@ -298,23 +294,28 @@ All commands output JSON by default, optimized for programmatic parsing.
 
 **Get structured data:**
 ```bash
-${CLAUDE_PLUGIN_ROOT}/cli/dist/spec status              # All features as JSON
-${CLAUDE_PLUGIN_ROOT}/cli/dist/spec resume {feature}    # Progress + next task as JSON
-${CLAUDE_PLUGIN_ROOT}/cli/dist/spec next {feature}      # Only next task as JSON
-${CLAUDE_PLUGIN_ROOT}/cli/dist/spec validate {path}     # Validation result as JSON
+${CLAUDE_PLUGIN_ROOT}/cli/dist/spec status            # All specs as JSON
+${CLAUDE_PLUGIN_ROOT}/cli/dist/spec resume {spec}     # Progress + next task as JSON
+${CLAUDE_PLUGIN_ROOT}/cli/dist/spec next {spec}       # Only next task as JSON
+${CLAUDE_PLUGIN_ROOT}/cli/dist/spec validate {path}   # Validation result as JSON
 ```
 
 **Minimal output for token efficiency:**
 ```bash
-${CLAUDE_PLUGIN_ROOT}/cli/dist/spec status -q                    # Just feature names + percentages
-${CLAUDE_PLUGIN_ROOT}/cli/dist/spec resume {feature} -q          # Just next task ID + files
-${CLAUDE_PLUGIN_ROOT}/cli/dist/spec next {feature} --filesOnly   # Just file paths to load
+${CLAUDE_PLUGIN_ROOT}/cli/dist/spec status -q                  # Just spec names + percentages
+${CLAUDE_PLUGIN_ROOT}/cli/dist/spec resume {spec} -q           # Just next task ID + files
+${CLAUDE_PLUGIN_ROOT}/cli/dist/spec next {spec} --filesOnly    # Just file paths to load
 ```
 
 **Update progress:**
 ```bash
-${CLAUDE_PLUGIN_ROOT}/cli/dist/spec mark {feature} {task-id}             # Mark all subtasks complete
-${CLAUDE_PLUGIN_ROOT}/cli/dist/spec mark {feature} {task-id} --subtask 0 # Mark first subtask complete
+${CLAUDE_PLUGIN_ROOT}/cli/dist/spec mark {spec} {task-id}             # Mark all subtasks complete
+${CLAUDE_PLUGIN_ROOT}/cli/dist/spec mark {spec} {task-id} --subtask 0 # Mark first subtask complete
+```
+
+**Archive completed specs:**
+```bash
+${CLAUDE_PLUGIN_ROOT}/cli/dist/spec archive {spec}   # Move to specs/archived/
 ```
 
 ## Tool Usage
