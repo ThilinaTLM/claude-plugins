@@ -300,7 +300,8 @@ Deprecated in favor of REQ-5.
 
 | Command | Description |
 |---------|-------------|
-| `spec init [name]` | Initialize `.specs/` structure with templates |
+| `spec init` | Initialize `.specs/` structure with project.md |
+| `spec new {name}` | Create new spec in `.specs/active/{name}/` with templates |
 | `spec status` | Show all specs and their progress |
 | `spec summary {spec}` | Compact overview for context priming (phase, progress, current/next task) |
 | `spec resume {spec}` | Show progress + next task + checkpoint context |

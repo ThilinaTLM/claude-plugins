@@ -9,15 +9,9 @@ export const initCommand = defineCommand({
     name: "init",
     description: "Initialize .specs/ structure for a project",
   },
-  args: {
-    projectName: {
-      type: "positional",
-      description: "Project name (defaults to current directory name)",
-      required: false,
-    },
-  },
-  async run({ args }) {
-    const projectName = (args.projectName as string) || basename(process.cwd());
+  args: {},
+  async run() {
+    const projectName = basename(process.cwd());
     const specDir = resolve(process.cwd(), ".specs");
 
     if (existsSync(specDir)) {

@@ -5,6 +5,7 @@ import { archiveCommand } from "./commands/archive";
 import { compactCommand } from "./commands/compact";
 import { initCommand } from "./commands/init";
 import { markCommand } from "./commands/mark";
+import { newCommand } from "./commands/new";
 import { nextCommand } from "./commands/next";
 import { pathCommand } from "./commands/path";
 import { resumeCommand } from "./commands/resume";
@@ -31,6 +32,7 @@ const main = defineCommand({
   },
   subCommands: {
     init: initCommand,
+    new: newCommand,
     status: statusCommand,
     resume: resumeCommand,
     next: nextCommand,
