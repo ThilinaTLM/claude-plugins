@@ -302,57 +302,50 @@ Deprecated in favor of REQ-5.
 |---------|-------------|
 | `spec init` | Initialize `.specs/` structure with project.md |
 | `spec new {name}` | Create new spec in `.specs/active/{name}/` with templates |
-| `spec status` | Show all specs and their progress |
-| `spec summary {spec}` | Compact overview for context priming (phase, progress, current/next task) |
-| `spec resume {spec}` | Show progress + next task + checkpoint context |
-| `spec next {spec}` | Show only next task (minimal output for AI) |
+| `spec context {spec}` | Show spec context with `--level min\|standard\|full` |
 | `spec path {spec}` | Critical path analysis, parallelizable tasks, blocked tasks |
-| `spec mark {spec} {task-id}` | Mark task/subtask complete |
 | `spec archive {spec}` | Archive a completed spec to `.specs/archived/` |
 | `spec validate {path}` | Check spec completeness, task coverage, dependencies |
 | `spec compact {file} [-o out]` | Generate token-optimized version |
 
 ### CLI Integration Patterns
 
-All commands output JSON by default. Use `-q` for minimal output, `--plain` for human-readable.
+All commands output JSON by default. Use `--plain` for human-readable.
 
-**Session Start (minimal context):**
+**Session Start:**
 ```bash
-spec summary {spec} -q          # Quick orientation: phase, progress, current task
-spec path {spec} -q             # Check dependencies before starting work
+spec context {spec} --level min     # Quick: current task ID, files only
+spec context {spec}                 # Standard: task + subtasks + progress + checkpoint
 ```
 
-**Task Implementation:**
+**During Implementation:**
 ```bash
-spec next {spec} --filesOnly    # Get just file paths to load
-spec next {spec} --context min  # Task ID + files (familiar spec)
-spec next {spec} --context full # Full details + notes (unfamiliar task)
+spec context {spec} --level full    # Full: all phases, notes, dependencies
+spec path {spec}                    # Check dependencies and parallelizable tasks
 ```
 
 **Progress Updates:**
-```bash
-spec mark {spec} {task-id} -q            # Mark all subtasks complete
-spec mark {spec} {task-id} --subtask 0   # Mark first subtask only
-```
+Edit `tasks.yaml` directly to mark subtasks complete (set `done: true`).
 
-**Session End / Checkpoint:**
+**Session End:**
 ```bash
-spec resume {spec} --since last          # Get changes since last checkpoint
-spec summary {spec} -q                   # Check if allComplete: true
-spec archive {spec}                      # Archive when complete
+spec archive {spec}                 # Archive when all tasks complete
 ```
 
 ### Context Level Reference
 
-| Situation | Command | Output |
-|-----------|---------|--------|
-| Quick status check | `spec summary -q` | Single-line JSON: phase, percent, current task |
-| Get files to load | `spec next --filesOnly` | Just `{"files": [...]}` |
-| Unfamiliar task | `spec next --context full` | Full task + notes + all subtasks |
-| Continuing work | `spec next --context min` | Just task ID, title, files |
-| Check blocking | `spec path -q` | Critical path + parallelizable tasks |
-| Session handoff | `spec resume --context standard` | Balanced detail for next session |
-| Checkpoint data | `spec resume --since last` | Diff since last checkpoint |
+| Level | Use When | Includes |
+|-------|----------|----------|
+| `min` | Tight context, familiar spec | Task ID, title, files |
+| `standard` | Default, balanced | + subtasks, progress, checkpoint summary |
+| `full` | Unfamiliar task, planning | + all phases, notes, spec files |
+
+### Hooks (Automatic)
+
+The plugin includes hooks that run automatically:
+- **SessionStart**: Shows spec context when `.specs/active/` exists
+- **PostToolUse**: Validates tasks.yaml after edits
+- **Stop**: Reminds to update checkpoint.md
 
 ## Tool Usage
 

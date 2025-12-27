@@ -39,17 +39,23 @@ The plugin provides:
 ### CLI Commands
 
 ```bash
-spec init [name]           # Initialize .specs/ structure
-spec status                # Show all specs and progress
-spec resume {spec}         # Resume work on a spec
-spec next {spec}           # Get next task
-spec mark {spec} {task-id} # Mark task complete
+spec init                  # Initialize .specs/ structure
+spec new {name}            # Create new spec with templates
+spec context {spec}        # Show spec context (--level min|standard|full)
+spec path {spec}           # Analyze task dependencies
 spec archive {spec}        # Archive completed spec
 spec validate {path}       # Validate spec completeness
 spec compact {file}        # Generate token-optimized version
 ```
 
-All commands output JSON by default. Use `-q` for minimal output.
+All commands output JSON by default. Use `--plain` for human-readable output.
+
+### Hooks
+
+The plugin includes automatic hooks:
+- **SessionStart** - Shows spec context when starting a session
+- **PostToolUse** - Validates tasks.yaml after edits
+- **Stop** - Reminds to update checkpoint.md
 
 ## Workflow
 

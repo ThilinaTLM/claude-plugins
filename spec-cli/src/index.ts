@@ -3,14 +3,10 @@ import { defineCommand, runMain } from "citty";
 import pkg from "../package.json";
 import { archiveCommand } from "./commands/archive";
 import { compactCommand } from "./commands/compact";
+import { contextCommand } from "./commands/context";
 import { initCommand } from "./commands/init";
-import { markCommand } from "./commands/mark";
 import { newCommand } from "./commands/new";
-import { nextCommand } from "./commands/next";
 import { pathCommand } from "./commands/path";
-import { resumeCommand } from "./commands/resume";
-import { statusCommand } from "./commands/status";
-import { summaryCommand } from "./commands/summary";
 import { validateCommand } from "./commands/validate";
 
 const main = defineCommand({
@@ -33,12 +29,8 @@ const main = defineCommand({
   subCommands: {
     init: initCommand,
     new: newCommand,
-    status: statusCommand,
-    resume: resumeCommand,
-    next: nextCommand,
-    summary: summaryCommand,
+    context: contextCommand,
     path: pathCommand,
-    mark: markCommand,
     archive: archiveCommand,
     validate: validateCommand,
     compact: compactCommand,
