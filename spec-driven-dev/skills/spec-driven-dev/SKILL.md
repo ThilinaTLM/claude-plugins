@@ -201,7 +201,7 @@ Execute tasks sequentially:
 
 ```bash
 # 1. Check overall progress
-spec status --plain
+spec status
 
 # 2. Get context for current task
 spec context {spec} --level min   # Files and current task
@@ -222,7 +222,7 @@ For broader context, use `Task` with `subagent_type=Explore` to understand relat
 
 **Session continuity:**
 ```bash
-spec status --plain              # Quick overview of all active specs
+spec status             # Quick overview of all active specs
 spec context {spec} --level min  # Get current task (familiar spec)
 spec context {spec} --level full # Full context when needed
 ```
@@ -235,7 +235,7 @@ When spec is complete:
 
 ```bash
 # 1. Check progress (should show 100%)
-spec status --plain             # Look for "ready to archive" suggestion
+spec status                     # Look for "ready to archive" suggestion
 
 # 2. Archive
 spec archive {spec}             # Move to .specs/archived/
@@ -318,11 +318,11 @@ Deprecated in favor of REQ-5.
 
 ### CLI Integration Patterns
 
-All commands output JSON by default. Use `--plain` for human-readable, `-q` for minimal.
+All commands output JSON by default. Use `-q` for minimal output.
 
 **Session Start:**
 ```bash
-spec status --plain                 # Overview of all active specs with progress
+spec status                         # Overview of all active specs with progress
 spec context {spec} --level min     # Quick: current task ID, files only
 spec context {spec}                 # Standard: task + subtasks + progress + checkpoint
 ```
@@ -337,7 +337,7 @@ Edit `tasks.yaml` directly to mark subtasks complete (set `done: true`).
 
 **Session End:**
 ```bash
-spec status --plain                 # Check if any specs are ready to archive
+spec status                         # Check if any specs are ready to archive
 spec archive {spec}                 # Archive when all tasks complete
 ```
 
@@ -379,7 +379,7 @@ The plugin includes hooks that run automatically:
 ## Quick Reference
 
 ```
-SESSION START:      spec status --plain
+SESSION START:      spec status        
 GET TASK CONTEXT:   spec context {spec} --level min
 FULL CONTEXT:       spec context {spec} --level full
 MARK COMPLETE:      Edit tasks.yaml (set done: true)
