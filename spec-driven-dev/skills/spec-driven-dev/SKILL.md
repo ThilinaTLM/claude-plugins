@@ -5,385 +5,142 @@ description: Specification-driven development workflow for AI agents. Use when t
 
 # Spec-Driven Development
 
-Manage complex development tasks through structured specifications that persist across sessions and minimize context overhead.
+Manage complex tasks through structured specifications that persist across sessions.
+
+## Quick Start
+
+```
+NEW SPEC:   spec new {name} → edit spec.md → plan.md → tasks.yaml
+RESUME:     spec status → spec context {spec} --level min → implement
+BLOCKED:    AskUserQuestion (decisions) | Explore agent (context)
+COMPLETE:   spec status → spec archive {spec}
+```
 
 ## Prerequisites
-
-Install the `spec` CLI:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/tlmtech/claude-plugins/main/spec-cli/install.sh | bash
 ```
 
-This installs the `spec` command to `~/.local/bin/`.
+## Session Entry
 
-## When to Use
-
-- Feature too large for single chat session
-- Multiple implementation phases required
-- Cross-cutting changes spanning multiple files
-- Need to track requirements/progress across sessions
-- Brownfield changes to existing behavior
-
-## Core Workflow
-
-1. **Spec** → Define requirements (WHAT, not HOW)
-2. **Plan** → Technical approach (architecture, stack)
-3. **Tasks** → Actionable breakdown with dependencies
-4. **Implement** → Execute tasks with validation
-5. **Archive** → Update specs, close feature
+| Situation | Action |
+|-----------|--------|
+| First time on spec | `spec context {spec} --level full` |
+| Familiar, continuing | `spec context {spec} --level min` |
+| Multiple specs active | `spec status` → pick one |
+| Spec 100% complete | `spec archive {spec}` |
 
 ## Directory Structure
 
 ```
 .specs/
-├── project.md           # Project-level conventions, stack, patterns
-├── active/              # Active specifications (source of truth)
-│   └── {spec-name}/
-│       ├── spec.md      # Requirements + acceptance criteria
-│       ├── plan.md      # Technical implementation plan
-│       ├── tasks.yaml   # Task breakdown (YAML format)
-│       └── design.md    # Architecture decisions (optional)
-└── archived/            # Completed specs
-    └── {spec-name}/     # Same structure as active/
+├── project.md           # Project conventions, stack
+├── active/{spec}/       # Active specifications
+│   ├── spec.md          # Requirements (WHAT)
+│   ├── plan.md          # Technical approach (HOW)
+│   ├── tasks.yaml       # Task breakdown (WHEN)
+│   └── checkpoint.md    # Session progress (optional)
+└── archived/{spec}/     # Completed specs
 ```
 
-## Phase 1: Specification
+## Workflow Phases
 
+### Phase 1: Specification
 Create `.specs/active/{spec}/spec.md`:
+- [ ] Purpose (1 line)
+- [ ] User Stories (AS/WANT/SO THAT + acceptance criteria)
+- [ ] Requirements (SHALL/MUST/SHOULD per RFC 2119)
+- [ ] Out of Scope (explicit boundaries)
 
-```markdown
-# {Feature Name}
+Use `AskUserQuestion` to clarify ambiguities before writing.
+Template: `references/spec-template.md`
 
-## Purpose
-One-line description of what this delivers.
-
-## User Stories
-### US-1: {Story Title}
-AS A {role} I WANT {capability} SO THAT {benefit}
-
-#### Acceptance Criteria
-- [ ] GIVEN {context} WHEN {action} THEN {outcome}
-- [ ] ...
-
-## Requirements
-### REQ-1: {Requirement}
-The system SHALL {behavior}.
-
-### REQ-2: {Requirement}
-The system MUST {constraint}.
-
-## Out of Scope
-- {Explicitly excluded items}
-
-## Open Questions
-- [ ] {Unresolved decisions}
-```
-
-**Key principles:**
-- Focus on WHAT, not HOW
-- Be explicit about boundaries
-- One user story = one testable unit
-- Use SHALL/MUST/SHOULD per RFC 2119
-
-**Clarifying requirements:** Use the `AskUserQuestion` tool to resolve ambiguities before writing specs. Common clarifications:
-- User roles and permissions model
-- Edge cases and error scenarios
-- Priority between conflicting requirements
-- Scope boundaries (what's explicitly out)
-
-## Phase 2: Planning
-
+### Phase 2: Planning
 Create `.specs/active/{spec}/plan.md`:
+- [ ] Explore codebase first (`Task` with `subagent_type=Explore`)
+- [ ] Technical approach + rationale
+- [ ] Stack/dependencies
+- [ ] Implementation phases with checkpoints
 
-```markdown
-# Implementation Plan: {Feature}
+Template: `references/plan-template.md`
 
-## Technical Approach
-{High-level architecture decision and rationale}
-
-## Stack/Dependencies
-- {framework}: {version} - {purpose}
-- {library}: {version} - {purpose}
-
-## Data Model
-{Schema changes, new models}
-
-## API Contracts
-{Endpoint definitions, request/response shapes}
-
-## Implementation Phases
-### Phase 1: {Name}
-{Description and components}
-
-### Phase 2: {Name}
-{Dependencies on Phase 1}
-
-## Risks & Mitigations
-| Risk | Impact | Mitigation |
-|------|--------|------------|
-| {risk} | {H/M/L} | {strategy} |
-```
-
-**Before planning:**
-
-1. **Explore the codebase** using the `Task` tool with `subagent_type=Explore` to understand:
-   - Existing patterns and conventions
-   - Related components and their interfaces
-   - Current architecture and data flow
-   - Files that will be affected
-
-2. **Surface ambiguities** by reviewing:
-   - Authentication/authorization model
-   - Error handling strategy
-   - Performance constraints
-   - Integration boundaries
-
-Use `AskUserQuestion` if exploration reveals architectural decisions that need user input.
-
-## Phase 3: Task Breakdown
-
+### Phase 3: Task Breakdown
 Create `.specs/active/{spec}/tasks.yaml`:
+- [ ] Break into phases with checkpoints
+- [ ] Each task: 1-2 files, <100 lines, clear done criteria
+- [ ] Mark dependencies explicitly
+- [ ] Include file paths for context loading
 
-```yaml
-feature: feature-name
+Template: `references/tasks-template.md`
 
-phases:
-  - id: 1
-    name: Phase Name
-    checkpoint: Validation criteria before Phase 2
-    tasks:
-      - id: "1.1"
-        title: Task Title
-        files: [src/file.ts]
-        depends: []
-        notes: Implementation hints
-        subtasks:
-          - text: Implementation
-            done: false
-          - text: Tests
-            done: false
-
-      - id: "1.2"
-        title: Task Title
-        files: [src/other.ts]
-        depends: []
-        parallel: true
-        subtasks:
-          - text: Implementation
-            done: false
-          - text: Tests
-            done: false
-
-  - id: 2
-    name: Phase Name
-    tasks:
-      - id: "2.1"
-        title: Task Title
-        files: [src/file.ts]
-        depends: ["1.1", "1.2"]
-        subtasks:
-          - text: Implementation
-            done: false
-          - text: Tests
-            done: false
-```
-
-**Task granularity:**
-- Each task: 1-2 files, <100 lines changed
-- Include file paths for context loading
-- Mark dependencies explicitly
-- Group by functional area
-
-## Phase 4: Implementation
-
-Execute tasks sequentially:
-
+### Phase 4: Implementation
 ```bash
-# 1. Check overall progress
-spec status
-
-# 2. Get context for current task
-spec context {spec} --level min   # Files and current task
-spec context {spec}               # Standard: + subtasks, progress
-
-# 3. Read files and implement changes
-
-# 4. Run tests/validation
-
-# 5. Mark subtasks complete by editing tasks.yaml
-#    (set done: true on completed subtasks)
-
-# 6. Archive when complete
-spec archive {spec}
+spec status                        # Overview
+spec context {spec} --level min    # Get current task
+# Read files, implement, test
+# Edit tasks.yaml → set done: true
 ```
 
-For broader context, use `Task` with `subagent_type=Explore` to understand related code.
+Use `Explore` agent for broader context. Use `AskUserQuestion` when blocked.
 
-**Session continuity:**
+### Phase 5: Archive
 ```bash
-spec status             # Quick overview of all active specs
-spec context {spec} --level min  # Get current task (familiar spec)
-spec context {spec} --level full # Full context when needed
-```
-
-**When blocked:** Use `AskUserQuestion` to get user input on implementation decisions rather than making assumptions.
-
-## Phase 5: Archive
-
-When spec is complete:
-
-```bash
-# 1. Check progress (should show 100%)
-spec status                     # Look for "ready to archive" suggestion
-
-# 2. Archive
-spec archive {spec}             # Move to .specs/archived/
-```
-
-3. Update project.md if conventions changed
-
-## Token Optimization
-
-### Spec Loading Strategy
-
-**Always load** (minimal context):
-- project.md (conventions only)
-- tasks.yaml (current phase only)
-
-**Load on demand:**
-- spec.md → When clarifying requirements
-- plan.md → When making technical choices
-- design.md → When architecting
-
-### Compact Spec Format
-
-For token-constrained contexts, use compact notation:
-
-```markdown
-## US-1: User Login
-AC: [valid-creds→JWT] [invalid→401] [lockout@5-fails]
-REQ: SHALL issue JWT on success, MUST hash passwords bcrypt
-```
-
-### Progress Checkpoints
-
-Save progress atomically:
-
-```markdown
-<!-- .specs/active/{spec}/checkpoint.md -->
-## Session: {date}
-- Completed: 1.1, 1.2, 1.3
-- Next: 2.1
-- Blockers: None
-- Notes: {Context for next session}
+spec status          # Verify 100% / "ready to archive"
+spec archive {spec}  # Move to .specs/archived/
 ```
 
 ## Brownfield Changes
 
-For modifications to existing behavior:
-
-1. Create spec in `.specs/active/{name}/` with a `delta.md` for changes
-2. Spec delta shows ONLY changes:
+For modifications to existing behavior, create `delta.md` showing only changes:
 
 ```markdown
-## ADDED Requirements
+## ADDED
 ### REQ-5: Two-Factor Auth
 The system MUST require OTP on login.
 
-## MODIFIED Requirements
+## MODIFIED
 ### REQ-2: Session Duration (was: 24h)
 The system SHALL expire sessions after 1h of inactivity.
 
-## REMOVED Requirements
+## REMOVED
 ### REQ-3: Remember Me
 Deprecated in favor of REQ-5.
 ```
 
-3. Tasks reference both existing code AND spec delta
-4. Archive when complete: `spec archive {name}`
-
-## CLI Commands
+## CLI Reference
 
 | Command | Description |
 |---------|-------------|
-| `spec init` | Initialize `.specs/` structure with project.md |
-| `spec new {name}` | Create new spec in `.specs/active/{name}/` with templates |
-| `spec status` | Show all active specs with progress, suggests archiving completed |
-| `spec context {spec}` | Show spec context with `--level min\|standard\|full` |
-| `spec path {spec}` | Show spec directory path |
-| `spec archive {spec}` | Archive a completed spec to `.specs/archived/` |
-| `spec validate {path}` | Check spec completeness, task coverage, dependencies |
-| `spec compact {file} [-o out]` | Generate token-optimized version |
+| `spec init` | Initialize `.specs/` structure |
+| `spec new {name}` | Create new spec with templates |
+| `spec status` | All active specs with progress |
+| `spec context {spec}` | Task context (`--level min\|standard\|full`) |
+| `spec archive {spec}` | Move completed spec to archived/ |
+| `spec validate {path}` | Check spec completeness |
 
-### CLI Integration Patterns
+All commands output JSON. Use `-q` for minimal output.
 
-All commands output JSON by default. Use `-q` for minimal output.
-
-**Session Start:**
-```bash
-spec status                         # Overview of all active specs with progress
-spec context {spec} --level min     # Quick: current task ID, files only
-spec context {spec}                 # Standard: task + subtasks + progress + checkpoint
-```
-
-**During Implementation:**
-```bash
-spec context {spec} --level full    # Full: all phases, notes, dependencies
-```
-
-**Progress Updates:**
-Edit `tasks.yaml` directly to mark subtasks complete (set `done: true`).
-
-**Session End:**
-```bash
-spec status                         # Check if any specs are ready to archive
-spec archive {spec}                 # Archive when all tasks complete
-```
-
-### Context Level Reference
+### Context Levels
 
 | Level | Use When | Includes |
 |-------|----------|----------|
-| `min` | Tight context, familiar spec | Task ID, title, files |
-| `standard` | Default, balanced | + subtasks, progress, checkpoint summary |
-| `full` | Unfamiliar task, planning | + all phases, notes, spec files |
+| `min` | Familiar spec, tight context | Task ID, title, files |
+| `standard` | Default | + subtasks, progress, checkpoint |
+| `full` | First time, planning | + all phases, notes, dependencies |
 
-### Hooks (Automatic)
+## Hooks (Automatic)
 
-The plugin includes hooks that run automatically:
 - **SessionStart**: Shows spec context when `.specs/active/` exists
 - **PostToolUse**: Validates tasks.yaml after edits
 - **Stop**: Reminds to update checkpoint.md
 
 ## Tool Usage
 
-| Tool | When to Use |
-|------|-------------|
-| `AskUserQuestion` | Clarify requirements, resolve ambiguities, get decisions on implementation choices |
-| `Task` with `subagent_type=Explore` | Understand existing codebase, find patterns, discover affected files |
-| `Task` with `subagent_type=Plan` | Design implementation approach for complex phases |
+| Tool | When |
+|------|------|
+| `AskUserQuestion` | Clarify requirements, get decisions |
+| `Explore` agent | Understand codebase, find patterns |
+| `Plan` agent | Design complex implementation approach |
 
-**Principle:** Ask early, explore thoroughly. Use `AskUserQuestion` before making assumptions about requirements. Use `Explore` agents before planning to understand what exists.
-
-## Best Practices
-
-1. **Spec first** - Never implement without written requirements
-2. **Small tasks** - Each task fits in one context window
-3. **Explicit dependencies** - Mark what blocks what
-4. **Checkpoint often** - Save progress every 2-3 tasks
-5. **Compact for continuation** - Use token-optimized format between sessions
-6. **Separate concerns** - Spec (what) vs Plan (how) vs Tasks (when)
-7. **Version specs** - Use git, specs are source of truth
-
-## Quick Reference
-
-```
-SESSION START:      spec status        
-GET TASK CONTEXT:   spec context {spec} --level min
-FULL CONTEXT:       spec context {spec} --level full
-MARK COMPLETE:      Edit tasks.yaml (set done: true)
-CHECK PROGRESS:     spec status -q
-VALIDATE SPEC:      spec validate {spec-path}
-ARCHIVE:            spec archive {spec}
-```
+**Principle:** Ask early, explore thoroughly. See `references/patterns.md` for best practices.
