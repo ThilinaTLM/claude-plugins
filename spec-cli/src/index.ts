@@ -7,6 +7,7 @@ import { contextCommand } from "./commands/context";
 import { initCommand } from "./commands/init";
 import { newCommand } from "./commands/new";
 import { pathCommand } from "./commands/path";
+import { statusCommand } from "./commands/status";
 import { validateCommand } from "./commands/validate";
 
 const main = defineCommand({
@@ -31,6 +32,7 @@ const main = defineCommand({
     new: newCommand,
     context: contextCommand,
     path: pathCommand,
+    status: statusCommand,
     archive: archiveCommand,
     validate: validateCommand,
     compact: compactCommand,

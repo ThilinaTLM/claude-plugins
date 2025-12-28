@@ -200,24 +200,31 @@ phases:
 Execute tasks sequentially:
 
 ```bash
-# 1. Get files to load
-spec next {spec} --filesOnly
+# 1. Check overall progress
+spec status --plain
 
-# 2. Read files and implement changes
+# 2. Get context for current task
+spec context {spec} --level min   # Files and current task
+spec context {spec}               # Standard: + subtasks, progress
 
-# 3. Run tests/validation
+# 3. Read files and implement changes
 
-# 4. Mark complete
-spec mark {spec} {task-id} -q
+# 4. Run tests/validation
+
+# 5. Mark subtasks complete by editing tasks.yaml
+#    (set done: true on completed subtasks)
+
+# 6. Archive when complete
+spec archive {spec}
 ```
 
 For broader context, use `Task` with `subagent_type=Explore` to understand related code.
 
 **Session continuity:**
 ```bash
-spec summary {spec} -q          # Quick orientation
-spec path {spec} -q             # Check what's parallelizable/blocked
-spec next {spec} --context min  # Get next task (familiar spec)
+spec status --plain              # Quick overview of all active specs
+spec context {spec} --level min  # Get current task (familiar spec)
+spec context {spec} --level full # Full context when needed
 ```
 
 **When blocked:** Use `AskUserQuestion` to get user input on implementation decisions rather than making assumptions.
@@ -227,8 +234,8 @@ spec next {spec} --context min  # Get next task (familiar spec)
 When spec is complete:
 
 ```bash
-# 1. Verify completion
-spec summary {spec} -q          # Check allComplete: true
+# 1. Check progress (should show 100%)
+spec status --plain             # Look for "ready to archive" suggestion
 
 # 2. Archive
 spec archive {spec}             # Move to .specs/archived/
@@ -302,18 +309,20 @@ Deprecated in favor of REQ-5.
 |---------|-------------|
 | `spec init` | Initialize `.specs/` structure with project.md |
 | `spec new {name}` | Create new spec in `.specs/active/{name}/` with templates |
+| `spec status` | Show all active specs with progress, suggests archiving completed |
 | `spec context {spec}` | Show spec context with `--level min\|standard\|full` |
-| `spec path {spec}` | Critical path analysis, parallelizable tasks, blocked tasks |
+| `spec path {spec}` | Show spec directory path |
 | `spec archive {spec}` | Archive a completed spec to `.specs/archived/` |
 | `spec validate {path}` | Check spec completeness, task coverage, dependencies |
 | `spec compact {file} [-o out]` | Generate token-optimized version |
 
 ### CLI Integration Patterns
 
-All commands output JSON by default. Use `--plain` for human-readable.
+All commands output JSON by default. Use `--plain` for human-readable, `-q` for minimal.
 
 **Session Start:**
 ```bash
+spec status --plain                 # Overview of all active specs with progress
 spec context {spec} --level min     # Quick: current task ID, files only
 spec context {spec}                 # Standard: task + subtasks + progress + checkpoint
 ```
@@ -321,7 +330,6 @@ spec context {spec}                 # Standard: task + subtasks + progress + che
 **During Implementation:**
 ```bash
 spec context {spec} --level full    # Full: all phases, notes, dependencies
-spec path {spec}                    # Check dependencies and parallelizable tasks
 ```
 
 **Progress Updates:**
@@ -329,6 +337,7 @@ Edit `tasks.yaml` directly to mark subtasks complete (set `done: true`).
 
 **Session End:**
 ```bash
+spec status --plain                 # Check if any specs are ready to archive
 spec archive {spec}                 # Archive when all tasks complete
 ```
 
@@ -370,12 +379,11 @@ The plugin includes hooks that run automatically:
 ## Quick Reference
 
 ```
-SESSION START:      spec summary {spec} -q
-CHECK DEPENDENCIES: spec path {spec} -q
-GET TASK FILES:     spec next {spec} --filesOnly
-FULL TASK CONTEXT:  spec next {spec} --context full
-MARK COMPLETE:      spec mark {spec} {id} -q
-CHECKPOINT DATA:    spec resume {spec} --since last
-VERIFY COMPLETION:  spec summary {spec} -q  (check allComplete)
+SESSION START:      spec status --plain
+GET TASK CONTEXT:   spec context {spec} --level min
+FULL CONTEXT:       spec context {spec} --level full
+MARK COMPLETE:      Edit tasks.yaml (set done: true)
+CHECK PROGRESS:     spec status -q
+VALIDATE SPEC:      spec validate {spec-path}
 ARCHIVE:            spec archive {spec}
 ```
