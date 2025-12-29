@@ -20,13 +20,24 @@ A Claude Code plugin marketplace by ThilinaTLM.
 
 The `spec` CLI tool can be installed separately for command-line spec management:
 
+**Linux/macOS:**
 ```bash
 curl -fsSL https://raw.githubusercontent.com/ThilinaTLM/claude-plugins/main/spec-cli/install.sh | bash
 ```
 
-Supports: Linux (x64, arm64), macOS (x64, arm64)
+**Windows (PowerShell):**
+```powershell
+irm https://raw.githubusercontent.com/ThilinaTLM/claude-plugins/main/spec-cli/install.ps1 | iex
+```
 
-Installs to `~/.local/bin/spec`. Ensure `~/.local/bin` is in your PATH.
+**Windows (Git Bash):**
+```bash
+curl -fsSL https://raw.githubusercontent.com/ThilinaTLM/claude-plugins/main/spec-cli/install.sh | bash
+```
+
+Supports: Linux (x64, arm64), macOS (x64, arm64), Windows (x64)
+
+Installs to `~/.local/bin/spec` (or `%USERPROFILE%\.local\bin\spec.exe` on Windows).
 
 ## Available Plugins
 

@@ -16,12 +16,6 @@ BLOCKED:    AskUserQuestion (decisions) | Explore agent (context)
 COMPLETE:   spec status → spec archive {spec}
 ```
 
-## Prerequisites
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/tlmtech/claude-plugins/main/spec-cli/install.sh | bash
-```
-
 ## Session Entry
 
 | Situation | Action |

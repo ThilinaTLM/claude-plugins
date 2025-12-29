@@ -17,11 +17,22 @@ A Claude Code plugin for specification-driven development workflow. Designed for
 
 ### 1. Install the CLI
 
+**Linux/macOS:**
 ```bash
 curl -fsSL https://raw.githubusercontent.com/tlmtech/claude-plugins/main/spec-cli/install.sh | bash
 ```
 
-This installs the `spec` command to `~/.local/bin/`.
+**Windows (PowerShell):**
+```powershell
+irm https://raw.githubusercontent.com/tlmtech/claude-plugins/main/spec-cli/install.ps1 | iex
+```
+
+**Windows (Git Bash):**
+```bash
+curl -fsSL https://raw.githubusercontent.com/tlmtech/claude-plugins/main/spec-cli/install.sh | bash
+```
+
+This installs the `spec` command to `~/.local/bin/` (or `%USERPROFILE%\.local\bin\` on Windows).
 
 ### 2. Install the Plugin
 

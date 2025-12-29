@@ -5,13 +5,17 @@ REPO="ThilinaTLM/claude-plugins"
 INSTALL_DIR="${HOME}/.local/bin"
 BINARY_NAME="spec"
 
-# Detect OS
-OS=$(uname -s | tr '[:upper:]' '[:lower:]')
-case "$OS" in
-  linux)  OS="linux" ;;
-  darwin) OS="darwin" ;;
+# Detect OS (including Git Bash/MSYS/Cygwin on Windows)
+OS_RAW=$(uname -s)
+case "$OS_RAW" in
+  Linux*)   OS="linux" ;;
+  Darwin*)  OS="darwin" ;;
+  MINGW*|MSYS*|CYGWIN*)
+    OS="windows"
+    BINARY_NAME="spec.exe"
+    ;;
   *)
-    echo "Error: Unsupported operating system: $OS"
+    echo "Error: Unsupported operating system: $OS_RAW"
     exit 1
     ;;
 esac
@@ -28,7 +32,12 @@ case "$ARCH" in
     ;;
 esac
 
-ASSET_NAME="spec-${OS}-${ARCH}"
+# Windows assets have .exe suffix
+if [ "$OS" = "windows" ]; then
+  ASSET_NAME="spec-${OS}-${ARCH}.exe"
+else
+  ASSET_NAME="spec-${OS}-${ARCH}"
+fi
 
 echo "Detected: ${OS}-${ARCH}"
 echo "Installing spec CLI..."
@@ -62,8 +71,13 @@ if [[ ":$PATH:" != *":${INSTALL_DIR}:"* ]]; then
   echo "Note: ${INSTALL_DIR} is not in your PATH."
   echo "Add it by running:"
   echo ""
-  echo "  echo 'export PATH=\"\$HOME/.local/bin:\$PATH\"' >> ~/.bashrc"
-  echo "  source ~/.bashrc"
+  if [ "$OS" = "windows" ]; then
+    echo "  echo 'export PATH=\"\$HOME/.local/bin:\$PATH\"' >> ~/.bash_profile"
+    echo "  source ~/.bash_profile"
+  else
+    echo "  echo 'export PATH=\"\$HOME/.local/bin:\$PATH\"' >> ~/.bashrc"
+    echo "  source ~/.bashrc"
+  fi
 fi
 
 echo ""
