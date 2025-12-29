@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "if [ -d .specs/active ] && [ \"$(ls -A .specs/active 2>/dev/null)\" ]; then spec context $(ls .specs/active | head -1) --level min --plain 2>/dev/null || true; fi"
+            "command": "spec hook session-start"
           }
         ]
       }
@@ -17,7 +17,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "file_path=$(jq -r '.tool_input.file_path // empty'); if echo \"$file_path\" | grep -q 'tasks\\.yaml$'; then spec validate \"$(dirname \"$file_path\")\" -q 2>/dev/null || true; fi"
+            "command": "spec hook post-edit"
           }
         ]
       }
@@ -28,7 +28,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "if [ -d .specs/active ] && [ \"$(ls -A .specs/active 2>/dev/null)\" ]; then echo '[spec-driven-dev] Remember to update checkpoint.md if you made progress'; fi"
+            "command": "spec hook stop"
           }
         ]
       }

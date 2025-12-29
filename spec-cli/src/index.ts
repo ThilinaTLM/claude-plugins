@@ -4,6 +4,7 @@ import pkg from "../package.json";
 import { archiveCommand } from "./commands/archive";
 import { compactCommand } from "./commands/compact";
 import { contextCommand } from "./commands/context";
+import { hookCommand } from "./commands/hook";
 import { initCommand } from "./commands/init";
 import { newCommand } from "./commands/new";
 import { pathCommand } from "./commands/path";
@@ -36,6 +37,7 @@ const main = defineCommand({
     archive: archiveCommand,
     validate: validateCommand,
     compact: compactCommand,
+    hook: hookCommand,
   },
 });
 

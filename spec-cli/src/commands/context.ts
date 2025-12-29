@@ -169,7 +169,9 @@ export const contextCommand = defineCommand({
       spec: specName,
       level,
       phase: phaseInfo,
-      progress: progress ? { done: progress.done, total: progress.total, percent: progress.percent } : null,
+      progress: progress
+        ? { done: progress.done, total: progress.total, percent: progress.percent }
+        : null,
       currentTask: null,
       nextTask: null,
       allComplete,
