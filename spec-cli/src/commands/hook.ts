@@ -7,22 +7,21 @@ import { getNextTask, parseTasksFile } from "../lib/spec-parser";
 import { validateFeature } from "../lib/validator";
 
 /**
- * Read JSON from stdin (Claude Code passes hook data this way)
- */
-async function readStdin(): Promise<string> {
-  const chunks: Buffer[] = [];
-  for await (const chunk of process.stdin) {
-    chunks.push(chunk);
-  }
-  return Buffer.concat(chunks).toString("utf-8");
-}
-
-/**
- * Parse stdin JSON, returns empty object if stdin is empty or invalid
+ * Parse stdin JSON (Claude Code passes hook data this way)
+ * Returns empty object if stdin is a TTY (manual execution) or invalid
  */
 async function parseStdinJson(): Promise<Record<string, unknown>> {
+  // Skip stdin reading if running interactively (no piped input)
+  if (process.stdin.isTTY) {
+    return {};
+  }
+
   try {
-    const input = await readStdin();
+    const chunks: Buffer[] = [];
+    for await (const chunk of process.stdin) {
+      chunks.push(chunk);
+    }
+    const input = Buffer.concat(chunks).toString("utf-8");
     if (!input.trim()) return {};
     return JSON.parse(input);
   } catch {
