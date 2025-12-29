@@ -190,7 +190,13 @@ const stopCommand = defineCommand({
     // Output progress summary
     console.log("[spec-driven-dev] Session progress:");
     for (const spec of specProgress) {
-      console.log(`  ${spec.name}: ${spec.done}/${spec.total} tasks (${spec.percent}%)`);
+      if (spec.percent === 100) {
+        console.log(
+          `  ${spec.name}: ${spec.done}/${spec.total} tasks (${spec.percent}%) → run \`spec archive ${spec.name}\``,
+        );
+      } else {
+        console.log(`  ${spec.name}: ${spec.done}/${spec.total} tasks (${spec.percent}%)`);
+      }
     }
   },
 });
