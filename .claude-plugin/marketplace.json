@@ -21,6 +21,20 @@
       "category": "productivity",
       "repository": "https://github.com/ThilinaTLM/claude-plugin",
       "homepage": "https://github.com/ThilinaTLM/claude-plugin/tree/main/spec-driven-dev"
+    },
+    {
+      "name": "adb-pilot",
+      "source": "./adb-pilot",
+      "description": "Android device automation and UI testing via ADB",
+      "version": "1.0.0",
+      "author": {
+        "name": "ThilinaTLM"
+      },
+      "license": "MIT",
+      "keywords": ["android", "adb", "testing", "automation", "emulator", "ui-testing"],
+      "category": "testing",
+      "repository": "https://github.com/ThilinaTLM/claude-plugin",
+      "homepage": "https://github.com/ThilinaTLM/claude-plugin/tree/main/adb-pilot"
     }
   ]
 }
