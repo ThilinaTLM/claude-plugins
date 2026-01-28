@@ -1,4 +1,4 @@
-# spec-driven-dev
+# specdev
 
 A Claude Code plugin for specification-driven development workflow. Designed for AI agents managing complex, multi-session software development tasks.
 
@@ -22,7 +22,7 @@ A Claude Code plugin for specification-driven development workflow. Designed for
 
 ```bash
 /plugin marketplace add tlmtech
-/plugin install spec-driven-dev@tlmtech
+/plugin install specdev@tlmtech
 ```
 
 ## Usage
@@ -38,14 +38,14 @@ The plugin provides:
 The CLI is embedded within the plugin. Hooks invoke it automatically, but you can also run commands directly:
 
 ```bash
-${CLAUDE_PLUGIN_ROOT}/spec-cli/spec init                  # Initialize .specs/ structure
-${CLAUDE_PLUGIN_ROOT}/spec-cli/spec new {name}            # Create new spec with templates
-${CLAUDE_PLUGIN_ROOT}/spec-cli/spec status                # Show all active specs with progress
-${CLAUDE_PLUGIN_ROOT}/spec-cli/spec context {spec}        # Show spec context (--level min|standard|full)
-${CLAUDE_PLUGIN_ROOT}/spec-cli/spec path {spec}           # Analyze task dependencies
-${CLAUDE_PLUGIN_ROOT}/spec-cli/spec archive {spec}        # Archive completed spec
-${CLAUDE_PLUGIN_ROOT}/spec-cli/spec validate {path}       # Validate spec completeness
-${CLAUDE_PLUGIN_ROOT}/spec-cli/spec compact {file}        # Generate token-optimized version
+${CLAUDE_PLUGIN_ROOT}/specdev-cli/specdev init                  # Initialize .specs/ structure
+${CLAUDE_PLUGIN_ROOT}/specdev-cli/specdev new {name}            # Create new spec with templates
+${CLAUDE_PLUGIN_ROOT}/specdev-cli/specdev status                # Show all active specs with progress
+${CLAUDE_PLUGIN_ROOT}/specdev-cli/specdev context {spec}        # Show spec context (--level min|standard|full)
+${CLAUDE_PLUGIN_ROOT}/specdev-cli/specdev path {spec}           # Analyze task dependencies
+${CLAUDE_PLUGIN_ROOT}/specdev-cli/specdev archive {spec}        # Archive completed spec
+${CLAUDE_PLUGIN_ROOT}/specdev-cli/specdev validate {path}       # Validate spec completeness
+${CLAUDE_PLUGIN_ROOT}/specdev-cli/specdev compact {file}        # Generate token-optimized version
 ```
 
 All commands output JSON by default. Use `--plain` for human-readable output.
@@ -85,7 +85,7 @@ The plugin includes automatic hooks:
 To work on the CLI:
 
 ```bash
-cd spec-driven-dev/spec-cli
+cd specdev/specdev-cli
 bun install
 bun run dev [command]     # Run in development
 bun test                  # Run tests

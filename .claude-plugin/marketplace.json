@@ -9,8 +9,8 @@
   },
   "plugins": [
     {
-      "name": "spec-driven-dev",
-      "source": "./spec-driven-dev",
+      "name": "specdev",
+      "source": "./specdev",
       "description": "Specification-driven development workflow skill for AI agents",
       "version": "3.0.0",
       "author": {
@@ -20,7 +20,7 @@
       "keywords": ["specifications", "ai-agents", "workflow", "multi-session"],
       "category": "productivity",
       "repository": "https://github.com/ThilinaTLM/claude-plugins",
-      "homepage": "https://github.com/ThilinaTLM/claude-plugins/tree/main/spec-driven-dev"
+      "homepage": "https://github.com/ThilinaTLM/claude-plugins/tree/main/specdev"
     },
     {
       "name": "droid",

@@ -8,7 +8,7 @@ Claude Code plugin marketplace (`tlmtech`) containing multiple plugins. Marketpl
 
 | Plugin | Purpose |
 |--------|---------|
-| `spec-driven-dev/` | Specification-driven development workflow with skill and CLI |
+| `specdev/` | Specification-driven development workflow with skill and CLI |
 | `adb-pilot/` | Android device automation via ADB (Python scripts) |
 | `pgtool/` | PostgreSQL database exploration and debugging |
 
@@ -29,42 +29,42 @@ plugin-name/
 Test plugins locally:
 ```bash
 /plugin marketplace add /path/to/claude-plugins
-/plugin install spec-driven-dev@tlmtech
+/plugin install specdev@tlmtech
 ```
 
 ## CLI Tools
 
-Both `spec-cli` and `pgtool/pgtool-cli` follow the same development pattern:
+Both `specdev/specdev-cli` and `pgtool/pgtool-cli` follow the same development pattern:
 
 ```bash
-cd {spec-cli|pgtool/pgtool-cli} && bun install
+cd {specdev/specdev-cli|pgtool/pgtool-cli} && bun install
 bun run dev [command]           # Run in development
 bun run build                   # Build for current platform
 bun run build:all               # Build for all platforms (linux/darwin/windows, x64/arm64)
 ```
 
-### Releasing spec-cli
+### Releasing specdev-cli
 
 Push a semantic version tag to trigger GitHub Action release:
 ```bash
 git tag v1.0.0 && git push origin v1.0.0
 ```
 
-## spec-cli Commands
+## specdev-cli Commands
 
 All commands output JSON by default. Use `--plain` for human-readable, `-q` for minimal output.
 
 | Command | Description |
 |---------|-------------|
-| `spec init [name]` | Initialize `.specs/` structure |
-| `spec status` | Show all specs and progress |
-| `spec resume {spec}` | Progress + next task + context |
-| `spec mark {spec} {task-id}` | Mark task/subtask complete |
-| `spec archive {spec}` | Move completed spec to `.specs/archived/` |
-| `spec validate {path}` | Check spec completeness |
-| `spec compact {file}` | Token-optimized version (~60% reduction) |
+| `specdev init [name]` | Initialize `.specs/` structure |
+| `specdev status` | Show all specs and progress |
+| `specdev resume {spec}` | Progress + next task + context |
+| `specdev mark {spec} {task-id}` | Mark task/subtask complete |
+| `specdev archive {spec}` | Move completed spec to `.specs/archived/` |
+| `specdev validate {path}` | Check spec completeness |
+| `specdev compact {file}` | Token-optimized version (~60% reduction) |
 
-### spec-cli Architecture
+### specdev-cli Architecture
 
 **Entry:** `src/index.ts` uses citty framework.
 

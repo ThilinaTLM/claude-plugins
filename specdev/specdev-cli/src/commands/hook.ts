@@ -73,7 +73,7 @@ const sessionStartCommand = defineCommand({
     const currentTask = getNextTask(phases);
 
     // Output context
-    console.log(`[spec-driven-dev] Active spec: ${specName}`);
+    console.log(`[specdev] Active spec: ${specName}`);
     console.log(`  Progress: ${progress.done}/${progress.total} tasks (${progress.percent}%)`);
 
     if (currentTask) {
@@ -123,7 +123,7 @@ const postEditCommand = defineCommand({
     const result = validateFeature(specDir);
 
     if (!result.ok) {
-      console.log("[spec-driven-dev] Validation errors:");
+      console.log("[specdev] Validation errors:");
       for (const err of result.errors) {
         console.log(`  ✗ ${err.message}`);
       }
@@ -188,7 +188,7 @@ const stopCommand = defineCommand({
     }
 
     // Output progress summary
-    console.log("[spec-driven-dev] Session progress:");
+    console.log("[specdev] Session progress:");
     for (const spec of specProgress) {
       if (spec.percent === 100) {
         console.log(

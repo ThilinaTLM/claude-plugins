@@ -13,26 +13,26 @@ A Claude Code plugin marketplace by ThilinaTLM.
 ### Install Plugins
 
 ```bash
-/plugin install spec-driven-dev@tlmtech
+/plugin install specdev@tlmtech
 ```
 
-### Install spec-cli (Optional)
+### Install specdev-cli (Optional)
 
 The `spec` CLI tool can be installed separately for command-line spec management:
 
 **Linux/macOS:**
 ```bash
-curl -fsSL https://raw.githubusercontent.com/ThilinaTLM/claude-plugins/main/spec-cli/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/ThilinaTLM/claude-plugins/main/specdev-cli/install.sh | bash
 ```
 
 **Windows (PowerShell):**
 ```powershell
-irm https://raw.githubusercontent.com/ThilinaTLM/claude-plugins/main/spec-cli/install.ps1 | iex
+irm https://raw.githubusercontent.com/ThilinaTLM/claude-plugins/main/specdev-cli/install.ps1 | iex
 ```
 
 **Windows (Git Bash):**
 ```bash
-curl -fsSL https://raw.githubusercontent.com/ThilinaTLM/claude-plugins/main/spec-cli/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/ThilinaTLM/claude-plugins/main/specdev-cli/install.sh | bash
 ```
 
 Supports: Linux (x64, arm64), macOS (x64, arm64), Windows (x64)
@@ -43,7 +43,7 @@ Installs to `~/.local/bin/spec` (or `%USERPROFILE%\.local\bin\spec.exe` on Windo
 
 | Plugin | Description | Version |
 |--------|-------------|---------|
-| [spec-driven-dev](./spec-driven-dev) | Specification-driven development workflow with CLI and skill for AI agents | 1.0.0 |
+| [specdev](./specdev) | Specification-driven development workflow with CLI and skill for AI agents | 1.0.0 |
 
 ## Local Development
 
@@ -51,7 +51,7 @@ For local testing, you can add the marketplace from a local path:
 
 ```bash
 /plugin marketplace add /path/to/claude-plugin
-/plugin install spec-driven-dev@tlmtech
+/plugin install specdev@tlmtech
 ```
 
 ## Contributing
