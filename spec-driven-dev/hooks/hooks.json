@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "spec hook session-start"
+            "command": "${CLAUDE_PLUGIN_ROOT}/spec-cli/spec hook session-start"
           }
         ]
       }
@@ -17,7 +17,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "spec hook post-edit"
+            "command": "${CLAUDE_PLUGIN_ROOT}/spec-cli/spec hook post-edit"
           }
         ]
       }
@@ -28,7 +28,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "spec hook stop"
+            "command": "${CLAUDE_PLUGIN_ROOT}/spec-cli/spec hook stop"
           }
         ]
       }

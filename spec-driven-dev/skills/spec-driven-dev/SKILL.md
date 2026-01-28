@@ -104,6 +104,12 @@ Deprecated in favor of REQ-5.
 
 ## CLI Reference
 
+The CLI is embedded within the plugin. Invoke using the full path:
+
+```bash
+${CLAUDE_PLUGIN_ROOT}/spec-cli/spec [command]
+```
+
 | Command | Description |
 |---------|-------------|
 | `spec init` | Initialize `.specs/` structure |
@@ -114,6 +120,8 @@ Deprecated in favor of REQ-5.
 | `spec validate {path}` | Check spec completeness |
 
 All commands output JSON. Use `-q` for minimal output.
+
+**Prerequisites:** [Bun](https://bun.sh) runtime. Dependencies auto-install on first run.
 
 ### Context Levels
 
