@@ -20,7 +20,9 @@ A Claude Code plugin marketplace by ThilinaTLM.
 
 | Plugin | Description | Version |
 |--------|-------------|---------|
-| [specdev](./specdev) | Specification-driven development workflow with CLI and skill for AI agents | 1.0.0 |
+| [specdev](./specdev) | Specification-driven development workflow skill for AI agents | 3.0.0 |
+| [droid](./droid) | Android device automation and UI testing via ADB | 1.0.0 |
+| [pgtool](./pgtool) | PostgreSQL database exploration and debugging | 2.1.0 |
 
 ## Local Development
 
