@@ -35,6 +35,20 @@
       "category": "testing",
       "repository": "https://github.com/ThilinaTLM/claude-plugin",
       "homepage": "https://github.com/ThilinaTLM/claude-plugin/tree/main/adb-pilot"
+    },
+    {
+      "name": "pgtool",
+      "source": "./pgtool",
+      "description": "PostgreSQL database exploration and debugging. Use when user asks to explore database schemas, tables, columns, or run queries.",
+      "version": "1.0.0",
+      "author": {
+        "name": "ThilinaTLM"
+      },
+      "license": "MIT",
+      "keywords": ["postgresql", "database", "sql", "psql", "schema"],
+      "category": "database",
+      "repository": "https://github.com/ThilinaTLM/claude-plugin",
+      "homepage": "https://github.com/ThilinaTLM/claude-plugin/tree/main/pgtool"
     }
   ]
 }

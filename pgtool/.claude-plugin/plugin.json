@@ -1,0 +1,8 @@
+{
+  "name": "pgtool",
+  "version": "2.0.0",
+  "description": "PostgreSQL database exploration and debugging",
+  "author": { "name": "ThilinaTLM" },
+  "license": "MIT",
+  "keywords": ["postgresql", "database", "sql", "psql"]
+}
