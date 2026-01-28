@@ -2,11 +2,16 @@
 import { defineCommand, runMain } from "citty";
 import pkg from "../package.json";
 import { constraintsCommand } from "./commands/constraints";
+import { countCommand } from "./commands/count";
 import { describeCommand } from "./commands/describe";
+import { explainCommand } from "./commands/explain";
 import { indexesCommand } from "./commands/indexes";
+import { overviewCommand } from "./commands/overview";
 import { queryCommand } from "./commands/query";
 import { relationshipsCommand } from "./commands/relationships";
+import { sampleCommand } from "./commands/sample";
 import { schemasCommand } from "./commands/schemas";
+import { searchCommand } from "./commands/search";
 import { tablesCommand } from "./commands/tables";
 
 const main = defineCommand({
@@ -35,6 +40,11 @@ const main = defineCommand({
     constraints: constraintsCommand,
     relationships: relationshipsCommand,
     query: queryCommand,
+    sample: sampleCommand,
+    count: countCommand,
+    search: searchCommand,
+    overview: overviewCommand,
+    explain: explainCommand,
   },
 });
 

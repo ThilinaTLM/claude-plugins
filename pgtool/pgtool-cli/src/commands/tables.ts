@@ -67,21 +67,29 @@ export const tablesCommand = defineCommand({
 
     const tables: TableInfo[] = result.result.rows.map((row) => {
       const sizeBytes = row.size_bytes ? Number(row.size_bytes) : null;
+      const rowEstimateRaw = Number(row.row_estimate);
       return {
         name: row.table_name,
         schema,
         type: row.table_type as TableInfo["type"],
         owner: row.owner,
-        rowEstimate: Number(row.row_estimate),
+        rowEstimate: rowEstimateRaw,
+        rowEstimateUnknown: rowEstimateRaw < 0,
         sizeBytes,
         sizeHuman: formatBytes(sizeBytes),
       };
     });
 
-    const response: { ok: true } & TablesResult = {
+    // Check if any tables have unknown row estimates
+    const hasUnknownEstimates = tables.some((t) => t.rowEstimateUnknown);
+
+    const response: { ok: true; hint?: string } & TablesResult = {
       ok: true,
       schema,
       tables,
+      ...(hasUnknownEstimates && {
+        hint: "Run ANALYZE <tablename> for accurate row estimates",
+      }),
     };
 
     if (plain) {
@@ -95,11 +103,16 @@ export const tablesCommand = defineCommand({
             tables.map((t) => [
               t.name,
               t.type,
-              t.rowEstimate.toLocaleString(),
+              t.rowEstimateUnknown ? "unknown" : t.rowEstimate.toLocaleString(),
               t.sizeHuman ?? "N/A",
             ])
           )
         );
+        if (hasUnknownEstimates) {
+          console.log(
+            "\nHint: Run ANALYZE <tablename> for accurate row estimates"
+          );
+        }
       }
       process.exit(0);
     }

@@ -52,6 +52,7 @@ export interface TableInfo {
   type: "table" | "view" | "materialized view" | "foreign table";
   owner: string;
   rowEstimate: number;
+  rowEstimateUnknown?: boolean;
   sizeBytes: number | null;
   sizeHuman: string | null;
 }
@@ -145,4 +146,58 @@ export interface QueryResult {
 export interface FieldInfo {
   name: string;
   dataTypeID: number;
+}
+
+// Sample command
+export interface SampleResult {
+  schema: string;
+  table: string;
+  rows: Record<string, unknown>[];
+  rowCount: number;
+  columns: string[];
+}
+
+// Count command
+export interface CountResult {
+  schema: string;
+  table: string;
+  count: number;
+}
+
+// Search command
+export interface SearchResult {
+  pattern: string;
+  matches: {
+    tables: Array<{ schema: string; name: string }>;
+    columns: Array<{
+      schema: string;
+      table: string;
+      column: string;
+      type: string;
+    }>;
+  };
+}
+
+// Overview command
+export interface OverviewTable {
+  name: string;
+  rowEstimate: number | "unknown";
+  primaryKey: string[];
+  foreignKeys: Array<{
+    column: string;
+    references: { table: string; column: string };
+  }>;
+  referencedBy: Array<{ table: string; column: string }>;
+}
+
+export interface OverviewResult {
+  schema: string;
+  tableCount: number;
+  tables: OverviewTable[];
+}
+
+// Explain command
+export interface ExplainResult {
+  query: string;
+  plan: string[];
 }
