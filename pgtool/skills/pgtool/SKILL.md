@@ -9,6 +9,12 @@ description: PostgreSQL database exploration and debugging. Use when user asks t
 
 A CLI tool for exploring and debugging PostgreSQL databases with JSON-first output designed for AI agents.
 
+## Important
+
+- **Always use pgtool-cli** for all database operations. Do NOT use `psql` directly.
+- If pgtool-cli encounters an error or limitation, report the issue to the user and stop. Do not fall back to psql or other tools.
+- Always add `LIMIT` to SELECT queries to avoid fetching excessive data.
+
 ## Scripts
 
 - Unix/Linux/macOS: `${CLAUDE_PLUGIN_ROOT}/pgtool-cli/pgtool`
@@ -83,15 +89,15 @@ Output: `{"ok":true,"relationships":[{"fromTable":"orders","fromColumns":["user_
 ### Execute Query
 
 ```bash
-${CLAUDE_PLUGIN_ROOT}/pgtool-cli/pgtool query "SELECT * FROM users WHERE active = true"
-
-# With custom limit
-${CLAUDE_PLUGIN_ROOT}/pgtool-cli/pgtool query "SELECT * FROM users" --limit 50
+${CLAUDE_PLUGIN_ROOT}/pgtool-cli/pgtool query "SELECT * FROM users WHERE active = true LIMIT 100"
 ```
 
 Output: `{"ok":true,"rows":[...],"rowCount":5,"fields":["id","name","email"]}`
 
-**Note:** Queries without LIMIT get `LIMIT 100` added automatically for safety.
+**Best Practices:**
+- Always add `LIMIT` to SELECT queries to avoid fetching excessive data
+- DML statements (INSERT, UPDATE, DELETE) with RETURNING are fully supported
+- Use parameterized values in WHERE clauses to avoid SQL injection
 
 ### Sample Table Rows
 

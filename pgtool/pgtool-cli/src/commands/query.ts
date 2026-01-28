@@ -23,27 +23,13 @@ export const queryCommand = defineCommand({
       type: "boolean",
       description: "Human-readable output instead of JSON",
     },
-    limit: {
-      type: "string",
-      alias: "l",
-      description: "Maximum rows to return (default: 100)",
-    },
   },
   async run({ args }) {
     const plain = args.plain ?? false;
     initPgTool(args.root, plain);
     registerCleanup();
 
-    const limit = args.limit ? Number.parseInt(args.limit, 10) : 100;
-    let sql = args.sql;
-
-    // Add LIMIT if not present (for safety)
-    const hasLimit = /\bLIMIT\s+\d+/i.test(sql);
-    if (!hasLimit && limit > 0) {
-      // Remove trailing semicolon if present, add limit, then add semicolon back
-      sql = sql.replace(/;\s*$/, "");
-      sql = `${sql} LIMIT ${limit}`;
-    }
+    const sql = args.sql;
 
     const result = await query(sql);
 
