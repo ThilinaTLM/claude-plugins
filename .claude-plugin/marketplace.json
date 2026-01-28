@@ -12,7 +12,7 @@
       "name": "spec-driven-dev",
       "source": "./spec-driven-dev",
       "description": "Specification-driven development workflow skill for AI agents",
-      "version": "2.1.0",
+      "version": "2.3.0",
       "author": {
         "name": "ThilinaTLM"
       },
@@ -39,13 +39,13 @@
     {
       "name": "pgtool",
       "source": "./pgtool",
-      "description": "PostgreSQL database exploration and debugging. Use when user asks to explore database schemas, tables, columns, or run queries.",
-      "version": "1.0.0",
+      "description": "PostgreSQL database exploration and debugging",
+      "version": "2.0.0",
       "author": {
         "name": "ThilinaTLM"
       },
       "license": "MIT",
-      "keywords": ["postgresql", "database", "sql", "psql", "schema"],
+      "keywords": ["postgresql", "database", "sql", "psql"],
       "category": "database",
       "repository": "https://github.com/ThilinaTLM/claude-plugin",
       "homepage": "https://github.com/ThilinaTLM/claude-plugin/tree/main/pgtool"
