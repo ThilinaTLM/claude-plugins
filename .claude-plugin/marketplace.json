@@ -12,15 +12,15 @@
       "name": "spec-driven-dev",
       "source": "./spec-driven-dev",
       "description": "Specification-driven development workflow skill for AI agents",
-      "version": "2.3.0",
+      "version": "3.0.0",
       "author": {
         "name": "ThilinaTLM"
       },
       "license": "MIT",
       "keywords": ["specifications", "ai-agents", "workflow", "multi-session"],
       "category": "productivity",
-      "repository": "https://github.com/ThilinaTLM/claude-plugin",
-      "homepage": "https://github.com/ThilinaTLM/claude-plugin/tree/main/spec-driven-dev"
+      "repository": "https://github.com/ThilinaTLM/claude-plugins",
+      "homepage": "https://github.com/ThilinaTLM/claude-plugins/tree/main/spec-driven-dev"
     },
     {
       "name": "droid",
@@ -33,22 +33,22 @@
       "license": "MIT",
       "keywords": ["android", "adb", "testing", "automation", "emulator", "ui-testing"],
       "category": "testing",
-      "repository": "https://github.com/ThilinaTLM/claude-plugin",
-      "homepage": "https://github.com/ThilinaTLM/claude-plugin/tree/main/droid"
+      "repository": "https://github.com/ThilinaTLM/claude-plugins",
+      "homepage": "https://github.com/ThilinaTLM/claude-plugins/tree/main/droid"
     },
     {
       "name": "pgtool",
       "source": "./pgtool",
       "description": "PostgreSQL database exploration and debugging",
-      "version": "2.0.0",
+      "version": "2.1.0",
       "author": {
         "name": "ThilinaTLM"
       },
       "license": "MIT",
       "keywords": ["postgresql", "database", "sql", "psql"],
       "category": "database",
-      "repository": "https://github.com/ThilinaTLM/claude-plugin",
-      "homepage": "https://github.com/ThilinaTLM/claude-plugin/tree/main/pgtool"
+      "repository": "https://github.com/ThilinaTLM/claude-plugins",
+      "homepage": "https://github.com/ThilinaTLM/claude-plugins/tree/main/pgtool"
     }
   ]
 }
