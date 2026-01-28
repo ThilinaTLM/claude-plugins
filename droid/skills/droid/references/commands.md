@@ -1,6 +1,6 @@
-# ADB-Pilot Command Reference
+# Droid Command Reference
 
-Complete documentation for all adb-pilot commands.
+Complete documentation for all droid commands.
 
 ## Command Index
 
@@ -29,17 +29,17 @@ Complete documentation for all adb-pilot commands.
 Capture screenshot AND UI elements in one call. Returns the screenshot path and all UI elements with their coordinates.
 
 ```bash
-adb-pilot screenshot
+droid screenshot
 # {"ok":true,"screenshot":"/tmp/screenshot_20240115_143022.png","elements":[...]}
 
 # Filter clickable elements only
-adb-pilot screenshot --clickable
+droid screenshot --clickable
 
 # Filter by text
-adb-pilot screenshot -t "Settings"
+droid screenshot -t "Settings"
 
 # Fast screenshot without UI dump
-adb-pilot screenshot --no-ui
+droid screenshot --no-ui
 ```
 
 **Options:**
@@ -67,21 +67,21 @@ Tap at coordinates or by text match.
 
 ```bash
 # By coordinates
-adb-pilot tap 540 960
+droid tap 540 960
 # {"ok":true,"action":"tap","x":540,"y":960}
 
 # By text (finds element and taps center)
-adb-pilot tap -t "Book Now"
+droid tap -t "Book Now"
 # {"ok":true,"action":"tap","x":540,"y":350,"matched":"Book Now"}
 
 # If multiple matches, use index
-adb-pilot tap -t "Button" -i 2
+droid tap -t "Button" -i 2
 
 # Prefer input fields over labels
-adb-pilot tap -t "State" --prefer-input
+droid tap -t "State" --prefer-input
 
 # Only match clickable elements
-adb-pilot tap -t "Submit" --clickable
+droid tap -t "Submit" --clickable
 ```
 
 **Options:**
@@ -98,7 +98,7 @@ adb-pilot tap -t "Submit" --clickable
 Fill a text field in one command. Combines: tap + clear + type + hide-keyboard.
 
 ```bash
-adb-pilot fill "Enter your email" "user@example.com"
+droid fill "Enter your email" "user@example.com"
 # {"ok":true,"action":"fill","field":"Enter your email","value":"user@example.com","x":540,"y":980,"matched":"Enter your email"}
 ```
 
@@ -118,7 +118,7 @@ adb-pilot fill "Enter your email" "user@example.com"
 Wait for an element to appear on screen with timeout.
 
 ```bash
-adb-pilot wait-for -t "Welcome" -s 10
+droid wait-for -t "Welcome" -s 10
 # {"ok":true,"action":"wait_for","found":true,"element":{...},"elapsed_ms":1500}
 
 # Timeout returns found:false
@@ -136,7 +136,7 @@ adb-pilot wait-for -t "Welcome" -s 10
 Type text into the currently focused input field.
 
 ```bash
-adb-pilot type "hello@example.com"
+droid type "hello@example.com"
 # {"ok":true,"action":"type","text":"hello@example.com"}
 ```
 
@@ -152,7 +152,7 @@ adb-pilot type "hello@example.com"
 Clear the currently focused text field.
 
 ```bash
-adb-pilot clear
+droid clear
 # {"ok":true,"action":"clear"}
 ```
 
@@ -168,7 +168,7 @@ adb-pilot clear
 Dismiss the on-screen keyboard without navigating back.
 
 ```bash
-adb-pilot hide-keyboard
+droid hide-keyboard
 # {"ok":true,"action":"hide_keyboard"}
 ```
 
@@ -184,7 +184,7 @@ adb-pilot hide-keyboard
 Send key events.
 
 ```bash
-adb-pilot key back
+droid key back
 # {"ok":true,"action":"key","key":"back","keycode":4}
 ```
 
@@ -210,10 +210,10 @@ adb-pilot key back
 Swipe gestures for scrolling.
 
 ```bash
-adb-pilot swipe up      # Scroll content down
-adb-pilot swipe down    # Scroll content up
-adb-pilot swipe left    # Next page
-adb-pilot swipe right   # Previous page
+droid swipe up      # Scroll content down
+droid swipe down    # Scroll content up
+droid swipe left    # Next page
+droid swipe right   # Previous page
 # {"ok":true,"action":"swipe","direction":"up"}
 ```
 
@@ -229,11 +229,11 @@ Long press at coordinates or by text.
 
 ```bash
 # By coordinates
-adb-pilot longpress 540 960
+droid longpress 540 960
 # {"ok":true,"action":"longpress","x":540,"y":960,"duration":1000}
 
 # By text
-adb-pilot longpress -t "Item"
+droid longpress -t "Item"
 # {"ok":true,"action":"longpress","x":540,"y":350,"matched":"Item","duration":1000}
 ```
 
@@ -250,7 +250,7 @@ adb-pilot longpress -t "Item"
 Launch an app by package name.
 
 ```bash
-adb-pilot launch com.example.app
+droid launch com.example.app
 # {"ok":true,"action":"launch","package":"com.example.app"}
 ```
 
@@ -264,7 +264,7 @@ adb-pilot launch com.example.app
 Get the currently visible activity.
 
 ```bash
-adb-pilot current
+droid current
 # {"ok":true,"action":"current","activity":"com.example.app/.MainActivity","package":"com.example.app"}
 ```
 
@@ -275,7 +275,7 @@ adb-pilot current
 Get device information.
 
 ```bash
-adb-pilot info
+droid info
 # {"ok":true,"device":"emulator-5554","model":"sdk_gphone64_x86_64","brand":"google","android":"14","sdk":"34","width":1080,"height":2400,"density":420}
 ```
 
@@ -286,7 +286,7 @@ adb-pilot info
 Wait for specified milliseconds.
 
 ```bash
-adb-pilot wait 1000
+droid wait 1000
 # {"ok":true,"action":"wait","ms":1000}
 ```
 
@@ -299,7 +299,7 @@ adb-pilot wait 1000
 Select all text in the currently focused field.
 
 ```bash
-adb-pilot select-all
+droid select-all
 # {"ok":true,"action":"select_all"}
 ```
 
@@ -316,7 +316,7 @@ All action commands support:
 - `-w, --wait <ms>` - Wait after action completes
 
 ```bash
-adb-pilot tap -t "Submit" -w 2000  # Tap and wait 2 seconds
+droid tap -t "Submit" -w 2000  # Tap and wait 2 seconds
 ```
 
 ---
@@ -326,9 +326,9 @@ adb-pilot tap -t "Submit" -w 2000  # Tap and wait 2 seconds
 All errors return JSON with `"ok":false`:
 
 ```bash
-adb-pilot tap -t "NonexistentButton"
+droid tap -t "NonexistentButton"
 # {"ok":false,"error":"No element found matching 'NonexistentButton'"}
 
-adb-pilot info  # No device connected
+droid info  # No device connected
 # {"ok":false,"error":"No Android device connected. Run 'adb devices' to check."}
 ```

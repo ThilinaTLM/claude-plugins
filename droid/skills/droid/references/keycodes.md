@@ -69,12 +69,12 @@ Common keycodes for use with `adb shell input keyevent`.
 |---------|------|
 | 131-142 | KEYCODE_F1 through KEYCODE_F12 |
 
-## Shortcuts in keyevent.sh
+## Shortcuts in droid CLI
 
-The `keyevent.sh` script supports these shortcuts:
+The `droid key` command supports these shortcuts:
 
 - `back` - Navigate back (KEYCODE_BACK)
-- `home` - Go home (KEYCODE_HOME)
+- `home`, `app_home` - Go home (KEYCODE_HOME)
 - `enter` - Confirm/submit (KEYCODE_ENTER)
 - `tab` - Next field (KEYCODE_TAB)
 - `delete`, `del` - Backspace (KEYCODE_DEL)
@@ -85,3 +85,6 @@ The `keyevent.sh` script supports these shortcuts:
 - `power` - Power button
 - `space` - Space character
 - `escape`, `esc` - Escape key
+- `move_home` - Cursor to start of text (KEYCODE_MOVE_HOME)
+- `move_end` - Cursor to end of text (KEYCODE_MOVE_END)
+- `page_up`, `page_down` - Page navigation

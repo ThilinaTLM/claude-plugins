@@ -23,8 +23,8 @@
       "homepage": "https://github.com/ThilinaTLM/claude-plugin/tree/main/spec-driven-dev"
     },
     {
-      "name": "adb-pilot",
-      "source": "./adb-pilot",
+      "name": "droid",
+      "source": "./droid",
       "description": "Android device automation and UI testing via ADB",
       "version": "1.0.0",
       "author": {
@@ -34,7 +34,7 @@
       "keywords": ["android", "adb", "testing", "automation", "emulator", "ui-testing"],
       "category": "testing",
       "repository": "https://github.com/ThilinaTLM/claude-plugin",
-      "homepage": "https://github.com/ThilinaTLM/claude-plugin/tree/main/adb-pilot"
+      "homepage": "https://github.com/ThilinaTLM/claude-plugin/tree/main/droid"
     },
     {
       "name": "pgtool",
