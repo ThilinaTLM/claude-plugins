@@ -93,6 +93,52 @@ Output: `{"ok":true,"rows":[...],"rowCount":5,"fields":["id","name","email"]}`
 
 **Note:** Queries without LIMIT get `LIMIT 100` added automatically for safety.
 
+## Error Responses
+
+All errors follow a consistent JSON format with `ok: false`, an error code, and a helpful hint:
+
+**Configuration not found:**
+```json
+{
+  "ok": false,
+  "error": "Configuration file not found",
+  "code": "CONFIG_NOT_FOUND",
+  "hint": "Create a .pgtool.json file in your project root with database connection details."
+}
+```
+
+**Connection failed:**
+```json
+{
+  "ok": false,
+  "error": "Could not connect to database server: connect ECONNREFUSED 127.0.0.1:5432",
+  "code": "CONNECTION_FAILED",
+  "hint": "Verify host and port in .pgtool.json and ensure PostgreSQL is running"
+}
+```
+
+**Authentication failed:**
+```json
+{
+  "ok": false,
+  "error": "Authentication failed",
+  "code": "PERMISSION_DENIED",
+  "hint": "Check your username and password in .pgtool.json"
+}
+```
+
+**Table not found:**
+```json
+{
+  "ok": false,
+  "error": "relation \"nonexistent_table\" does not exist",
+  "code": "TABLE_NOT_FOUND",
+  "hint": "Check that the table exists and you have permission to access it"
+}
+```
+
+**Error codes:** `CONFIG_NOT_FOUND`, `CONFIG_INVALID`, `CONNECTION_FAILED`, `QUERY_FAILED`, `TABLE_NOT_FOUND`, `SCHEMA_NOT_FOUND`, `PERMISSION_DENIED`, `TIMEOUT`
+
 ## Common Usage Patterns
 
 **Exploring a new database:**
