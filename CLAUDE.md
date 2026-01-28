@@ -9,7 +9,7 @@ Claude Code plugin marketplace (`tlmtech`) containing multiple plugins. Marketpl
 | Plugin | Purpose |
 |--------|---------|
 | `specdev/` | Specification-driven development workflow with skill and CLI |
-| `adb-pilot/` | Android device automation via ADB (Python scripts) |
+| `droid/` | Android device automation via ADB (TypeScript CLI) |
 | `pgtool/` | PostgreSQL database exploration and debugging |
 
 ## Plugin Structure
@@ -34,13 +34,20 @@ Test plugins locally:
 
 ## CLI Tools
 
-Both `specdev/specdev-cli` and `pgtool/pgtool-cli` follow the same development pattern:
+All three CLIs (`specdev-cli`, `pgtool-cli`, `droid-cli`) follow the same development pattern:
 
 ```bash
-cd {specdev/specdev-cli|pgtool/pgtool-cli} && bun install
+cd {plugin}/{plugin}-cli && bun install
 bun run dev [command]           # Run in development
-bun run build                   # Build for current platform
-bun run build:all               # Build for all platforms (linux/darwin/windows, x64/arm64)
+bun run lint                    # Check with Biome
+bun run lint:fix                # Auto-fix lint issues
+bun run format                  # Format with Biome
+```
+
+Testing (specdev-cli only):
+```bash
+bun test                        # Run all tests
+bun test --watch                # Watch mode
 ```
 
 ### Releasing specdev-cli
@@ -52,14 +59,15 @@ git tag v1.0.0 && git push origin v1.0.0
 
 ## specdev-cli Commands
 
-All commands output JSON by default. Use `--plain` for human-readable, `-q` for minimal output.
+All commands output JSON by default. Use `--plain` for human-readable output.
 
 | Command | Description |
 |---------|-------------|
-| `specdev init [name]` | Initialize `.specs/` structure |
+| `specdev init` | Initialize `.specs/` structure |
+| `specdev new {name}` | Create new spec with templates |
 | `specdev status` | Show all specs and progress |
-| `specdev resume {spec}` | Progress + next task + context |
-| `specdev mark {spec} {task-id}` | Mark task/subtask complete |
+| `specdev context {spec}` | Show spec context (--level min\|standard\|full) |
+| `specdev path {spec}` | Analyze task dependencies |
 | `specdev archive {spec}` | Move completed spec to `.specs/archived/` |
 | `specdev validate {path}` | Check spec completeness |
 | `specdev compact {file}` | Token-optimized version (~60% reduction) |
@@ -68,7 +76,22 @@ All commands output JSON by default. Use `--plain` for human-readable, `-q` for 
 
 **Entry:** `src/index.ts` uses citty framework.
 
-**Core Libraries (`src/lib/`):** `project-root.ts` (finds `.specs/`), `spec-parser.ts` (YAML→Phase[]), `validator.ts`, `compactor.ts` (GIVEN/WHEN/THEN→shorthand), `progress.ts`.
+**Commands (`src/commands/`):** Each file exports a citty command definition.
+
+**Core Libraries (`src/lib/`):**
+- `project-root.ts` - Finds `.specs/` directory
+- `spec-parser.ts` - Parses YAML tasks into Phase[]
+- `spec-lookup.ts` - Resolves spec names to paths
+- `validator.ts` - Validates spec completeness
+- `compactor.ts` - GIVEN/WHEN/THEN → shorthand notation
+- `progress.ts` - Calculates task completion
+- `dependency-graph.ts` - Task dependency analysis
+- `checkpoint-parser.ts` - Parses checkpoint.md files
+- `safe-io.ts` - Safe file I/O operations
+- `args.ts` - Argument parsing utilities
+- `diff.ts` - Diff generation utilities
+
+**Other (`src/`):** `templates/` (spec templates), `types/` (TypeScript types), `ui/output.ts` (JSON/plain formatting)
 
 ## pgtool-cli Commands
 
@@ -79,10 +102,56 @@ Requires `.pgtool.json` config file with connection details.
 | `pgtool schemas` | List database schemas |
 | `pgtool tables [schema]` | List tables |
 | `pgtool describe <table>` | Show columns with PK/FK info |
+| `pgtool indexes <table>` | List table indexes |
+| `pgtool constraints <table>` | List constraints |
+| `pgtool relationships [schema]` | Show FK relationships |
 | `pgtool query <sql>` | Execute SQL query |
+| `pgtool sample <table>` | Sample rows from table |
+| `pgtool count <table>` | Count rows |
+| `pgtool search <term>` | Search across tables |
+| `pgtool overview` | Database overview |
+| `pgtool explain <sql>` | Explain query plan |
 
 ### pgtool-cli Architecture
 
 **Entry:** `src/index.ts` uses citty framework.
 
-**Core Libraries (`src/lib/`):** `config.ts` (reads `.pgtool.json`), `connection.ts` (pg pool), `project-root.ts`, `output.ts` (JSON/plain formatting).
+**Core Libraries (`src/lib/`):**
+- `config.ts` - Reads `.pgtool.json`
+- `connection.ts` - PostgreSQL pool management
+- `project-root.ts` - Finds config file
+- `output.ts` - JSON/plain formatting
+- `init.ts` - Initialization utilities
+
+## droid-cli Commands
+
+Requires ADB in PATH and connected Android device/emulator.
+
+| Command | Description |
+|---------|-------------|
+| `droid screenshot` | Capture screenshot + UI elements |
+| `droid tap` | Tap by text or coordinates |
+| `droid fill <field> <text>` | Fill text field |
+| `droid wait-for -t <text>` | Wait for element |
+| `droid clear` | Clear focused field |
+| `droid type <text>` | Type into focused field |
+| `droid key <keyname>` | Send key event |
+| `droid swipe <direction>` | Swipe gesture |
+| `droid longpress` | Long press |
+| `droid launch <package>` | Launch app |
+| `droid current` | Current activity |
+| `droid info` | Device info |
+| `droid wait <ms>` | Wait milliseconds |
+| `droid select-all` | Select text |
+| `droid hide-keyboard` | Dismiss keyboard |
+
+### droid-cli Architecture
+
+**Entry:** `src/index.ts` uses citty framework.
+
+**Core Libraries (`src/lib/`):**
+- `adb.ts` - ADB command execution
+- `ui-hierarchy.ts` - UI dump parsing
+- `ui-element.ts` - Element finding and matching
+- `keycodes.ts` - Android keycode mappings
+- `output.ts` - JSON output formatting

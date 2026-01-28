@@ -16,29 +16,6 @@ A Claude Code plugin marketplace by ThilinaTLM.
 /plugin install specdev@tlmtech
 ```
 
-### Install specdev-cli (Optional)
-
-The `spec` CLI tool can be installed separately for command-line spec management:
-
-**Linux/macOS:**
-```bash
-curl -fsSL https://raw.githubusercontent.com/ThilinaTLM/claude-plugins/main/specdev-cli/install.sh | bash
-```
-
-**Windows (PowerShell):**
-```powershell
-irm https://raw.githubusercontent.com/ThilinaTLM/claude-plugins/main/specdev-cli/install.ps1 | iex
-```
-
-**Windows (Git Bash):**
-```bash
-curl -fsSL https://raw.githubusercontent.com/ThilinaTLM/claude-plugins/main/specdev-cli/install.sh | bash
-```
-
-Supports: Linux (x64, arm64), macOS (x64, arm64), Windows (x64)
-
-Installs to `~/.local/bin/spec` (or `%USERPROFILE%\.local\bin\spec.exe` on Windows).
-
 ## Available Plugins
 
 | Plugin | Description | Version |
