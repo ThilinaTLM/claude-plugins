@@ -37,7 +37,8 @@ Test plugins locally:
 All three CLIs (`specdev-cli`, `pgtool-cli`, `droid-cli`) follow the same development pattern:
 
 ```bash
-cd {plugin}/{plugin}-cli && bun install
+cd {plugin}-cli && bun install  # pgtool-cli, droid-cli
+cd specdev/skills/specdev/scripts/specdev-cli && bun install  # specdev-cli
 bun run dev [command]           # Run in development
 bun run lint                    # Check with Biome
 bun run lint:fix                # Auto-fix lint issues

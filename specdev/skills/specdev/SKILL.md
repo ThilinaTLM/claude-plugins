@@ -11,16 +11,20 @@ A CLI tool for managing structured specifications that persist across sessions, 
 
 ## Scripts
 
-- Unix/Linux/macOS: `${CLAUDE_PLUGIN_ROOT}/specdev-cli/specdev`
-- Windows PowerShell: `${CLAUDE_PLUGIN_ROOT}/specdev-cli/specdev.ps1`
-- Windows Git Bash: Use `specdev` (bash script)
+The `specdev` CLI location varies by environment:
+
+| Environment | Path |
+|-------------|------|
+| Claude Code plugins | `${CLAUDE_PLUGIN_ROOT}/skills/specdev/scripts/specdev-cli/specdev` |
+| Vercel Skills (claude.ai) | `/mnt/skills/user/specdev/scripts/specdev-cli/specdev` |
+| Windows PowerShell | Use `.ps1` extension |
 
 ## Commands
 
 ### Initialize Specs Directory
 
 ```bash
-${CLAUDE_PLUGIN_ROOT}/specdev-cli/specdev init
+specdev init
 ```
 
 Output: `{"ok":true,"created":[".specs/project.md",".specs/active/",".specs/archived/"]}`
@@ -28,7 +32,7 @@ Output: `{"ok":true,"created":[".specs/project.md",".specs/active/",".specs/arch
 ### Create New Spec
 
 ```bash
-${CLAUDE_PLUGIN_ROOT}/specdev-cli/specdev new auth-feature
+specdev new auth-feature
 ```
 
 Output: `{"ok":true,"spec":"auth-feature","created":["spec.md","plan.md","tasks.yaml"],"path":".specs/active/auth-feature"}`
@@ -36,7 +40,7 @@ Output: `{"ok":true,"spec":"auth-feature","created":["spec.md","plan.md","tasks.
 ### Show Status
 
 ```bash
-${CLAUDE_PLUGIN_ROOT}/specdev-cli/specdev status
+specdev status
 ```
 
 Output:
@@ -55,10 +59,10 @@ Get current task context for implementation. Levels: `min` (tight context), `sta
 
 ```bash
 # Minimal context (familiar spec)
-${CLAUDE_PLUGIN_ROOT}/specdev-cli/specdev context auth-feature --level min
+specdev context auth-feature --level min
 
 # Full context (first time on spec)
-${CLAUDE_PLUGIN_ROOT}/specdev-cli/specdev context auth-feature --level full
+specdev context auth-feature --level full
 ```
 
 Output (min): `{"ok":true,"spec":"auth-feature","task":{"id":"T3","title":"Add JWT validation","files":["src/auth.ts"]}}`
@@ -68,7 +72,7 @@ Output (full): Includes all phases, notes, dependencies, and checkpoint.
 ### Get Spec Path
 
 ```bash
-${CLAUDE_PLUGIN_ROOT}/specdev-cli/specdev path auth-feature
+specdev path auth-feature
 ```
 
 Output: `{"ok":true,"spec":"auth-feature","path":".specs/active/auth-feature"}`
@@ -76,7 +80,7 @@ Output: `{"ok":true,"spec":"auth-feature","path":".specs/active/auth-feature"}`
 ### Archive Completed Spec
 
 ```bash
-${CLAUDE_PLUGIN_ROOT}/specdev-cli/specdev archive auth-feature
+specdev archive auth-feature
 ```
 
 Output: `{"ok":true,"spec":"auth-feature","from":".specs/active/auth-feature","to":".specs/archived/auth-feature"}`
@@ -84,7 +88,7 @@ Output: `{"ok":true,"spec":"auth-feature","from":".specs/active/auth-feature","t
 ### Validate Spec
 
 ```bash
-${CLAUDE_PLUGIN_ROOT}/specdev-cli/specdev validate .specs/active/auth-feature
+specdev validate .specs/active/auth-feature
 ```
 
 Output: `{"ok":true,"valid":true,"files":{"spec.md":true,"plan.md":true,"tasks.yaml":true}}`
@@ -94,7 +98,7 @@ Output: `{"ok":true,"valid":true,"files":{"spec.md":true,"plan.md":true,"tasks.y
 Token-optimized version for context loading (~60% reduction).
 
 ```bash
-${CLAUDE_PLUGIN_ROOT}/specdev-cli/specdev compact .specs/active/auth-feature/tasks.yaml
+specdev compact .specs/active/auth-feature/tasks.yaml
 ```
 
 Output: `{"ok":true,"original":1200,"compacted":480,"reduction":"60%","content":"..."}`
