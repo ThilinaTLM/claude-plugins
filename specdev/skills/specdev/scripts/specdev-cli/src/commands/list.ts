@@ -19,10 +19,10 @@ interface SpecStatus {
   suggestArchive: boolean;
 }
 
-export const statusCommand = defineCommand({
+export const listCommand = defineCommand({
   meta: {
-    name: "status",
-    description: "Show all active specs and their progress",
+    name: "list",
+    description: "List all active specs and their progress",
   },
   args: {
     root: {

@@ -66,12 +66,11 @@ All commands output JSON by default. Use `--plain` for human-readable output.
 |---------|-------------|
 | `specdev init` | Initialize `.specs/` structure |
 | `specdev new {name}` | Create new spec with templates |
-| `specdev status` | Show all specs and progress |
+| `specdev list` | List all active specs and progress |
 | `specdev context {spec}` | Show spec context (--level min\|standard\|full) |
 | `specdev path {spec}` | Analyze task dependencies |
 | `specdev archive {spec}` | Move completed spec to `.specs/archived/` |
 | `specdev validate {path}` | Check spec completeness |
-| `specdev compact {file}` | Token-optimized version (~60% reduction) |
 
 ### specdev-cli Architecture
 
@@ -84,7 +83,6 @@ All commands output JSON by default. Use `--plain` for human-readable output.
 - `spec-parser.ts` - Parses YAML tasks into Phase[]
 - `spec-lookup.ts` - Resolves spec names to paths
 - `validator.ts` - Validates spec completeness
-- `compactor.ts` - GIVEN/WHEN/THEN → shorthand notation
 - `progress.ts` - Calculates task completion
 - `dependency-graph.ts` - Task dependency analysis
 - `checkpoint-parser.ts` - Parses checkpoint.md files
