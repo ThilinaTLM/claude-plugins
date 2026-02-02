@@ -2,6 +2,7 @@
 import { defineCommand, runMain } from "citty";
 import pkg from "../package.json";
 import { clickCommand } from "./commands/click";
+import { daemonCommand } from "./commands/daemon";
 import { elementsCommand } from "./commands/elements";
 import { fillCommand } from "./commands/fill";
 import { gotoCommand } from "./commands/goto";
@@ -21,8 +22,9 @@ const main = defineCommand({
 		description: "Browser automation via Chrome extension",
 	},
 	subCommands: {
-		// Setup
+		// Setup and daemon
 		setup: setupCommand,
+		daemon: daemonCommand,
 
 		// Status and info
 		status: statusCommand,

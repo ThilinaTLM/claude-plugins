@@ -15,14 +15,7 @@ cd skills/webnav/scripts/webnav-cli
 bun install
 ```
 
-## Step 2: Install Native Host Dependencies
-
-```bash
-cd native-host
-bun install
-```
-
-## Step 3: Load Extension in Chrome
+## Step 2: Load Extension in Chrome
 
 1. Open Chrome and navigate to `chrome://extensions`
 2. Enable **Developer mode** (toggle in top-right)
@@ -30,7 +23,7 @@ bun install
 4. Select the `extension/` directory from this plugin
 5. **Copy the Extension ID** - it's a 32-character string shown under the extension name
 
-## Step 4: Install Native Host Manifest
+## Step 3: Install Native Host Manifest
 
 Run the setup command with your extension ID:
 
@@ -43,31 +36,13 @@ This command:
 - Installs the native messaging manifest to Chrome's directory
 - Configures the allowed extension origin
 
-### Manual Installation (if needed)
-
-If the automatic setup doesn't work, you can manually install:
-
-**Linux:**
-```bash
-mkdir -p ~/.config/google-chrome/NativeMessagingHosts
-cp native-host/manifests/com.tlmtech.webnav.json ~/.config/google-chrome/NativeMessagingHosts/
-```
-
-**macOS:**
-```bash
-mkdir -p ~/Library/Application\ Support/Google/Chrome/NativeMessagingHosts
-cp native-host/manifests/com.tlmtech.webnav.json ~/Library/Application\ Support/Google/Chrome/NativeMessagingHosts/
-```
-
-Edit the manifest to set the correct `path` and `allowed_origins`.
-
-## Step 5: Connect Extension
+## Step 4: Connect Extension
 
 1. Go back to `chrome://extensions`
 2. Find WebNav and click the **reload** icon
 3. The extension will connect to the native host
 
-## Step 6: Verify Connection
+## Step 5: Verify Connection
 
 ```bash
 webnav status
@@ -102,14 +77,14 @@ Extension IDs are exactly 32 lowercase letters (a-z). Copy it carefully from `ch
 
 Make sure the wrapper script is executable:
 ```bash
-chmod +x native-host/webnav-host
+chmod +x skills/webnav/scripts/webnav-cli/webnav-host
 ```
 
 ### Check Native Host Logs
 
 The native host writes to stderr. You can run it manually to see errors:
 ```bash
-./native-host/webnav-host
+webnav daemon
 ```
 
 ### Socket Location

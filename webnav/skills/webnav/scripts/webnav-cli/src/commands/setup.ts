@@ -1,21 +1,14 @@
-import {
-	copyFileSync,
-	existsSync,
-	mkdirSync,
-	readFileSync,
-	writeFileSync,
-} from "node:fs";
+import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { homedir, platform } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { defineCommand } from "citty";
 import { jsonError, jsonOk } from "../lib/output";
 
-// Get the plugin root (4 levels up from this file: commands -> src -> webnav-cli -> scripts -> webnav -> skills -> webnav)
-function getPluginRoot(): string {
-	// __dirname equivalent for this module
+// Get the CLI root directory (webnav-cli/)
+function getCliRoot(): string {
 	const currentFile = new URL(import.meta.url).pathname;
-	// Go up: commands -> src -> webnav-cli -> scripts -> webnav (skill) -> skills -> webnav (plugin)
-	return resolve(dirname(currentFile), "..", "..", "..", "..", "..", "..");
+	// Go up: commands -> src -> webnav-cli
+	return resolve(dirname(currentFile), "..", "..");
 }
 
 function getNativeMessagingHostsDir(): string {
@@ -81,36 +74,22 @@ export const setupCommand = defineCommand({
 			);
 		}
 
-		const pluginRoot = getPluginRoot();
-		const nativeHostDir = join(pluginRoot, "native-host");
-		const nativeHostScript = join(nativeHostDir, "src", "index.ts");
-		const manifestTemplate = join(
-			nativeHostDir,
-			"manifests",
-			"com.tlmtech.webnav.json",
-		);
+		const cliRoot = getCliRoot();
+		const webnavCli = join(cliRoot, "webnav");
 
-		// Verify native host files exist
-		if (!existsSync(nativeHostScript)) {
+		// Verify CLI exists
+		if (!existsSync(webnavCli)) {
 			jsonError(
-				`Native host script not found: ${nativeHostScript}`,
+				`CLI not found: ${webnavCli}`,
 				"SETUP_FAILED",
 				"Make sure the plugin is installed correctly",
 			);
 		}
 
-		if (!existsSync(manifestTemplate)) {
-			jsonError(
-				`Manifest template not found: ${manifestTemplate}`,
-				"SETUP_FAILED",
-				"Make sure the plugin is installed correctly",
-			);
-		}
-
-		// Create wrapper script that runs the native host with bun
-		const wrapperScript = join(nativeHostDir, "webnav-host");
+		// Create wrapper script that runs `webnav daemon`
+		const wrapperScript = join(cliRoot, "webnav-host");
 		const wrapperContent = `#!/bin/bash
-exec bun run "${nativeHostScript}"
+exec "${webnavCli}" daemon
 `;
 		writeFileSync(wrapperScript, wrapperContent, { mode: 0o755 });
 
@@ -134,17 +113,6 @@ exec bun run "${nativeHostScript}"
 		// Write manifest
 		const manifestPath = join(hostsDir, "com.tlmtech.webnav.json");
 		writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
-
-		// Install native host dependencies
-		const nativeHostPackageJson = join(nativeHostDir, "package.json");
-		if (existsSync(nativeHostPackageJson)) {
-			const { execSync } = await import("node:child_process");
-			try {
-				execSync("bun install", { cwd: nativeHostDir, stdio: "pipe" });
-			} catch {
-				// Dependencies are optional, continue anyway
-			}
-		}
 
 		jsonOk({
 			action: "setup",

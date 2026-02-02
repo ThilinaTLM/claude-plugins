@@ -1,2 +1,0 @@
-#!/bin/bash
-exec bun run "/home/tlm/Projects/claude-plugins/webnav/native-host/src/index.ts"
