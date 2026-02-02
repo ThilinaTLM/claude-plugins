@@ -1,11 +1,11 @@
 <div align="center">
 
-```
+<pre>
     _   ___ ___ _  _ _____   ___ _  _____ _    _    ___
    /_\ / __| __| \| |_   _| / __| |/ /_ _| |  | |  / __|
   / _ \ (_ | _||  ` | | |   \__ \ ' < | || |__| |__\__ \
  /_/ \_\___|___|_|\_| |_|   |___/_|\_\___|____|____|___/
-```
+</pre>
 
 **Reusable skills for AI coding assistants**
 
@@ -15,7 +15,18 @@
 
 </div>
 
-## Quick Install
+## Installation
+
+### Claude Code
+
+```bash
+/plugin marketplace add ThilinaTLM/agent-skills
+/plugin install specdev@tlmtech
+/plugin install pgtool@tlmtech
+/plugin install droid@tlmtech
+```
+
+### Other Tools (Cursor, Copilot, etc.)
 
 ```bash
 npx skills add ThilinaTLM/agent-skills
@@ -36,8 +47,6 @@ npx skills add ThilinaTLM/agent-skills/droid
 
 > Specification-driven development for complex, multi-session tasks
 
-**Version:** 3.2.0 • **Category:** Productivity
-
 Break down large features into structured specs that persist across sessions. Perfect for:
 - Multi-file refactors
 - New feature implementation
@@ -50,15 +59,13 @@ specdev list              # Show active specs
 specdev context my-spec   # Get current task context
 ```
 
-[Documentation](./specdev) • [Install](https://skills.sh/ThilinaTLM/agent-skills/specdev)
+[Documentation](./specdev)
 
 ---
 
 ### pgtool
 
 > PostgreSQL database exploration and debugging
-
-**Version:** 2.2.0 • **Category:** Database
 
 Explore schemas, tables, and relationships with JSON-first output designed for AI agents. Never write raw SQL to understand your database again.
 
@@ -70,15 +77,13 @@ pgtool sample orders      # Quick data preview
 pgtool query "SELECT..."  # Execute queries
 ```
 
-[Documentation](./pgtool) • [Install](https://skills.sh/ThilinaTLM/agent-skills/pgtool)
+[Documentation](./pgtool)
 
 ---
 
 ### droid
 
 > Android device automation and UI testing via ADB
-
-**Version:** 1.0.0 • **Category:** Testing
 
 Control Android emulators and devices with text-based element targeting. No coordinate hunting required.
 
@@ -90,20 +95,7 @@ droid fill "Email" "x@y"  # Fill form fields
 droid wait-for -t "Done"  # Wait for elements
 ```
 
-[Documentation](./droid) • [Install](https://skills.sh/ThilinaTLM/agent-skills/droid)
-
----
-
-## Claude Code Marketplace
-
-Also available via Claude Code plugin system:
-
-```bash
-/plugin marketplace add ThilinaTLM/agent-skills
-/plugin install specdev@tlmtech
-/plugin install pgtool@tlmtech
-/plugin install droid@tlmtech
-```
+[Documentation](./droid)
 
 ---
 
