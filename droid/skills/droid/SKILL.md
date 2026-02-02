@@ -7,6 +7,17 @@ description: This skill should be used when the user asks to "test Android app",
 
 Unified Android testing tool with **JSON output** for LLM-friendly automation.
 
+## CLI Discovery
+
+The CLI is located at `./scripts/droid-cli/` relative to this SKILL.md file.
+
+| Platform         | Script       |
+| ---------------- | ------------ |
+| Unix/Linux/macOS | `droid`      |
+| Windows          | `droid.ps1`  |
+
+**Claude Code:** Use `${CLAUDE_PLUGIN_ROOT}/skills/droid/scripts/droid-cli/droid` (or `droid.ps1` on Windows).
+
 ## Prerequisites
 
 - Bun runtime (https://bun.sh)
@@ -18,19 +29,19 @@ Unified Android testing tool with **JSON output** for LLM-friendly automation.
 
 ```bash
 # Check device connection
-${CLAUDE_PLUGIN_ROOT}/droid-cli/droid info
+droid info
 
 # Screenshot + UI elements (most useful command)
-${CLAUDE_PLUGIN_ROOT}/droid-cli/droid screenshot
+droid screenshot
 
 # Tap by text (no coordinates needed!)
-${CLAUDE_PLUGIN_ROOT}/droid-cli/droid tap -t "Book Now"
+droid tap -t "Book Now"
 
 # Fill a form field in one command
-${CLAUDE_PLUGIN_ROOT}/droid-cli/droid fill "Email" "user@example.com"
+droid fill "Email" "user@example.com"
 
 # Wait for element to appear
-${CLAUDE_PLUGIN_ROOT}/droid-cli/droid wait-for -t "Success" -s 5
+droid wait-for -t "Success" -s 5
 ```
 
 ## Core Commands

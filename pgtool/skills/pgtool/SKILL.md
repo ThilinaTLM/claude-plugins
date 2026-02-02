@@ -5,9 +5,20 @@ description: PostgreSQL database exploration and debugging. Use when user asks t
 
 # PostgreSQL
 
-## Overview
-
 A CLI tool for exploring and debugging PostgreSQL databases with JSON-first output designed for AI agents.
+
+## CLI Discovery
+
+The CLI is located at `./scripts/pgtool-cli/` relative to this SKILL.md file.
+
+| Platform         | Script       |
+| ---------------- | ------------ |
+| Unix/Linux/macOS | `pgtool`     |
+| Windows          | `pgtool.ps1` |
+
+**Claude Code:** Use `${CLAUDE_PLUGIN_ROOT}/skills/pgtool/scripts/pgtool-cli/pgtool` (or `pgtool.ps1` on Windows).
+
+For setup instructions, see SETUP.md in this directory.
 
 ## Important
 
@@ -15,20 +26,12 @@ A CLI tool for exploring and debugging PostgreSQL databases with JSON-first outp
 - If pgtool-cli encounters an error or limitation, report the issue to the user and stop. Do not fall back to psql or other tools.
 - Always add `LIMIT` to SELECT queries to avoid fetching excessive data.
 
-## Scripts
-
-- Unix/Linux/macOS: `${CLAUDE_PLUGIN_ROOT}/pgtool-cli/pgtool`
-- Windows PowerShell: `${CLAUDE_PLUGIN_ROOT}/pgtool-cli/pgtool.ps1`
-- Windows Git Bash: Use `pgtool` (bash script)
-
-For setup instructions, see SETUP.md in this directory.
-
 ## Commands
 
 ### List Schemas
 
 ```bash
-${CLAUDE_PLUGIN_ROOT}/pgtool-cli/pgtool schemas
+pgtool schemas
 ```
 
 Output: `{"ok":true,"schemas":[{"name":"public","owner":"postgres"}]}`
@@ -37,10 +40,10 @@ Output: `{"ok":true,"schemas":[{"name":"public","owner":"postgres"}]}`
 
 ```bash
 # Tables in default schema
-${CLAUDE_PLUGIN_ROOT}/pgtool-cli/pgtool tables
+pgtool tables
 
 # Tables in a specific schema
-${CLAUDE_PLUGIN_ROOT}/pgtool-cli/pgtool tables auth
+pgtool tables auth
 ```
 
 Output: `{"ok":true,"schema":"public","tables":[{"name":"users","type":"table","rowEstimate":1000,"sizeHuman":"256 KB"}]}`
@@ -51,10 +54,10 @@ Get column details with primary key and foreign key information.
 
 ```bash
 # Table in default schema
-${CLAUDE_PLUGIN_ROOT}/pgtool-cli/pgtool describe users
+pgtool describe users
 
 # Table in specific schema
-${CLAUDE_PLUGIN_ROOT}/pgtool-cli/pgtool describe auth.users
+pgtool describe auth.users
 ```
 
 Output includes column types, nullability, defaults, PK/FK info, and foreign key references.
@@ -62,7 +65,7 @@ Output includes column types, nullability, defaults, PK/FK info, and foreign key
 ### List Indexes
 
 ```bash
-${CLAUDE_PLUGIN_ROOT}/pgtool-cli/pgtool indexes users
+pgtool indexes users
 ```
 
 Output: `{"ok":true,"indexes":[{"name":"users_pkey","unique":true,"primary":true,"columns":["id"],"type":"btree"}]}`
@@ -70,7 +73,7 @@ Output: `{"ok":true,"indexes":[{"name":"users_pkey","unique":true,"primary":true
 ### List Constraints
 
 ```bash
-${CLAUDE_PLUGIN_ROOT}/pgtool-cli/pgtool constraints users
+pgtool constraints users
 ```
 
 Output includes PRIMARY KEY, FOREIGN KEY, UNIQUE, CHECK, and EXCLUDE constraints.
@@ -80,8 +83,8 @@ Output includes PRIMARY KEY, FOREIGN KEY, UNIQUE, CHECK, and EXCLUDE constraints
 Get all foreign key relationships in a schema.
 
 ```bash
-${CLAUDE_PLUGIN_ROOT}/pgtool-cli/pgtool relationships
-${CLAUDE_PLUGIN_ROOT}/pgtool-cli/pgtool relationships auth
+pgtool relationships
+pgtool relationships auth
 ```
 
 Output: `{"ok":true,"relationships":[{"fromTable":"orders","fromColumns":["user_id"],"toTable":"users","toColumns":["id"]}]}`
@@ -89,7 +92,7 @@ Output: `{"ok":true,"relationships":[{"fromTable":"orders","fromColumns":["user_
 ### Execute Query
 
 ```bash
-${CLAUDE_PLUGIN_ROOT}/pgtool-cli/pgtool query "SELECT * FROM users WHERE active = true LIMIT 100"
+pgtool query "SELECT * FROM users WHERE active = true LIMIT 100"
 ```
 
 Output: `{"ok":true,"rows":[...],"rowCount":5,"fields":["id","name","email"]}`
@@ -105,13 +108,13 @@ Get sample data from a table quickly.
 
 ```bash
 # Default: 5 rows
-${CLAUDE_PLUGIN_ROOT}/pgtool-cli/pgtool sample users
+pgtool sample users
 
 # Custom limit
-${CLAUDE_PLUGIN_ROOT}/pgtool-cli/pgtool sample users --limit 10
+pgtool sample users --limit 10
 
 # Specific schema
-${CLAUDE_PLUGIN_ROOT}/pgtool-cli/pgtool sample auth.users
+pgtool sample auth.users
 ```
 
 Output: `{"ok":true,"schema":"public","table":"users","rows":[...],"rowCount":5,"columns":["id","name","email"]}`
@@ -121,8 +124,8 @@ Output: `{"ok":true,"schema":"public","table":"users","rows":[...],"rowCount":5,
 Get exact row count (not estimate).
 
 ```bash
-${CLAUDE_PLUGIN_ROOT}/pgtool-cli/pgtool count users
-${CLAUDE_PLUGIN_ROOT}/pgtool-cli/pgtool count auth.sessions
+pgtool count users
+pgtool count auth.sessions
 ```
 
 Output: `{"ok":true,"schema":"public","table":"users","count":12345}`
@@ -134,8 +137,8 @@ Plain: `public.users: 12,345 rows`
 Find tables and columns matching a pattern.
 
 ```bash
-${CLAUDE_PLUGIN_ROOT}/pgtool-cli/pgtool search email
-${CLAUDE_PLUGIN_ROOT}/pgtool-cli/pgtool search user
+pgtool search email
+pgtool search user
 ```
 
 Output:
@@ -158,8 +161,8 @@ Output:
 Compact ERD-like view showing tables, primary keys, and relationships.
 
 ```bash
-${CLAUDE_PLUGIN_ROOT}/pgtool-cli/pgtool overview
-${CLAUDE_PLUGIN_ROOT}/pgtool-cli/pgtool overview auth
+pgtool overview
+pgtool overview auth
 ```
 
 Output (plain):
@@ -185,10 +188,10 @@ Analyze query execution plan.
 
 ```bash
 # With ANALYZE (executes query)
-${CLAUDE_PLUGIN_ROOT}/pgtool-cli/pgtool explain "SELECT * FROM users WHERE email = 'x'"
+pgtool explain "SELECT * FROM users WHERE email = 'x'"
 
 # Without ANALYZE (plan only)
-${CLAUDE_PLUGIN_ROOT}/pgtool-cli/pgtool explain "SELECT * FROM users WHERE id = 1" --no-analyze
+pgtool explain "SELECT * FROM users WHERE id = 1" --no-analyze
 ```
 
 Output: `{"ok":true,"query":"SELECT...","plan":["Seq Scan on users...","..."]}`
