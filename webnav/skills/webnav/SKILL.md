@@ -14,6 +14,7 @@ The CLI is located at `./scripts/webnav-cli/` relative to this SKILL.md file.
 | Platform         | Script       |
 | ---------------- | ------------ |
 | Unix/Linux/macOS | `webnav`     |
+| Windows          | `webnav.ps1` |
 
 **Claude Code:** Use `${CLAUDE_PLUGIN_ROOT}/skills/webnav/scripts/webnav-cli/webnav`.
 

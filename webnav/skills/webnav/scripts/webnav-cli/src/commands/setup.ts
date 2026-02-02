@@ -4,6 +4,11 @@ import { dirname, join, resolve } from "node:path";
 import { defineCommand } from "citty";
 import { jsonError, jsonOk } from "../lib/output";
 
+function getHostWrapper(): string {
+	const os = platform();
+	return os === "win32" ? "webnav-host.ps1" : "webnav-host";
+}
+
 // Get the CLI root directory (webnav-cli/)
 function getCliRoot(): string {
 	const currentFile = new URL(import.meta.url).pathname;
@@ -75,29 +80,22 @@ export const setupCommand = defineCommand({
 		}
 
 		const cliRoot = getCliRoot();
-		const webnavCli = join(cliRoot, "webnav");
+		const hostWrapper = join(cliRoot, getHostWrapper());
 
-		// Verify CLI exists
-		if (!existsSync(webnavCli)) {
+		// Verify static host wrapper exists
+		if (!existsSync(hostWrapper)) {
 			jsonError(
-				`CLI not found: ${webnavCli}`,
+				`Native host wrapper not found: ${hostWrapper}`,
 				"SETUP_FAILED",
 				"Make sure the plugin is installed correctly",
 			);
 		}
 
-		// Create wrapper script that runs `webnav daemon`
-		const wrapperScript = join(cliRoot, "webnav-host");
-		const wrapperContent = `#!/bin/bash
-exec "${webnavCli}" daemon
-`;
-		writeFileSync(wrapperScript, wrapperContent, { mode: 0o755 });
-
 		// Create the manifest with correct paths
 		const manifest = {
 			name: "com.tlmtech.webnav",
 			description: "WebNav native messaging host for browser automation",
-			path: wrapperScript,
+			path: hostWrapper,
 			type: "stdio",
 			allowed_origins: [`chrome-extension://${extensionId}/`],
 		};
@@ -117,7 +115,7 @@ exec "${webnavCli}" daemon
 		jsonOk({
 			action: "setup",
 			manifest: manifestPath,
-			nativeHost: wrapperScript,
+			nativeHost: hostWrapper,
 			extensionId,
 			hostsDir,
 			hint: "Now reload the extension in chrome://extensions to connect",
