@@ -5,14 +5,14 @@
   },
   "metadata": {
     "description": "Claude Code plugins by ThilinaTLM",
-    "version": "1.1.0"
+    "version": "1.2.0"
   },
   "plugins": [
     {
       "name": "specdev",
       "source": "./specdev",
       "description": "Specification-driven development workflow skill for AI agents",
-      "version": "3.2.0",
+      "version": "3.3.0",
       "author": {
         "name": "ThilinaTLM"
       },
@@ -26,7 +26,7 @@
       "name": "droid",
       "source": "./droid",
       "description": "Android device automation and UI testing via ADB",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "author": {
         "name": "ThilinaTLM"
       },
@@ -40,7 +40,7 @@
       "name": "pgtool",
       "source": "./pgtool",
       "description": "PostgreSQL database exploration and debugging",
-      "version": "2.2.0",
+      "version": "2.3.0",
       "author": {
         "name": "ThilinaTLM"
       },
