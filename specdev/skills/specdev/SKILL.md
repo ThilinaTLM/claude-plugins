@@ -11,10 +11,10 @@ A CLI tool for managing structured specifications that persist across sessions, 
 
 The CLI is located at `./scripts/specdev-cli/` relative to this SKILL.md file.
 
-| Platform         | Script       |
-| ---------------- | ------------ |
-| Unix/Linux/macOS | `specdev`    |
-| Windows          | `specdev.ps1`|
+| Platform         | Script        |
+| ---------------- | ------------- |
+| Unix/Linux/macOS | `specdev`     |
+| Windows          | `specdev.ps1` |
 
 **Claude Code:** Use `${CLAUDE_PLUGIN_ROOT}/skills/specdev/scripts/specdev-cli/specdev` (or `specdev.ps1` on Windows).
 

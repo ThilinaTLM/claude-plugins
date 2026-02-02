@@ -15,15 +15,15 @@ Create a `.pgtool.json` file in the project root:
 }
 ```
 
-| Field | Required | Description |
-|-------|----------|-------------|
-| `host` | Yes | Database hostname |
-| `port` | No | Port (default: 5432) |
-| `database` | Yes | Database name |
-| `user` | Yes | Username |
-| `password` | One of | Direct password |
-| `passwordEnv` | One of | Environment variable containing password |
-| `schema` | No | Default schema (default: public) |
+| Field         | Required | Description                              |
+| ------------- | -------- | ---------------------------------------- |
+| `host`        | Yes      | Database hostname                        |
+| `port`        | No       | Port (default: 5432)                     |
+| `database`    | Yes      | Database name                            |
+| `user`        | Yes      | Username                                 |
+| `password`    | One of   | Direct password                          |
+| `passwordEnv` | One of   | Environment variable containing password |
+| `schema`      | No       | Default schema (default: public)         |
 
 ## Error Codes
 

@@ -98,6 +98,7 @@ pgtool query "SELECT * FROM users WHERE active = true LIMIT 100"
 Output: `{"ok":true,"rows":[...],"rowCount":5,"fields":["id","name","email"]}`
 
 **Best Practices:**
+
 - Always add `LIMIT` to SELECT queries to avoid fetching excessive data
 - DML statements (INSERT, UPDATE, DELETE) with RETURNING are fully supported
 - Use parameterized values in WHERE clauses to avoid SQL injection
@@ -142,15 +143,26 @@ pgtool search user
 ```
 
 Output:
+
 ```json
 {
   "ok": true,
   "pattern": "email",
   "matches": {
-    "tables": [{"schema": "public", "name": "emails"}],
+    "tables": [{ "schema": "public", "name": "emails" }],
     "columns": [
-      {"schema": "public", "table": "users", "column": "email", "type": "varchar(255)"},
-      {"schema": "public", "table": "contacts", "column": "email_address", "type": "text"}
+      {
+        "schema": "public",
+        "table": "users",
+        "column": "email",
+        "type": "varchar(255)"
+      },
+      {
+        "schema": "public",
+        "table": "contacts",
+        "column": "email_address",
+        "type": "text"
+      }
     ]
   }
 }
@@ -166,6 +178,7 @@ pgtool overview auth
 ```
 
 Output (plain):
+
 ```
 Schema: public (3 tables)
 
@@ -201,6 +214,7 @@ Output: `{"ok":true,"query":"SELECT...","plan":["Seq Scan on users...","..."]}`
 All errors follow a consistent JSON format with `ok: false`, an error code, and a helpful hint:
 
 **Configuration not found:**
+
 ```json
 {
   "ok": false,
@@ -211,6 +225,7 @@ All errors follow a consistent JSON format with `ok: false`, an error code, and 
 ```
 
 **Connection failed:**
+
 ```json
 {
   "ok": false,
@@ -221,6 +236,7 @@ All errors follow a consistent JSON format with `ok: false`, an error code, and 
 ```
 
 **Authentication failed:**
+
 ```json
 {
   "ok": false,
@@ -231,6 +247,7 @@ All errors follow a consistent JSON format with `ok: false`, an error code, and 
 ```
 
 **Table not found:**
+
 ```json
 {
   "ok": false,
@@ -245,6 +262,7 @@ All errors follow a consistent JSON format with `ok: false`, an error code, and 
 ## Common Usage Patterns
 
 **Exploring a new database:**
+
 1. `pgtool schemas` - See available schemas
 2. `pgtool overview` - Quick view of tables and relationships
 3. `pgtool tables <schema>` - List tables with sizes
@@ -252,18 +270,21 @@ All errors follow a consistent JSON format with `ok: false`, an error code, and 
 5. `pgtool sample <table>` - See example data
 
 **Finding data:**
+
 1. `pgtool search <pattern>` - Find tables/columns by name
 2. `pgtool sample <table>` - Quick data preview
 3. `pgtool count <table>` - Get exact row count
 4. `pgtool query "SELECT..."` - Custom queries
 
 **Debugging data issues:**
+
 1. `pgtool describe <table>` - Verify column types
 2. `pgtool sample <table>` - Check actual data
 3. `pgtool explain "SELECT..."` - Analyze query performance
 4. `pgtool indexes <table>` - Check index coverage
 
 **Understanding relationships:**
+
 1. `pgtool overview` - Visual relationship map
 2. `pgtool relationships` - Get all FK relationships
 3. `pgtool constraints <table>` - See specific table constraints
