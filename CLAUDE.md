@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Repository Overview
 
-Claude Code plugin marketplace (`tlmtech`) containing multiple plugins. Marketplace manifest: `.claude-plugin/marketplace.json`.
+Claude Code plugin marketplace (`tlmtech`) containing multiple plugins.
 
 | Plugin | Purpose |
 |--------|---------|
@@ -14,14 +14,14 @@ Claude Code plugin marketplace (`tlmtech`) containing multiple plugins. Marketpl
 
 ## Plugin Structure
 
-Each plugin follows this structure:
 ```
+.claude-plugin/marketplace.json  # Root marketplace manifest (versions must sync with plugin.json)
 plugin-name/
-├── .claude-plugin/plugin.json   # Plugin manifest
-├── skills/                      # Claude Code skills (SKILL.md files)
-├── commands/                    # Slash commands
-├── agents/                      # Custom agents
-└── hooks/                       # Event hooks
+├── .claude-plugin/plugin.json   # Plugin manifest with version
+├── skills/plugin-name/
+│   ├── SKILL.md                 # Skill definition
+│   └── scripts/plugin-name-cli/ # CLI tool (Bun + citty)
+└── README.md                    # User documentation
 ```
 
 ## Local Development
@@ -59,9 +59,20 @@ Push a semantic version tag to trigger GitHub Action release:
 git tag v1.0.0 && git push origin v1.0.0
 ```
 
-## specdev-cli Commands
+### Version Management
 
-All commands output JSON by default. Use `--plain` for human-readable output.
+Plugin versions appear in two places that must stay in sync:
+- `.claude-plugin/marketplace.json` (root) - marketplace listing
+- `{plugin}/.claude-plugin/plugin.json` - plugin manifest
+
+## CLI Global Options
+
+All CLIs output JSON by default. Common options:
+- `--plain` - Human-readable output instead of JSON
+- `--root, -r <path>` - Project root directory (default: auto-detect)
+- `--quiet, -q` - Minimal output (available on most commands)
+
+## specdev-cli Commands
 
 | Command | Description |
 |---------|-------------|
@@ -72,6 +83,7 @@ All commands output JSON by default. Use `--plain` for human-readable output.
 | `specdev path {spec}` | Analyze task dependencies |
 | `specdev archive {spec}` | Move completed spec to `.specs/archived/` |
 | `specdev validate {path}` | Check spec completeness |
+| `specdev hook {event}` | Hook handlers for Claude Code integration |
 
 ### specdev-cli Architecture
 
