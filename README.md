@@ -44,11 +44,11 @@ npx skills add ThilinaTLM/agent-skills/droid
 
 ## Available Skills
 
-| Skill | Description | Tags |
-|-------|-------------|------|
+| Skill                | Description                                     | Tags                      |
+| -------------------- | ----------------------------------------------- | ------------------------- |
 | [specdev](./specdev) | Spec-driven development for multi-session tasks | `productivity` `workflow` |
-| [pgtool](./pgtool) | PostgreSQL database exploration and debugging | `database` `sql` |
-| [droid](./droid) | Android device automation via ADB | `testing` `android` |
+| [pgtool](./pgtool)   | PostgreSQL database exploration and debugging   | `database` `sql`          |
+| [droid](./droid)     | Android device automation via ADB               | `testing` `android`       |
 
 ---
 
