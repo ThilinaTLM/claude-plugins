@@ -1,13 +1,20 @@
 # pgtool
 
-PostgreSQL database exploration and debugging plugin for Claude Code.
+PostgreSQL database exploration and debugging for AI agents.
 
 ## Installation
 
-This plugin is part of the `tlmtech` Claude Code plugin marketplace. Install via:
+### Claude Code
 
 ```bash
-claude plugin install tlmtech/pgtool
+/plugin marketplace add ThilinaTLM/agent-skills
+/plugin install pgtool@tlmtech
+```
+
+### Other Tools
+
+```bash
+npx skills add ThilinaTLM/agent-skills/pgtool
 ```
 
 ## Configuration
@@ -30,28 +37,13 @@ Set the password via environment variable:
 export PGPASSWORD=your_password
 ```
 
-## Commands
+## Features
 
-| Command | Description |
-|---------|-------------|
-| `pgtool schemas` | List database schemas |
-| `pgtool tables [schema]` | List tables in a schema |
-| `pgtool describe <table>` | Show columns with PK/FK info |
-| `pgtool indexes <table>` | List table indexes |
-| `pgtool constraints <table>` | List constraints |
-| `pgtool relationships [schema]` | Show FK relationships |
-| `pgtool query <sql>` | Execute SQL query |
-
-All commands output JSON by default. Use `--plain` for human-readable output.
-
-## Development
-
-```bash
-cd pgtool-cli
-bun install
-bun run dev schemas        # Run in development mode
-bun run dev tables public  # List tables
-```
+- **Schema exploration** - List schemas, tables, columns with PK/FK info
+- **Relationship mapping** - View foreign key relationships across tables
+- **Query execution** - Run SQL queries with formatted output
+- **Data sampling** - Quick preview of table contents
+- **JSON-first output** - All commands output JSON by default for AI consumption
 
 ## License
 
