@@ -19,8 +19,8 @@
       "license": "MIT",
       "keywords": ["specifications", "ai-agents", "workflow", "multi-session"],
       "category": "productivity",
-      "repository": "https://github.com/ThilinaTLM/claude-plugins",
-      "homepage": "https://github.com/ThilinaTLM/claude-plugins/tree/main/specdev"
+      "repository": "https://github.com/ThilinaTLM/agent-skills",
+      "homepage": "https://github.com/ThilinaTLM/agent-skills/tree/main/specdev"
     },
     {
       "name": "droid",
@@ -33,8 +33,8 @@
       "license": "MIT",
       "keywords": ["android", "adb", "testing", "automation", "emulator", "ui-testing"],
       "category": "testing",
-      "repository": "https://github.com/ThilinaTLM/claude-plugins",
-      "homepage": "https://github.com/ThilinaTLM/claude-plugins/tree/main/droid"
+      "repository": "https://github.com/ThilinaTLM/agent-skills",
+      "homepage": "https://github.com/ThilinaTLM/agent-skills/tree/main/droid"
     },
     {
       "name": "pgtool",
@@ -47,8 +47,8 @@
       "license": "MIT",
       "keywords": ["postgresql", "database", "sql", "psql"],
       "category": "database",
-      "repository": "https://github.com/ThilinaTLM/claude-plugins",
-      "homepage": "https://github.com/ThilinaTLM/claude-plugins/tree/main/pgtool"
+      "repository": "https://github.com/ThilinaTLM/agent-skills",
+      "homepage": "https://github.com/ThilinaTLM/agent-skills/tree/main/pgtool"
     }
   ]
 }
