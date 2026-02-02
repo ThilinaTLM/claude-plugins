@@ -31,14 +31,63 @@ npx skills add ThilinaTLM/agent-skills/droid
 - **Wait conditions** - Wait for elements to appear before proceeding
 - **JSON-first output** - All commands output JSON by default for AI consumption
 
-## Supported Actions
+## CLI Commands
 
-- Screenshots with UI hierarchy extraction
-- Tap, long press, swipe gestures
-- Text input and field manipulation
-- Key events (back, home, enter, etc.)
-- App launching and activity inspection
-- Keyboard dismissal
+All commands output JSON by default for AI consumption.
+
+### Screen & Information
+
+| Command            | Description                             |
+| ------------------ | --------------------------------------- |
+| `droid screenshot` | Capture screenshot with UI element list |
+| `droid info`       | Device information                      |
+| `droid current`    | Current activity and package            |
+
+### Interaction
+
+| Command                     | Description                                          |
+| --------------------------- | ---------------------------------------------------- |
+| `droid tap <x> <y>`         | Tap at coordinates                                   |
+| `droid tap -t <text>`       | Tap element by text                                  |
+| `droid longpress -t <text>` | Long press on element                                |
+| `droid swipe <direction>`   | Swipe up/down/left/right                             |
+| `droid fill <field> <text>` | Fill text field (tap + clear + type + hide-keyboard) |
+| `droid type <text>`         | Type into focused field                              |
+| `droid clear`               | Clear focused field                                  |
+| `droid key <keyname>`       | Send key event (back, home, enter, etc.)             |
+| `droid select-all`          | Select all text in focused field                     |
+
+### App Control
+
+| Command                    | Description                 |
+| -------------------------- | --------------------------- |
+| `droid launch <package>`   | Launch app by package name  |
+| `droid hide-keyboard`      | Dismiss on-screen keyboard  |
+| `droid wait <ms>`          | Wait specified milliseconds |
+| `droid wait-for -t <text>` | Wait for element to appear  |
+
+### Command Options
+
+| Command      | Option                | Description                             |
+| ------------ | --------------------- | --------------------------------------- |
+| `screenshot` | `--clickable, -c`     | Only return clickable elements          |
+| `screenshot` | `--text, -t <text>`   | Filter elements by text                 |
+| `screenshot` | `--dir, -d <path>`    | Output directory (default: system temp) |
+| `screenshot` | `--no-ui`             | Skip UI hierarchy dump (faster)         |
+| `tap`        | `--text, -t <text>`   | Find element by text                    |
+| `tap`        | `--index, -i <n>`     | Index if multiple matches (default: 0)  |
+| `tap`        | `--wait, -w <ms>`     | Wait after tap                          |
+| `tap`        | `--prefer-input`      | Prefer input fields over labels         |
+| `tap`        | `--clickable`         | Only match clickable elements           |
+| `longpress`  | `--text, -t <text>`   | Find element by text                    |
+| `longpress`  | `--index, -i <n>`     | Index if multiple matches               |
+| `longpress`  | `--duration, -d <ms>` | Press duration (default: 1000)          |
+| `longpress`  | `--wait, -w <ms>`     | Wait after action                       |
+| `swipe`      | `--duration, -d <ms>` | Swipe duration (default: 300)           |
+| `swipe`      | `--wait, -w <ms>`     | Wait after swipe                        |
+| `fill`       | `--wait, -w <ms>`     | Wait after action                       |
+| `wait-for`   | `--text, -t <text>`   | Text to wait for (required)             |
+| `wait-for`   | `--timeout, -s <sec>` | Timeout in seconds (default: 10)        |
 
 ## License
 

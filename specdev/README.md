@@ -50,6 +50,40 @@ npx skills add ThilinaTLM/agent-skills/specdev
 └── archived/            # Completed specs
 ```
 
+## CLI Commands
+
+All commands output JSON by default. Use `--plain` for human-readable output.
+
+| Command                   | Description                                      |
+| ------------------------- | ------------------------------------------------ |
+| `specdev init`            | Initialize `.specs/` structure                   |
+| `specdev new <name>`      | Create new spec with templates                   |
+| `specdev list`            | List all active specs and progress               |
+| `specdev context [spec]`  | Show spec context for AI consumption             |
+| `specdev path [spec]`     | Analyze task dependencies and show critical path |
+| `specdev archive <spec>`  | Move completed spec to `.specs/archived/`        |
+| `specdev validate <path>` | Check spec file completeness                     |
+| `specdev hook <event>`    | Hook handlers for Claude Code integration        |
+
+### Global Options
+
+| Option              | Description                                   |
+| ------------------- | --------------------------------------------- |
+| `--root, -r <path>` | Project root directory (default: auto-detect) |
+| `--plain`           | Human-readable output instead of JSON         |
+
+### Command Options
+
+| Command    | Option                | Description                                   |
+| ---------- | --------------------- | --------------------------------------------- |
+| `context`  | `--level, -l <level>` | Context detail: min, standard (default), full |
+| `archive`  | `--force, -f`         | Archive even if not 100% complete             |
+| `archive`  | `--quiet, -q`         | Minimal output                                |
+| `path`     | `--quiet, -q`         | Minimal output (critical path only)           |
+| `list`     | `--quiet, -q`         | Minimal output                                |
+| `new`      | `--quiet, -q`         | Minimal output                                |
+| `validate` | `--quiet, -q`         | Minimal output (pass/fail + error count)      |
+
 ## License
 
 MIT
