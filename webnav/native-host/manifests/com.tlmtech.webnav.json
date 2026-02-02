@@ -1,0 +1,9 @@
+{
+  "name": "com.tlmtech.webnav",
+  "description": "WebNav native messaging host for browser automation",
+  "path": "/path/to/webnav-host",
+  "type": "stdio",
+  "allowed_origins": [
+    "chrome-extension://EXTENSION_ID/"
+  ]
+}

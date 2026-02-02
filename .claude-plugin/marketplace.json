@@ -49,6 +49,20 @@
       "category": "database",
       "repository": "https://github.com/ThilinaTLM/agent-skills",
       "homepage": "https://github.com/ThilinaTLM/agent-skills/tree/main/pgtool"
+    },
+    {
+      "name": "webnav",
+      "source": "./webnav",
+      "description": "Browser automation via Chrome extension and native messaging",
+      "version": "1.0.0",
+      "author": {
+        "name": "ThilinaTLM"
+      },
+      "license": "MIT",
+      "keywords": ["browser", "chrome", "automation", "web", "testing"],
+      "category": "automation",
+      "repository": "https://github.com/ThilinaTLM/agent-skills",
+      "homepage": "https://github.com/ThilinaTLM/agent-skills/tree/main/webnav"
     }
   ]
 }

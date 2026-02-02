@@ -1,0 +1,14 @@
+{
+  "name": "webnav-native-host",
+  "version": "1.0.0",
+  "description": "Native messaging host for WebNav browser extension",
+  "type": "module",
+  "main": "src/index.ts",
+  "scripts": {
+    "build": "bun build src/index.ts --outfile=dist/webnav-host.js --target=bun",
+    "dev": "bun run src/index.ts"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.2.0"
+  }
+}
