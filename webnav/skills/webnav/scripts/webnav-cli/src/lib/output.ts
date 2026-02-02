@@ -2,7 +2,7 @@
  * Output helpers for consistent JSON formatting.
  */
 
-import type { ErrorCode, ErrorResponse } from "../types";
+import type { ErrorCode, ErrorHint, ErrorResponse } from "../types";
 
 /**
  * Output success JSON and exit.
@@ -14,11 +14,14 @@ export function jsonOk<T extends Record<string, unknown>>(data: T): never {
 
 /**
  * Output error JSON and exit.
+ * @param error - Error message
+ * @param code - Error code for categorization
+ * @param hint - Structured hint with steps, diagnostics, and context
  */
 export function jsonError(
 	error: string,
 	code?: ErrorCode,
-	hint?: string,
+	hint?: ErrorHint,
 ): never {
 	const response: ErrorResponse = { ok: false, error };
 	if (code) response.code = code;

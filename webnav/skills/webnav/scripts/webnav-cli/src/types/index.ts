@@ -1,13 +1,23 @@
 // Error codes
 export type ErrorCode =
+	| "SETUP_REQUIRED"
 	| "NOT_CONNECTED"
 	| "CONNECTION_FAILED"
+	| "EXTENSION_DISCONNECTED"
 	| "TIMEOUT"
 	| "EXTENSION_ERROR"
 	| "INVALID_ARGS"
 	| "ELEMENT_NOT_FOUND"
 	| "SETUP_FAILED"
 	| "NATIVE_HOST_ERROR";
+
+// Structured error hint for self-documenting errors
+export interface ErrorHint {
+	summary: string;
+	steps?: string[];
+	diagnostics?: string[];
+	context?: string;
+}
 
 // Base response types
 export interface SuccessResponse<T = Record<string, unknown>> {
@@ -20,7 +30,7 @@ export interface ErrorResponse {
 	ok: false;
 	error: string;
 	code?: ErrorCode;
-	hint?: string;
+	hint?: ErrorHint;
 }
 
 export type Response<T = Record<string, unknown>> =

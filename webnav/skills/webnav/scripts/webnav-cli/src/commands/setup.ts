@@ -2,6 +2,10 @@ import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { homedir, platform } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { defineCommand } from "citty";
+import {
+	getInvalidExtensionIdHint,
+	getMissingExtensionIdHint,
+} from "../lib/errors";
 import { jsonError, jsonOk } from "../lib/output";
 
 function getHostWrapper(): string {
@@ -66,7 +70,7 @@ export const setupCommand = defineCommand({
 			jsonError(
 				"Extension ID is required",
 				"INVALID_ARGS",
-				"Find your extension ID in chrome://extensions after loading the unpacked extension",
+				getMissingExtensionIdHint(),
 			);
 		}
 
@@ -75,7 +79,7 @@ export const setupCommand = defineCommand({
 			jsonError(
 				"Invalid extension ID format",
 				"INVALID_ARGS",
-				"Extension ID should be 32 lowercase letters (found in chrome://extensions)",
+				getInvalidExtensionIdHint(extensionId),
 			);
 		}
 

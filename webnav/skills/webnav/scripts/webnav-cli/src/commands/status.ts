@@ -1,5 +1,9 @@
 import { defineCommand } from "citty";
 import { isSocketAvailable, sendCommand } from "../lib/client";
+import {
+	getConnectionErrorHint,
+	getExtensionDisconnectedHint,
+} from "../lib/errors";
 import { jsonError, jsonOk } from "../lib/output";
 
 export const statusCommand = defineCommand({
@@ -9,11 +13,12 @@ export const statusCommand = defineCommand({
 	},
 	async run() {
 		if (!isSocketAvailable()) {
-			jsonError(
-				"Native host not running",
-				"NOT_CONNECTED",
-				"Load the extension in Chrome to start the native host.",
-			);
+			const { code, hint } = getConnectionErrorHint();
+			const message =
+				code === "SETUP_REQUIRED"
+					? "WebNav has not been set up"
+					: "Native host not running";
+			jsonError(message, code, hint);
 		}
 
 		try {
@@ -30,8 +35,8 @@ export const statusCommand = defineCommand({
 		} catch {
 			jsonError(
 				"Extension not responding",
-				"NOT_CONNECTED",
-				"The native host is running but the extension is not connected.",
+				"EXTENSION_DISCONNECTED",
+				getExtensionDisconnectedHint(),
 			);
 		}
 	},

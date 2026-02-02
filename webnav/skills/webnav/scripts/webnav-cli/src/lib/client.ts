@@ -2,14 +2,20 @@
  * Unix socket client for communicating with the native host.
  */
 
-import { existsSync } from "node:fs";
 import { type Socket, connect } from "node:net";
-import { homedir } from "node:os";
-import { join } from "node:path";
+import {
+	getConnectionErrorHint,
+	getConnectionFailedHint,
+	getSocketPath,
+	getTimeoutHint,
+	socketExists,
+} from "./errors";
 import { jsonError } from "./output";
 
-const SOCKET_PATH = join(homedir(), ".webnav", "webnav.sock");
+const SOCKET_PATH = getSocketPath();
 const DEFAULT_TIMEOUT = 30000;
+
+export { getSocketPath, socketExists as isSocketAvailable };
 
 export interface ClientOptions {
 	timeout?: number;
@@ -25,13 +31,14 @@ export async function sendCommand<T = Record<string, unknown>>(
 ): Promise<T> {
 	const timeout = options.timeout ?? DEFAULT_TIMEOUT;
 
-	// Check if socket exists
-	if (!existsSync(SOCKET_PATH)) {
-		jsonError(
-			"WebNav not connected. Make sure the Chrome extension is installed and running.",
-			"NOT_CONNECTED",
-			"Load the extension in Chrome (chrome://extensions) and ensure it connects to the native host.",
-		);
+	// Check if socket exists and detect error state
+	if (!socketExists()) {
+		const { code, hint } = getConnectionErrorHint();
+		const message =
+			code === "SETUP_REQUIRED"
+				? "WebNav has not been set up"
+				: "WebNav not connected";
+		jsonError(message, code, hint);
 	}
 
 	return new Promise((resolve, reject) => {
@@ -88,7 +95,7 @@ export async function sendCommand<T = Record<string, unknown>>(
 				jsonError(
 					`Connection failed: ${err.message}`,
 					"CONNECTION_FAILED",
-					"Make sure the Chrome extension is running and connected.",
+					getConnectionFailedHint(),
 				);
 			});
 
@@ -102,7 +109,7 @@ export async function sendCommand<T = Record<string, unknown>>(
 				jsonError(
 					`Command timed out after ${timeout}ms`,
 					"TIMEOUT",
-					"The extension did not respond in time.",
+					getTimeoutHint(timeout),
 				);
 			}, timeout);
 		} catch (err) {
@@ -112,18 +119,4 @@ export async function sendCommand<T = Record<string, unknown>>(
 			);
 		}
 	});
-}
-
-/**
- * Check if the native host socket exists.
- */
-export function isSocketAvailable(): boolean {
-	return existsSync(SOCKET_PATH);
-}
-
-/**
- * Get the socket path.
- */
-export function getSocketPath(): string {
-	return SOCKET_PATH;
 }
