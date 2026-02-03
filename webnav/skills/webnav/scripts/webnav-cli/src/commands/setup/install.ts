@@ -1,7 +1,13 @@
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
-import { homedir, platform } from "node:os";
+import { platform } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { defineCommand } from "citty";
+import {
+	BROWSERS,
+	BROWSER_SLUGS,
+	getNativeMessagingHostsDir,
+	parseBrowserSlug,
+} from "../../lib/browsers";
 import {
 	getInvalidExtensionIdHint,
 	getMissingExtensionIdHint,
@@ -20,36 +26,6 @@ function getCliRoot(): string {
 	return resolve(dirname(currentFile), "..", "..", "..");
 }
 
-function getNativeMessagingHostsDir(): string {
-	const os = platform();
-
-	if (os === "darwin") {
-		// macOS
-		return join(
-			homedir(),
-			"Library",
-			"Application Support",
-			"Google",
-			"Chrome",
-			"NativeMessagingHosts",
-		);
-	}
-	if (os === "linux") {
-		// Linux
-		return join(homedir(), ".config", "google-chrome", "NativeMessagingHosts");
-	}
-	if (os === "win32") {
-		// Windows - requires registry, we'll handle this differently
-		jsonError(
-			"Windows requires registry setup for native messaging",
-			"SETUP_FAILED",
-			"Please follow the manual setup instructions in SETUP.md",
-		);
-	}
-
-	jsonError(`Unsupported platform: ${os}`, "SETUP_FAILED");
-}
-
 export const installCommand = defineCommand({
 	meta: {
 		name: "install",
@@ -58,18 +34,32 @@ export const installCommand = defineCommand({
 	args: {
 		extensionId: {
 			type: "positional",
-			description: "Chrome extension ID (find in chrome://extensions)",
-			required: true,
+			description: "Extension ID (find in your browser's extensions page)",
+			required: false,
+		},
+		browser: {
+			type: "string",
+			alias: "b",
+			description: `Target browser: ${BROWSER_SLUGS.join(", ")} (default: chrome)`,
+			default: "chrome",
 		},
 	},
 	async run({ args }) {
+		const browserSlug = parseBrowserSlug(args.browser);
+		if (!browserSlug) {
+			jsonError(`Unknown browser "${args.browser}"`, "INVALID_ARGS", {
+				summary: `Valid browsers: ${BROWSER_SLUGS.join(", ")}`,
+			});
+		}
+
+		const browser = BROWSERS[browserSlug];
 		const extensionId = args.extensionId as string;
 
 		if (!extensionId) {
 			jsonError(
 				"Extension ID is required",
 				"INVALID_ARGS",
-				getMissingExtensionIdHint(),
+				getMissingExtensionIdHint(browserSlug),
 			);
 		}
 
@@ -78,8 +68,22 @@ export const installCommand = defineCommand({
 			jsonError(
 				"Invalid extension ID format",
 				"INVALID_ARGS",
-				getInvalidExtensionIdHint(extensionId),
+				getInvalidExtensionIdHint(extensionId, browserSlug),
 			);
+		}
+
+		const os = platform();
+		if (os === "win32") {
+			jsonError(
+				"Windows requires registry setup for native messaging",
+				"SETUP_FAILED",
+				"Please follow the manual setup instructions in SETUP.md",
+			);
+		}
+
+		const hostsDir = getNativeMessagingHostsDir(browserSlug);
+		if (!hostsDir) {
+			jsonError(`Unsupported platform: ${os}`, "SETUP_FAILED");
 		}
 
 		const cliRoot = getCliRoot();
@@ -103,9 +107,6 @@ export const installCommand = defineCommand({
 			allowed_origins: [`chrome-extension://${extensionId}/`],
 		};
 
-		// Get native messaging hosts directory
-		const hostsDir = getNativeMessagingHostsDir();
-
 		// Create directory if it doesn't exist
 		if (!existsSync(hostsDir)) {
 			mkdirSync(hostsDir, { recursive: true });
@@ -117,11 +118,12 @@ export const installCommand = defineCommand({
 
 		jsonOk({
 			action: "setup",
+			browser: browserSlug,
 			manifest: manifestPath,
 			nativeHost: hostWrapper,
 			extensionId,
 			hostsDir,
-			hint: "Now reload the extension in chrome://extensions to connect",
+			hint: `Now reload the extension in ${browser.extensionsUrl} to connect`,
 		});
 	},
 });

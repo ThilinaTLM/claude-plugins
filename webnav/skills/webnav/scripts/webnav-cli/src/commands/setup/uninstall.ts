@@ -1,22 +1,55 @@
 import { existsSync, readdirSync, rmSync, unlinkSync } from "node:fs";
 import { dirname } from "node:path";
 import { defineCommand } from "citty";
-import { getManifestPath, getSocketPath } from "../../lib/errors";
-import { jsonOk } from "../../lib/output";
+import {
+	BROWSER_SLUGS,
+	getManifestPathForBrowser,
+	parseBrowserSlug,
+} from "../../lib/browsers";
+import { getSocketPath } from "../../lib/errors";
+import { jsonError, jsonOk } from "../../lib/output";
 
 export const uninstallCommand = defineCommand({
 	meta: {
 		name: "uninstall",
 		description: "Remove native messaging host manifest and runtime artifacts",
 	},
-	async run() {
+	args: {
+		browser: {
+			type: "string",
+			alias: "b",
+			description: `Target browser to uninstall (omit to remove all): ${BROWSER_SLUGS.join(", ")}`,
+			required: false,
+		},
+	},
+	async run({ args }) {
 		const removed: string[] = [];
+		const browsers: string[] = [];
 
-		// Remove native messaging manifest
-		const manifestPath = getManifestPath();
-		if (manifestPath && existsSync(manifestPath)) {
-			unlinkSync(manifestPath);
-			removed.push(manifestPath);
+		if (args.browser) {
+			const slug = parseBrowserSlug(args.browser);
+			if (!slug) {
+				jsonError(`Unknown browser "${args.browser}"`, "INVALID_ARGS", {
+					summary: `Valid browsers: ${BROWSER_SLUGS.join(", ")}`,
+				});
+			}
+
+			const manifestPath = getManifestPathForBrowser(slug);
+			if (manifestPath && existsSync(manifestPath)) {
+				unlinkSync(manifestPath);
+				removed.push(manifestPath);
+				browsers.push(slug);
+			}
+		} else {
+			// No browser specified — remove all
+			for (const slug of BROWSER_SLUGS) {
+				const manifestPath = getManifestPathForBrowser(slug);
+				if (manifestPath && existsSync(manifestPath)) {
+					unlinkSync(manifestPath);
+					removed.push(manifestPath);
+					browsers.push(slug);
+				}
+			}
 		}
 
 		// Remove socket file
@@ -36,6 +69,6 @@ export const uninstallCommand = defineCommand({
 			}
 		}
 
-		jsonOk({ action: "uninstall", removed });
+		jsonOk({ action: "uninstall", browsers, removed });
 	},
 });

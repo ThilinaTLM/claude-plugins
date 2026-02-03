@@ -19,7 +19,7 @@ const main = defineCommand({
 	meta: {
 		name: "webnav",
 		version: pkg.version,
-		description: "Browser automation via Chrome extension",
+		description: "Browser automation via Chromium-based browser extension",
 	},
 	subCommands: {
 		// Setup and daemon
