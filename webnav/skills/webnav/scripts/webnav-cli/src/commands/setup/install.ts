@@ -5,8 +5,8 @@ import { defineCommand } from "citty";
 import {
 	getInvalidExtensionIdHint,
 	getMissingExtensionIdHint,
-} from "../lib/errors";
-import { jsonError, jsonOk } from "../lib/output";
+} from "../../lib/errors";
+import { jsonError, jsonOk } from "../../lib/output";
 
 function getHostWrapper(): string {
 	const os = platform();
@@ -16,8 +16,8 @@ function getHostWrapper(): string {
 // Get the CLI root directory (webnav-cli/)
 function getCliRoot(): string {
 	const currentFile = new URL(import.meta.url).pathname;
-	// Go up: commands -> src -> webnav-cli
-	return resolve(dirname(currentFile), "..", "..");
+	// Go up: commands/setup -> commands -> src -> webnav-cli
+	return resolve(dirname(currentFile), "..", "..", "..");
 }
 
 function getNativeMessagingHostsDir(): string {
@@ -50,21 +50,20 @@ function getNativeMessagingHostsDir(): string {
 	jsonError(`Unsupported platform: ${os}`, "SETUP_FAILED");
 }
 
-export const setupCommand = defineCommand({
+export const installCommand = defineCommand({
 	meta: {
-		name: "setup",
+		name: "install",
 		description: "Install the native messaging host manifest",
 	},
 	args: {
-		"extension-id": {
-			type: "string",
-			alias: "e",
+		extensionId: {
+			type: "positional",
 			description: "Chrome extension ID (find in chrome://extensions)",
 			required: true,
 		},
 	},
 	async run({ args }) {
-		const extensionId = args["extension-id"] as string;
+		const extensionId = args.extensionId as string;
 
 		if (!extensionId) {
 			jsonError(

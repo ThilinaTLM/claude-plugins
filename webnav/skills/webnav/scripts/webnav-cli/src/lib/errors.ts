@@ -124,7 +124,7 @@ export function getSetupRequiredHint(): ErrorHint {
 			"  - Copy the 32-character ID under the name",
 			"",
 			"Step 3: Run setup",
-			"  - Run: webnav setup --extension-id <your-id>",
+			"  - Run: webnav setup install <your-id>",
 			"",
 			"Step 4: Reload extension",
 			"  - Click reload icon on WebNav card in chrome://extensions",
@@ -279,7 +279,7 @@ export function getInvalidExtensionIdHint(providedId: string): ErrorHint {
 			"  - Make sure no extra spaces or characters are included",
 			"",
 			"Step 4: Run setup again",
-			"  - Run: webnav setup --extension-id <your-id>",
+			"  - Run: webnav setup install <your-id>",
 		],
 		context:
 			issues.length > 0 ? `Issues found: ${issues.join("; ")}` : undefined,
@@ -299,7 +299,7 @@ export function getMissingExtensionIdHint(): ErrorHint {
 			"  - Copy the 32-character ID under the name",
 			"",
 			"Step 2: Run setup with the ID",
-			"  - Run: webnav setup --extension-id <your-id>",
+			"  - Run: webnav setup install <your-id>",
 		],
 	};
 }
