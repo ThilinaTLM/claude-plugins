@@ -6,6 +6,8 @@ import { daemonCommand } from "./commands/daemon";
 import { elementsCommand } from "./commands/elements";
 import { fillCommand } from "./commands/fill";
 import { gotoCommand } from "./commands/goto";
+import { groupCommand } from "./commands/group";
+import { historyCommand } from "./commands/history";
 import { infoCommand } from "./commands/info";
 import { keyCommand } from "./commands/key";
 import { screenshotCommand } from "./commands/screenshot";
@@ -30,6 +32,10 @@ const main = defineCommand({
 		status: statusCommand,
 		info: infoCommand,
 		tabs: tabsCommand,
+		history: historyCommand,
+
+		// Tab group management
+		group: groupCommand,
 
 		// Navigation
 		goto: gotoCommand,

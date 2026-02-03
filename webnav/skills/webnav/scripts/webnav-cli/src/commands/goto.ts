@@ -13,6 +13,12 @@ export const gotoCommand = defineCommand({
 			description: "URL to navigate to",
 			required: true,
 		},
+		"new-tab": {
+			type: "boolean",
+			alias: "n",
+			description: "Open in a new tab within the webnav group",
+			default: false,
+		},
 	},
 	async run({ args }) {
 		const url = args.url as string;
@@ -27,9 +33,15 @@ export const gotoCommand = defineCommand({
 				? url
 				: `https://${url}`;
 
-		const result = await sendCommand<{ url: string; title: string }>("goto", {
-			url: normalizedUrl,
-		});
+		const payload: Record<string, unknown> = { url: normalizedUrl };
+		if (args["new-tab"]) {
+			payload.newTab = true;
+		}
+
+		const result = await sendCommand<{ url: string; title: string }>(
+			"goto",
+			payload,
+		);
 
 		jsonOk({
 			action: "goto",

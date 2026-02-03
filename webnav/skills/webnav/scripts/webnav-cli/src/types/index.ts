@@ -9,7 +9,9 @@ export type ErrorCode =
 	| "INVALID_ARGS"
 	| "ELEMENT_NOT_FOUND"
 	| "SETUP_FAILED"
-	| "NATIVE_HOST_ERROR";
+	| "NATIVE_HOST_ERROR"
+	| "GROUP_ERROR"
+	| "TAB_NOT_IN_GROUP";
 
 // Structured error hint for self-documenting errors
 export interface ErrorHint {
@@ -62,6 +64,66 @@ export interface ElementInfo {
 		width: number;
 		height: number;
 	};
+}
+
+// Group tab info (includes active marker)
+export interface GroupTabInfo {
+	id: number;
+	url: string;
+	title: string;
+	active: boolean;
+	windowId: number;
+}
+
+// Group command responses
+export interface GroupTabsResponse {
+	tabs: GroupTabInfo[];
+	activeTabId: number | null;
+}
+
+export interface GroupSwitchResponse {
+	activeTabId: number;
+	url: string;
+	title: string;
+}
+
+export interface GroupAddResponse {
+	tabId: number;
+	url: string;
+	title: string;
+	groupId: number;
+}
+
+export interface GroupRemoveResponse {
+	tabId: number;
+	url: string;
+	title: string;
+	removed: boolean;
+}
+
+export interface GroupCloseResponse {
+	tabId: number;
+	url: string;
+	title: string;
+	closed: boolean;
+}
+
+// History types
+export interface HistoryEntry {
+	action: string;
+	payload: Record<string, unknown>;
+	ok: boolean;
+	timestamp: string;
+	durationMs: number;
+	result?: Record<string, unknown>;
+	error?: string;
+}
+
+export interface HistoryResponse {
+	entries: HistoryEntry[];
+	total: number;
+	limit: number;
+	offset: number;
 }
 
 // Command message sent to extension
