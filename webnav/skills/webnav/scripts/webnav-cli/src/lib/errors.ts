@@ -146,26 +146,43 @@ export function getSetupRequiredHint(browser?: BrowserSlug): ErrorHint {
 export function getNotConnectedHint(browser?: BrowserSlug): ErrorHint {
 	const label = browserLabel(browser);
 	const extUrl = extensionsUrl(browser);
+	const distExists = existsSync(EXTENSION_DIST_PATH);
 
 	return {
-		summary: `WebNav is set up but the extension is not connected. The ${label} extension needs to be loaded and active.`,
+		summary: `WebNav is set up but the extension is not connected. This could mean the extension is not installed in ${label} or ${label} is not running.`,
 		steps: [
-			`Step 1: Check ${label} is running`,
-			`  - Open ${label} if not already running`,
+			"If the extension is NOT installed in the browser:",
+			"  Step 1: Load the extension",
+			`    - Open ${label}: ${extUrl}`,
+			"    - Enable 'Developer mode' (top-right toggle)",
+			"    - Click 'Load unpacked'",
+			`    - Select: ${EXTENSION_DIST_PATH}`,
+			"  Step 2: Reload after loading",
+			`    - Click reload icon on WebNav card in ${extUrl}`,
+			"  Step 3: Verify",
+			"    - Run: webnav status",
 			"",
-			"Step 2: Reload the extension",
-			`  - Open ${label}: ${extUrl}`,
-			"  - Find WebNav and click the reload icon",
-			"",
-			"Step 3: Verify connection",
-			"  - Run: webnav status",
+			"If the extension IS installed but not connected:",
+			`  Step 1: Check ${label} is running`,
+			`    - Open ${label} if not already running`,
+			"  Step 2: Reload the extension",
+			`    - Open ${label}: ${extUrl}`,
+			"    - Find WebNav and click the reload icon",
+			"  Step 3: Verify connection",
+			"    - Run: webnav status",
 		],
 		diagnostics: [
 			"Check socket: ls -la ~/.webnav/",
 			`Check extension errors: ${label} > ${extUrl} > WebNav > Errors`,
+			`Check extension dist exists: ls -la ${EXTENSION_DIST_PATH}`,
+			...(distExists
+				? []
+				: [
+						`WARNING: Extension dist directory not found at ${EXTENSION_DIST_PATH}. Run 'bun run build' in the extension directory first.`,
+					]),
 		],
 		context:
-			"The native messaging manifest exists but the native host socket is not present. This usually means the extension hasn't connected yet or the browser is not running.",
+			"The native messaging manifest exists but the native host socket is not present. Two possible causes: (1) the extension was never loaded into the browser or was removed — the user needs to load it via 'Load unpacked', or (2) the extension is installed but the browser is not running or the extension needs a reload. Ask the user whether they see WebNav listed in their extensions page to determine which scenario applies.",
 	};
 }
 
