@@ -11,6 +11,7 @@ Claude Code plugin marketplace (`tlmtech`) containing multiple plugins.
 | `specdev/` | Specification-driven development workflow with skill and CLI |
 | `droid/` | Android device automation via ADB (TypeScript CLI) |
 | `pgtool/` | PostgreSQL database exploration and debugging |
+| `webnav/` | Browser automation via Chrome extension and native messaging |
 
 ## Plugin Structure
 
@@ -34,12 +35,13 @@ Test plugins locally:
 
 ## CLI Tools
 
-All three CLIs (`specdev-cli`, `pgtool-cli`, `droid-cli`) follow the same development pattern:
+All four CLIs (`specdev-cli`, `pgtool-cli`, `droid-cli`, `webnav-cli`) follow the same development pattern:
 
 ```bash
 cd specdev/skills/specdev/scripts/specdev-cli && bun install  # specdev-cli
 cd pgtool/skills/pgtool/scripts/pgtool-cli && bun install     # pgtool-cli
 cd droid/skills/droid/scripts/droid-cli && bun install        # droid-cli
+cd webnav/skills/webnav/scripts/webnav-cli && bun install     # webnav-cli
 bun run dev [command]           # Run in development
 bun run lint                    # Check with Biome
 bun run lint:fix                # Auto-fix lint issues
@@ -167,3 +169,48 @@ Requires ADB in PATH and connected Android device/emulator.
 - `ui-element.ts` - Element finding and matching
 - `keycodes.ts` - Android keycode mappings
 - `output.ts` - JSON output formatting
+
+## webnav-cli Commands
+
+Requires Chrome extension installed and native host daemon running.
+
+| Command | Description |
+|---------|-------------|
+| `webnav setup install` | Install native host manifest for browser |
+| `webnav setup uninstall` | Remove native host manifest |
+| `webnav daemon` | Start native host relay daemon |
+| `webnav status` | Check connection to extension |
+| `webnav info` | Current tab info |
+| `webnav goto <url>` | Navigate to URL |
+| `webnav screenshot` | Capture page screenshot |
+| `webnav click` | Click element by text or selector |
+| `webnav type <text>` | Type into focused element |
+| `webnav fill <selector> <text>` | Fill specific field |
+| `webnav key <key>` | Send key event |
+| `webnav wait-for` | Wait for element to appear |
+| `webnav elements` | List interactive elements |
+| `webnav history` | Show command history |
+| `webnav group add <name>` | Create tab group |
+| `webnav group remove <name>` | Remove tab group |
+| `webnav group switch <name>` | Switch to tab group |
+| `webnav group close <name>` | Close tab group |
+| `webnav group tabs [name]` | List tabs in group |
+
+### webnav Architecture
+
+Unlike other plugins, webnav uses a 3-layer architecture:
+
+```
+CLI (webnav) → Unix Socket → Native Host Daemon → Chrome Native Messaging → Extension
+```
+
+- **CLI (`src/commands/`)** - User-facing commands that connect via Unix socket
+- **Native Host (`src/lib/native-host.ts`)** - Daemon process that bridges socket server and Chrome's native messaging protocol (4-byte length-prefixed JSON)
+- **Chrome Extension (`extension/`)** - MV3 service worker (`background.js`) that executes commands in the browser, manages tab groups, and tracks command history
+- **Socket Client (`src/lib/client.ts`)** - Sends commands to the daemon and receives responses
+
+**Other key files:**
+- `src/lib/browsers.ts` - Multi-browser support (Chrome, Edge, Brave, Vivaldi) and manifest path resolution
+- `src/lib/errors.ts` - Centralized error codes and self-documenting error hints
+- `src/types/index.ts` - Shared TypeScript types
+- `src/commands/setup/` - Install/uninstall subcommands for native host manifest registration
