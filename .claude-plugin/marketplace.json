@@ -17,7 +17,12 @@
         "name": "ThilinaTLM"
       },
       "license": "MIT",
-      "keywords": ["specifications", "ai-agents", "workflow", "multi-session"],
+      "keywords": [
+        "specifications",
+        "ai-agents",
+        "workflow",
+        "multi-session"
+      ],
       "category": "productivity",
       "repository": "https://github.com/ThilinaTLM/agent-skills",
       "homepage": "https://github.com/ThilinaTLM/agent-skills/tree/main/specdev"
@@ -31,7 +36,14 @@
         "name": "ThilinaTLM"
       },
       "license": "MIT",
-      "keywords": ["android", "adb", "testing", "automation", "emulator", "ui-testing"],
+      "keywords": [
+        "android",
+        "adb",
+        "testing",
+        "automation",
+        "emulator",
+        "ui-testing"
+      ],
       "category": "testing",
       "repository": "https://github.com/ThilinaTLM/agent-skills",
       "homepage": "https://github.com/ThilinaTLM/agent-skills/tree/main/droid"
@@ -45,7 +57,12 @@
         "name": "ThilinaTLM"
       },
       "license": "MIT",
-      "keywords": ["postgresql", "database", "sql", "psql"],
+      "keywords": [
+        "postgresql",
+        "database",
+        "sql",
+        "psql"
+      ],
       "category": "database",
       "repository": "https://github.com/ThilinaTLM/agent-skills",
       "homepage": "https://github.com/ThilinaTLM/agent-skills/tree/main/pgtool"
@@ -54,12 +71,18 @@
       "name": "webnav",
       "source": "./webnav",
       "description": "Browser automation via Chrome extension and native messaging",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "author": {
         "name": "ThilinaTLM"
       },
       "license": "MIT",
-      "keywords": ["browser", "chrome", "automation", "web", "testing"],
+      "keywords": [
+        "browser",
+        "chrome",
+        "automation",
+        "web",
+        "testing"
+      ],
       "category": "automation",
       "repository": "https://github.com/ThilinaTLM/agent-skills",
       "homepage": "https://github.com/ThilinaTLM/agent-skills/tree/main/webnav"
