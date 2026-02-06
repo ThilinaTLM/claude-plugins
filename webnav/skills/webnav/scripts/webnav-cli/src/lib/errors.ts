@@ -34,6 +34,39 @@ function extensionsUrl(browser?: BrowserSlug): string {
 	return "chrome://extensions";
 }
 
+// ── Reusable context fragments ──────────────────────────────────────
+
+function askForIdContext(): string {
+	return `[ASK USER] Ask the user for BOTH of the following (the AI CANNOT see these, the user MUST provide them):
+   - The 32-character extension ID shown on the extension card
+   - Which browser they installed it in (chrome, brave, edge, chromium)
+   - Do NOT proceed until the user provides both values`;
+}
+
+function freshInstallContext(extUrl: string): string {
+	return [
+		`[USER action] Tell the user to open extensions page (${extUrl}), enable 'Developer mode', click 'Load unpacked' and select: ${EXTENSION_DIST_PATH}`,
+		askForIdContext(),
+		"[AI runs] Run: webnav setup install <extension-id> --browser <browser>",
+		"[USER action] Ask the user to reload the extension (click reload icon on extensions page)",
+		"[AI runs] Run: webnav status — to verify the connection",
+	].join("\n");
+}
+
+function reinstallContext(extUrl: string): string {
+	return [
+		`[USER action] Tell the user to remove the old WebNav from the extensions page (${extUrl}), then click 'Load unpacked' and select: ${EXTENSION_DIST_PATH}`,
+		askForIdContext(),
+		"[AI runs] Run: webnav setup install <extension-id> --browser <browser>",
+		"[AI runs] Run: webnav status — to verify the connection",
+	].join("\n");
+}
+
+function reloadAndVerifyContext(): string {
+	return `[USER action] Ask the user to reload the extension (click reload icon on extensions page)
+[AI runs] Run: webnav status — to verify the connection`;
+}
+
 // ── Public path / state helpers ─────────────────────────────────────
 
 /**
@@ -137,7 +170,7 @@ export function getSetupRequiredHint(browser?: BrowserSlug): ErrorHint {
 			"Check manifest: ls -la ~/.config/*/NativeMessagingHosts/ ~/Library/Application\\ Support/*/NativeMessagingHosts/ 2>/dev/null",
 			"Check socket: ls -la ~/.webnav/",
 		],
-		context: `SETUP_REQUIRED: The AI agent should guide the user through setup interactively:\n1. Tell the user to load the extension:\n   - Open their browser's extensions page (${extUrl})\n   - Enable 'Developer mode'\n   - Click 'Load unpacked' and select: ${EXTENSION_DIST_PATH}\n2. Ask the user to provide:\n   - The 32-character extension ID shown on the extension card\n   - Which browser they installed it in (chrome, brave, edge, chromium)\n3. Run: webnav setup install <extension-id> --browser <browser>\n4. Ask the user to reload the extension (click reload icon on extensions page)\n5. Run: webnav status — to verify the connection`,
+		context: `SETUP_REQUIRED: The AI agent MUST guide the user through setup. Do NOT skip any step.\n\n${freshInstallContext(extUrl)}`,
 	};
 }
 
@@ -158,9 +191,14 @@ export function getNotConnectedHint(browser?: BrowserSlug): ErrorHint {
 			"    - Enable 'Developer mode' (top-right toggle)",
 			"    - Click 'Load unpacked'",
 			`    - Select: ${EXTENSION_DIST_PATH}`,
-			"  Step 2: Reload after loading",
+			"  Step 2: Copy the Extension ID",
+			"    - Find WebNav card on the extensions page",
+			"    - Copy the 32-character ID under the name",
+			"  Step 3: Run setup",
+			"    - Run: webnav setup install <your-id>",
+			"  Step 4: Reload extension",
 			`    - Click reload icon on WebNav card in ${extUrl}`,
-			"  Step 3: Verify",
+			"  Step 5: Verify",
 			"    - Run: webnav status",
 			"",
 			"If the extension IS installed but not connected:",
@@ -170,6 +208,12 @@ export function getNotConnectedHint(browser?: BrowserSlug): ErrorHint {
 			`    - Open ${label}: ${extUrl}`,
 			"    - Find WebNav and click the reload icon",
 			"  Step 3: Verify connection",
+			"    - Run: webnav status",
+			"  If still not connected:",
+			"    - The extension may be loaded from an outdated path",
+			"    - Remove WebNav from extensions page",
+			`    - Load unpacked from: ${EXTENSION_DIST_PATH}`,
+			"    - Copy the new extension ID and run: webnav setup install <new-id>",
 			"    - Run: webnav status",
 		],
 		diagnostics: [
@@ -182,7 +226,7 @@ export function getNotConnectedHint(browser?: BrowserSlug): ErrorHint {
 						`WARNING: Extension dist directory not found at ${EXTENSION_DIST_PATH}. Run 'bun run build' in the extension directory first.`,
 					]),
 		],
-		context: `NOT_CONNECTED: The native messaging manifest exists but the extension is not connected. The AI agent should:\n1. Ask the user: 'Is the WebNav extension installed and visible in your browser extensions page?'\n2. If NOT installed — guide them to install it:\n   - Open extensions page, enable Developer mode, Load unpacked from: ${EXTENSION_DIST_PATH}\n   - Then ask for the extension ID and browser, run: webnav setup install <id> --browser <browser>\n   - Ask user to reload the extension\n3. If IS installed — ask user to:\n   - Make sure ${label} is running\n   - Reload the extension (click reload icon on extensions page)\n4. Run: webnav status — to verify the connection`,
+		context: `NOT_CONNECTED: The native messaging manifest exists but the extension is not connected.\n\n[ASK USER] Ask: 'Is the WebNav extension installed and visible in your browser extensions page?'\n\nIf NOT installed:\n${freshInstallContext(extUrl)}\n\nIf IS installed:\n${reloadAndVerifyContext()}\nIf still not connected — the extension may be loaded from an outdated path (e.g. after a plugin update). Full reinstall:\n${reinstallContext(extUrl)}`,
 	};
 }
 
@@ -211,8 +255,7 @@ export function getConnectionFailedHint(browser?: BrowserSlug): ErrorHint {
 			"Check socket: ls -la ~/.webnav/",
 			`Check if ${label} is running: pgrep -x chrome || pgrep -x 'Google Chrome'`,
 		],
-		context:
-			"CONNECTION_FAILED: The socket file exists but the native host is not responding (likely stale). The AI agent should:\n1. Run: rm ~/.webnav/webnav.sock\n2. Ask the user to reload the extension in their browser's extensions page\n3. Run: webnav status — to verify the connection",
+		context: `CONNECTION_FAILED: The socket file exists but the native host is not responding (likely stale).\n\n[AI runs] Run: rm ~/.webnav/webnav.sock\n${reloadAndVerifyContext()}\n\nIf webnav status still fails — the extension may be from an outdated path. Full reinstall:\n${reinstallContext(extUrl)}`,
 	};
 }
 
@@ -245,8 +288,7 @@ export function getExtensionDisconnectedHint(browser?: BrowserSlug): ErrorHint {
 			"Check native host logs: webnav native-host (run manually to see stderr)",
 			"Check socket: ls -la ~/.webnav/",
 		],
-		context:
-			"The native host socket is accepting connections but the extension is not sending responses. The extension may have been disabled or encountered an error.",
+		context: `EXTENSION_DISCONNECTED: The native host is running but the extension is not responding.\n\n[USER action] Ask the user to check that WebNav is enabled on the extensions page (${extUrl})\n${reloadAndVerifyContext()}\n\nIf still not responding after reload, the extension may need a full reinstall:\n${reinstallContext(extUrl)}`,
 	};
 }
 
@@ -269,8 +311,7 @@ export function getTimeoutHint(timeoutMs: number): ErrorHint {
 			"  - Run your command again",
 		],
 		diagnostics: ["Check extension status: webnav status"],
-		context:
-			"Commands have a default 30-second timeout. Very slow pages or an unresponsive extension can cause timeouts.",
+		context: `TIMEOUT: Command timed out after ${timeoutMs}ms.\n\n[AI runs] Wait a moment, then retry the command.\nIf the command still times out:\n${reloadAndVerifyContext()}`,
 	};
 }
 
@@ -283,16 +324,27 @@ export function getExtensionOutdatedHint(
 ): ErrorHint {
 	const extUrl = extensionsUrl();
 	return {
-		summary: `Extension version (${extensionVersion}) does not match CLI version (${cliVersion}). Update the extension to get the latest features and fixes.`,
+		summary: `Extension version (${extensionVersion}) does not match CLI version (${cliVersion}). The extension must be reinstalled from the new path.`,
 		steps: [
-			"Step 1: Reload the extension",
+			"Step 1: Remove the old extension",
 			`  - Open: ${extUrl}`,
-			"  - Find WebNav and click the reload icon",
+			"  - Find WebNav and click 'Remove'",
 			"",
-			"Step 2: Verify",
+			"Step 2: Load the new extension",
+			`  - On the same page (${extUrl}), click 'Load unpacked'`,
+			`  - Select: ${EXTENSION_DIST_PATH}`,
+			"",
+			"Step 3: Copy the new extension ID",
+			"  - Find the new WebNav card",
+			"  - Copy the 32-character ID under the name",
+			"",
+			"Step 4: Run setup with the new ID",
+			"  - Run: webnav setup install <new-id>",
+			"",
+			"Step 5: Verify",
 			"  - Run: webnav status",
 		],
-		context: `CLI version: ${cliVersion}, Extension version: ${extensionVersion}. The extension dist is rebuilt automatically when the CLI runs, but the browser needs to reload the extension to pick up the changes.`,
+		context: `EXTENSION_OUTDATED: CLI version: ${cliVersion}, Extension version: ${extensionVersion}. A simple reload is NOT sufficient — after a plugin update the extension path changes, so the old extension must be fully removed and reinstalled.\n\n${reinstallContext(extUrl)}`,
 	};
 }
 
@@ -335,8 +387,7 @@ export function getInvalidExtensionIdHint(
 				? `  - Run: webnav setup install <your-id> --browser ${browser}`
 				: "  - Run: webnav setup install <your-id>",
 		],
-		context:
-			issues.length > 0 ? `Issues found: ${issues.join("; ")}` : undefined,
+		context: `INVALID_EXTENSION_ID: The provided extension ID is not valid.${issues.length > 0 ? ` ${issues.join("; ")}.` : ""}\n\n[ASK USER] Tell the user the ID was invalid and ask them to:\n   - Open the extensions page (${extUrl})\n   - Find the WebNav card and carefully copy the 32-character ID (lowercase letters only, no spaces)\n   - Provide the correct ID\n   - Do NOT proceed until the user provides a valid ID\n\n[AI runs] Run: webnav setup install <correct-id> --browser <browser>`,
 	};
 }
 
@@ -359,5 +410,6 @@ export function getMissingExtensionIdHint(browser?: BrowserSlug): ErrorHint {
 				? `  - Run: webnav setup install <your-id> --browser ${browser}`
 				: "  - Run: webnav setup install <your-id>",
 		],
+		context: `MISSING_EXTENSION_ID: The setup install command requires an extension ID. If the extension is not yet loaded in the browser, tell the user to load it from: ${EXTENSION_DIST_PATH}\n\n${askForIdContext()}\n\n[AI runs] Run: webnav setup install <extension-id> --browser <browser>`,
 	};
 }
