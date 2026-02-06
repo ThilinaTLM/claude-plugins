@@ -28,3 +28,10 @@ export function saveJson(data: unknown, prefix: string, dir?: string): string {
 
 	return filepath;
 }
+
+/**
+ * Estimate token count for JSON data (~4 chars per token).
+ */
+export function estimateTokens(data: unknown): number {
+	return Math.ceil(JSON.stringify(data).length / 4);
+}

@@ -40,7 +40,12 @@ export interface SearchResult {
 	total: number;
 	limit: number;
 	offset: number;
-	fileType: "elements" | "snapshot-tree" | "snapshot-compact";
+	fileType:
+		| "elements"
+		| "snapshot-tree"
+		| "snapshot-compact"
+		| "console"
+		| "errors";
 }
 
 type FileType = SearchResult["fileType"];
@@ -52,23 +57,30 @@ function detectFileType(data: unknown): { type: FileType; data: unknown } {
 	if (Array.isArray(data)) {
 		if (data.length === 0) return { type: "elements", data };
 		const first = data[0];
-		// Snapshot nodes have ref/role/name/tag; element arrays have tag/type/text
-		if (first && typeof first === "object" && "children" in first) {
-			return { type: "snapshot-tree", data };
+		if (first && typeof first === "object") {
+			if ("children" in first) {
+				return { type: "snapshot-tree", data };
+			}
+			if ("ref" in first && "role" in first && !("type" in first)) {
+				return { type: "snapshot-tree", data };
+			}
+			if ("level" in first && "text" in first && "timestamp" in first) {
+				return { type: "console", data };
+			}
+			if ("message" in first && "line" in first && "col" in first) {
+				return { type: "errors", data };
+			}
+			if ("tag" in first && "type" in first) {
+				return { type: "elements", data };
+			}
 		}
-		// Check for snapshot node shape (ref + role)
-		if (
-			first &&
-			typeof first === "object" &&
-			"ref" in first &&
-			"role" in first &&
-			!("type" in first)
-		) {
-			return { type: "snapshot-tree", data };
-		}
-		return { type: "elements", data };
+		throw new Error(
+			"Unsupported file format. json-search only supports files created by webnav snapshot, elements, console, errors, or observe commands.",
+		);
 	}
-	return { type: "elements", data };
+	throw new Error(
+		"Unsupported file format. json-search only supports files created by webnav snapshot, elements, console, errors, or observe commands.",
+	);
 }
 
 function flattenSnapshotTree(nodes: SnapshotNode[]): FlatItem[] {
@@ -149,6 +161,11 @@ function matchesFilters(item: FlatItem, options: SearchOptions): boolean {
 			...(typeof item.id === "string" ? [item.id] : []),
 			...(typeof item.href === "string" ? [item.href] : []),
 			...(typeof item.value === "string" ? [item.value] : []),
+			// Console fields
+			...(typeof item.level === "string" ? [item.level] : []),
+			// Error fields
+			...(typeof item.message === "string" ? [item.message] : []),
+			...(typeof item.source === "string" ? [item.source] : []),
 		];
 		const found = searchable.some(
 			(v) => typeof v === "string" && v.toLowerCase().includes(p),
@@ -170,6 +187,8 @@ export function searchJsonFile(
 	let items: FlatItem[];
 	switch (type) {
 		case "elements":
+		case "console":
+		case "errors":
 			items = (data as FlatItem[]) || [];
 			break;
 		case "snapshot-tree":

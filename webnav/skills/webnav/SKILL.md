@@ -33,7 +33,7 @@ Run `webnav status` to check connection. If not set up, the output includes step
 | -------------- | ------------------------------------------------------------------ | --------------------------------------------------- |
 | `status`       | —                                                                  | Check extension connection                          |
 | `info`         | —                                                                  | Current tab URL, title, status                      |
-| `observe`      | `--no-screenshot`, `-f` full-tree, `-d` dir                        | Screenshot + accessibility tree snapshot (compact)  |
+| `observe`      | `--no-screenshot`, `-f` full-tree, `-d` dir                        | Full page state: screenshot + snapshot + console + errors |
 | `screenshot`   | `-d` dir, `-f` full-page, `-s` selector                            | Capture viewport or element screenshot              |
 | `elements`     | `-d` dir                                                           | List all interactive elements with metadata         |
 | `snapshot`     | `--all` include-all, `-s` selector, `-d` max-depth, `-c` compact, `--dir` | Accessibility tree with `@ref` IDs (interactive-only by default) |
@@ -132,7 +132,7 @@ Run `webnav status` to check connection. If not set up, the output includes step
 
 **`click --wait-*` flags** — Combine click + wait in one call: `--wait-url "*/dashboard*"`, `--wait-text "Success"`, `--wait-selector ".results"`, `--wait-timeout 15000`.
 
-**File output** — `elements`, `snapshot`, `observe`, `console`, and `errors` auto-save to file when results exceed 50 items. Output includes `nodeCount` + file path instead of inline data. Use `util json-search` to query the file.
+**File output** — `observe` always saves snapshot/console/errors to files. Standalone `elements`, `snapshot`, `console`, `errors` auto-save when results exceed 10 items. Output includes file path + `tokens` estimate. For large files use `util json-search`; small files can be read directly.
 
 ## Workflows
 
@@ -177,7 +177,7 @@ webnav fill -r @e7 "value"
 **Search through large result sets:**
 
 ```bash
-webnav observe                               # returns snapshotFile if >50 nodes
+webnav observe                               # saves snapshot, console, errors to files
 webnav util json-search /tmp/snapshot_*.json "Login"
 webnav util json-search /tmp/snapshot_*.json --role button
 webnav util json-search /tmp/snapshot_*.json --ref @e42
@@ -186,8 +186,7 @@ webnav util json-search /tmp/snapshot_*.json --ref @e42
 **Debug JS issues:**
 
 ```bash
-webnav console
-webnav errors
+webnav observe                              # includes console + errors in output
 webnav evaluate "document.querySelector('#app').__vue__"
 ```
 
@@ -203,8 +202,9 @@ webnav group switch <tabId>
 ## Tips
 
 - Prefer `fill` over click + type for form fields
-- Prefer `observe` over `elements` — snapshot provides hierarchy, roles, and `@ref` IDs for precise targeting
+- Prefer `observe` over `elements` — snapshot provides hierarchy, roles, and `@ref` IDs for precise targeting; also captures console + errors
 - Use `elements` only when you need bounding box coordinates
+- Use `observe` instead of separate `console` / `errors` calls — it captures everything in one round trip
 - Use `act` to batch multiple actions in one round trip
 - Use `click --wait-*` instead of click then wait-for
 - Navigation commands (`goto`, `back`, `forward`, `reload`) auto-wait for page load

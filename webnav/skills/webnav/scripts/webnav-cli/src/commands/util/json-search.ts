@@ -5,7 +5,8 @@ import { jsonError, jsonOk } from "../../lib/output";
 export const jsonSearchCommand = defineCommand({
 	meta: {
 		name: "json-search",
-		description: "Search a JSON file produced by elements/snapshot/observe",
+		description:
+			"Search a JSON file produced by elements/snapshot/console/errors/observe",
 	},
 	args: {
 		file: {

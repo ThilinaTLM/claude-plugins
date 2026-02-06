@@ -318,6 +318,26 @@ export async function handleObserve(
 		result.compact = payload.compact;
 	}
 
+	// Console logs (read-only, reuse existing handler)
+	try {
+		const consoleRes = await handleConsole({ clear: false });
+		result.console = consoleRes.logs;
+		result.consoleCount = consoleRes.count;
+	} catch (_e) {
+		result.console = [];
+		result.consoleCount = 0;
+	}
+
+	// JS errors (read-only, reuse existing handler)
+	try {
+		const errorsRes = await handleErrors({ clear: false });
+		result.errors = errorsRes.errors;
+		result.errorsCount = errorsRes.count;
+	} catch (_e) {
+		result.errors = [];
+		result.errorsCount = 0;
+	}
+
 	return result;
 }
 

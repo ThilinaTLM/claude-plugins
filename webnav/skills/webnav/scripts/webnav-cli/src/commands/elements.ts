@@ -1,10 +1,10 @@
 import { defineCommand } from "citty";
 import { sendCommand } from "../lib/client";
 import { jsonOk } from "../lib/output";
-import { saveJson } from "../lib/save-json";
+import { estimateTokens, saveJson } from "../lib/save-json";
 import type { ElementInfo } from "../types";
 
-const FILE_THRESHOLD = 50;
+const FILE_THRESHOLD = 10;
 
 export const elementsCommand = defineCommand({
 	meta: {
@@ -29,8 +29,9 @@ export const elementsCommand = defineCommand({
 
 		if (count > FILE_THRESHOLD) {
 			output.file = saveJson(result.elements, "elements", args.dir as string);
+			output.tokens = estimateTokens(result.elements);
 			output.hint =
-				"Use `webnav util json-search <file> [pattern]` to search this file";
+				"For large files use `webnav util json-search <file> [pattern]` to search; small files can be read directly";
 		} else {
 			output.elements = result.elements;
 		}

@@ -1,10 +1,8 @@
 import { defineCommand } from "citty";
 import { sendCommand } from "../lib/client";
 import { jsonOk } from "../lib/output";
-import { saveJson } from "../lib/save-json";
+import { estimateTokens, saveJson } from "../lib/save-json";
 import { saveScreenshot } from "../lib/screenshot";
-
-const FILE_THRESHOLD = 50;
 
 export const observeCommand = defineCommand({
 	meta: {
@@ -39,6 +37,10 @@ export const observeCommand = defineCommand({
 			tree: unknown;
 			nodeCount: number;
 			compact?: boolean;
+			console: unknown[];
+			consoleCount: number;
+			errors: unknown[];
+			errorsCount: number;
 		}>("observe", {
 			noScreenshot: args["no-screenshot"] || undefined,
 			compact: args.full ? false : undefined,
@@ -55,14 +57,40 @@ export const observeCommand = defineCommand({
 			output.screenshot = saveScreenshot(result.image, dir);
 		}
 
-		output.nodeCount = result.nodeCount;
-		if (result.nodeCount > FILE_THRESHOLD) {
-			output.snapshotFile = saveJson(result.tree, "snapshot", dir);
-			output.hint =
-				"Use `webnav util json-search <file> [pattern]` to search the snapshot file";
+		// Snapshot — always saved to file
+		const snapshotFile = saveJson(result.tree, "snapshot", dir);
+		output.snapshot = {
+			file: snapshotFile,
+			nodeCount: result.nodeCount,
+			tokens: estimateTokens(result.tree),
+		};
+
+		// Console — file only when there are logs
+		if (result.consoleCount > 0) {
+			const consoleFile = saveJson(result.console, "console", dir);
+			output.console = {
+				file: consoleFile,
+				count: result.consoleCount,
+				tokens: estimateTokens(result.console),
+			};
 		} else {
-			output.tree = result.tree;
+			output.console = { count: 0 };
 		}
+
+		// Errors — file only when there are errors
+		if (result.errorsCount > 0) {
+			const errorsFile = saveJson(result.errors, "errors", dir);
+			output.errors = {
+				file: errorsFile,
+				count: result.errorsCount,
+				tokens: estimateTokens(result.errors),
+			};
+		} else {
+			output.errors = { count: 0 };
+		}
+
+		output.hint =
+			"For large files use `webnav util json-search <file> [pattern]` to search; small files can be read directly";
 
 		jsonOk(output);
 	},
