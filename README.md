@@ -24,6 +24,7 @@
 /plugin install specdev@tlmtech
 /plugin install pgtool@tlmtech
 /plugin install droid@tlmtech
+/plugin install webnav@tlmtech
 ```
 
 ### Other Tools (Cursor, Copilot, etc.)
@@ -38,6 +39,7 @@ Or install individual skills:
 npx skills add ThilinaTLM/agent-skills/specdev
 npx skills add ThilinaTLM/agent-skills/pgtool
 npx skills add ThilinaTLM/agent-skills/droid
+npx skills add ThilinaTLM/agent-skills/webnav
 ```
 
 ---
@@ -49,6 +51,7 @@ npx skills add ThilinaTLM/agent-skills/droid
 | [specdev](./specdev) | Spec-driven development for multi-session tasks | `productivity` `workflow` |
 | [pgtool](./pgtool)   | PostgreSQL database exploration and debugging   | `database` `sql`          |
 | [droid](./droid)     | Android device automation via ADB               | `testing` `android`       |
+| [webnav](./webnav)   | Browser automation via Chrome extension         | `browser` `automation`    |
 
 ---
 
