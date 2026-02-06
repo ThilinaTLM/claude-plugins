@@ -29,6 +29,8 @@ export const elementsCommand = defineCommand({
 
 		if (count > FILE_THRESHOLD) {
 			output.file = saveJson(result.elements, "elements", args.dir as string);
+			output.hint =
+				"Use `webnav util json-search <file> [pattern]` to search this file";
 		} else {
 			output.elements = result.elements;
 		}

@@ -36,6 +36,8 @@ export const errorsCommand = defineCommand({
 
 		if (result.count > FILE_THRESHOLD) {
 			output.file = saveJson(result.errors, "errors", args.dir as string);
+			output.hint =
+				"Use `webnav util json-search <file> [pattern]` to search this file";
 		} else {
 			output.errors = result.errors;
 		}

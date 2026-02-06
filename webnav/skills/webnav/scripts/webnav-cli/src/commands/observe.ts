@@ -58,6 +58,8 @@ export const observeCommand = defineCommand({
 		output.nodeCount = result.nodeCount;
 		if (result.nodeCount > FILE_THRESHOLD) {
 			output.snapshotFile = saveJson(result.tree, "snapshot", dir);
+			output.hint =
+				"Use `webnav util json-search <file> [pattern]` to search the snapshot file";
 		} else {
 			output.tree = result.tree;
 		}
