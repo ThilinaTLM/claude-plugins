@@ -18,10 +18,52 @@ The CLI is located at `./scripts/webnav-cli/` relative to this SKILL.md file.
 
 **Claude Code:** Use `${CLAUDE_PLUGIN_ROOT}/skills/webnav/scripts/webnav-cli/webnav`.
 
-## Prerequisites
+## How It Works
 
-- Bun runtime (https://bun.sh)
-- Google Chrome browser
+Every interaction follows the **observe → read → act → verify** loop:
+
+```
+1. Observe  →  webnav observe          (returns file paths to screenshot + snapshot)
+2. Read     →  Read the screenshot PNG + snapshot file to understand page state
+3. Act      →  Run action commands (click, fill, type, etc.)
+4. Verify   →  webnav observe again to confirm the result
+```
+
+**`observe` returns file paths, not inline data.** Example output:
+
+```json
+{
+  "ok": true,
+  "action": "observe",
+  "url": "https://example.com/login",
+  "title": "Login - Example",
+  "screenshot": "/tmp/webnav_screenshot_abc123.png",
+  "snapshot": {
+    "file": "/tmp/webnav_snapshot_abc123.json",
+    "nodeCount": 47,
+    "tokens": 1820
+  },
+  "console": { "count": 0 },
+  "errors": { "count": 0 },
+  "hint": "For large files use `webnav util json-search <file> [pattern]` to search; small files can be read directly"
+}
+```
+
+You **must** read the screenshot and snapshot files to see what's on the page. The snapshot is a compact accessibility tree:
+
+```
+@e1 navigation "Main Menu"
+  @e2 link "Home"
+  @e3 link "About"
+@e4 main
+  @e5 heading "Welcome" [level=1]
+  @e6 textbox "Email" [value= required=true]
+  @e7 button "Submit"
+```
+
+Each `@eN` ref can be used with `-r @eN` on `click`, `fill`, `type`, `key`, `wait-for` for precise targeting.
+
+## Prerequisites
 
 Run `webnav status` to check connection. If not set up, the output includes step-by-step setup instructions. Seek help from user to set up the extension.
 
@@ -29,21 +71,23 @@ Run `webnav status` to check connection. If not set up, the output includes step
 
 ### Observe (read page state)
 
-| Command        | Args / Flags                                                       | Description                                         |
-| -------------- | ------------------------------------------------------------------ | --------------------------------------------------- |
-| `status`       | —                                                                  | Check extension connection                          |
-| `info`         | —                                                                  | Current tab URL, title, status                      |
-| `observe`      | `--no-screenshot`, `-f` full-tree, `-d` dir                        | Full page state: screenshot + snapshot + console + errors |
-| `screenshot`   | `-d` dir, `-f` full-page, `-s` selector                            | Capture viewport or element screenshot              |
-| `elements`     | `-d` dir                                                           | List all interactive elements with metadata         |
+| Command        | Args / Flags                                                              | Description                                                      |
+| -------------- | ------------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| `status`       | —                                                                         | Check extension connection                                       |
+| `info`         | —                                                                         | Current tab URL, title, status                                   |
+| `observe`      | `--no-screenshot`, `-f` full-tree, `-d` dir                               | Full page state: screenshot + snapshot + console + errors        |
+| `screenshot`   | `-d` dir, `-f` full-page, `-s` selector                                   | Capture viewport or element screenshot                           |
+| `elements`     | `-d` dir                                                                  | List all interactive elements with metadata                      |
 | `snapshot`     | `--all` include-all, `-s` selector, `-d` max-depth, `-c` compact, `--dir` | Accessibility tree with `@ref` IDs (interactive-only by default) |
-| `gettext`      | `-t` text, `-s` selector                                           | Get element text content                            |
-| `inputvalue`   | `-t` text, `-s` selector                                           | Get current input value                             |
-| `getattribute` | `-t` text, `-s` selector, `-n` name (required)                     | Get element attribute value                         |
-| `isvisible`    | `-t` text, `-s` selector                                           | Check element visibility                            |
-| `isenabled`    | `-t` text, `-s` selector                                           | Check if element is enabled                         |
-| `ischecked`    | `-t` text, `-s` selector                                           | Check checkbox/radio state                          |
-| `boundingbox`  | `-t` text, `-s` selector                                           | Get element bounding rectangle                      |
+| `gettext`      | `-t` text, `-s` selector                                                  | Get element text content                                         |
+| `inputvalue`   | `-t` text, `-s` selector                                                  | Get current input value                                          |
+| `getattribute` | `-t` text, `-s` selector, `-n` name (required)                            | Get element attribute value                                      |
+| `isvisible`    | `-t` text, `-s` selector                                                  | Check element visibility                                         |
+| `isenabled`    | `-t` text, `-s` selector                                                  | Check if element is enabled                                      |
+| `ischecked`    | `-t` text, `-s` selector                                                  | Check checkbox/radio state                                       |
+| `boundingbox`  | `-t` text, `-s` selector                                                  | Get element bounding rectangle                                   |
+
+`observe` returns compact text snapshot by default; use `-f` for full JSON tree. Results are always saved to files; the response includes file paths and a `tokens` estimate.
 
 ### Navigate (move between pages/positions)
 
@@ -71,6 +115,8 @@ Run `webnav status` to check connection. If not set up, the output includes step
 | `check`    | `-t` text, `-s` selector, `--screenshot`, `-d` dir                                                                                                   | Check checkbox/radio                                             |
 | `uncheck`  | `-t` text, `-s` selector                                                                                                                             | Uncheck checkbox                                                 |
 | `hover`    | `-t` text, `-s` selector                                                                                                                             | Hover over element                                               |
+
+Text matching (`-t`): substring by default, `-x` for exact match. When multiple matches, interactive elements are preferred. `fill` with `-r @eN` omits the label arg: `fill -r @e6 "value"`. `select` requires one of `-v` (value) or `-o` (option text).
 
 ### Wait (explicit waits)
 
@@ -113,8 +159,8 @@ Run `webnav status` to check connection. If not set up, the output includes step
 
 ### Utilities
 
-| Command            | Args / Flags                                                                   | Description                                   |
-| ------------------ | ------------------------------------------------------------------------------ | --------------------------------------------- |
+| Command            | Args / Flags                                                                    | Description                                     |
+| ------------------ | ------------------------------------------------------------------------------- | ----------------------------------------------- |
 | `util json-search` | `<file>` `[pattern]`, `-t` tag, `-r` role, `--ref`, `-n` limit (50), `--offset` | Search JSON file from elements/snapshot/observe |
 
 ### Setup
@@ -124,97 +170,100 @@ Run `webnav status` to check connection. If not set up, the output includes step
 | `setup install`   | `[extensionId]`, `-b` browser (chrome/edge/brave/vivaldi) | Install native host manifest |
 | `setup uninstall` | `-b` browser (omit for all)                               | Remove native host manifest  |
 
-## Key Concepts
+## Snapshot Refs
 
-**Snapshot refs** — `observe` and `snapshot` assign `@e1`, `@e2`, ... to elements. Use with `-r @e5` on `click`, `type`, `key`, `fill`, `wait-for` for precise targeting.
+`observe` and `snapshot` assign `@e1`, `@e2`, ... to interactive elements. These refs enable precise targeting:
 
-**`--screenshot` flag** — Available on `goto`, `click`, `fill`, `type`, `key`, `check`, `select`. Captures viewport after action. Saves to `--dir` or system temp.
+- Use with `-r @eN` on: `click`, `fill`, `type`, `key`, `wait-for`
+- Refs are assigned fresh on every `observe` or `snapshot` call
+- **Refs go stale** after page navigation or DOM changes — always re-run `observe` before using refs
 
-**`click --wait-*` flags** — Combine click + wait in one call: `--wait-url "*/dashboard*"`, `--wait-text "Success"`, `--wait-selector ".results"`, `--wait-timeout 15000`.
+## Reading Output Files
 
-**File output** — `observe` always saves snapshot/console/errors to files. Standalone `elements`, `snapshot`, `console`, `errors` auto-save when results exceed 10 items. Output includes file path + `tokens` estimate. For large files use `util json-search`; small files can be read directly.
+`observe` saves screenshot, snapshot, console, and errors to files. How to read them:
+
+- **Screenshot PNG** — always read with the Read tool to see the page visually
+- **Snapshot / console / errors** — check the `tokens` field in the response:
+  - Small (`tokens` < 4000): read the file directly
+  - Large: use `webnav util json-search <file> [pattern]` to search
+- **`json-search`** supports: text pattern, `--role button`, `--tag input`, `--ref @eN`
+
+Standalone `elements`, `snapshot`, `console`, `errors` also auto-save to files when results exceed 10 items.
 
 ## Workflows
 
-**Start any session:**
+**Start + navigate:**
 
 ```bash
 webnav status
 webnav goto "https://example.com" --screenshot
 webnav observe
+# → Read screenshot PNG and snapshot file to understand the page
 ```
 
-**Fill a form:**
+**Fill and submit a form:**
 
 ```bash
-webnav goto "https://example.com/login" --screenshot
 webnav observe
+# → Read snapshot to find form fields
 webnav fill "Email" "user@example.com"
 webnav fill "Password" "secret123"
 webnav click -t "Sign In" --wait-url "*/dashboard*" --screenshot
+# → Read screenshot to verify navigation succeeded
 ```
 
-**Batch form fill (fewer round trips):**
+**Debug JS errors:**
 
 ```bash
-webnav goto "https://example.com/login" --screenshot
 webnav observe
+# → Check errors.count and console.count in response
+# → If count > 0, read the errors/console file
+webnav evaluate "document.querySelector('#app').dataset.version"
+```
+
+**Precise targeting with refs:**
+
+```bash
+webnav observe
+# → Read snapshot file, find @e6 is the email textbox
+webnav fill -r @e6 "user@example.com"
+webnav click -r @e7
+```
+
+**Batch actions (fewer round trips):**
+
+```bash
 webnav act --json '[
   {"action":"fill","label":"Email","value":"user@example.com"},
   {"action":"fill","label":"Password","value":"secret123"},
   {"action":"click","text":"Sign In","waitUrl":"*/dashboard*","screenshot":true}
 ]'
-```
-
-**Precise targeting with snapshot refs:**
-
-```bash
-webnav observe
-webnav click -r @e5
-webnav fill -r @e7 "value"
-```
-
-**Search through large result sets:**
-
-```bash
-webnav observe                               # saves snapshot, console, errors to files
-webnav util json-search /tmp/snapshot_*.json "Login"
-webnav util json-search /tmp/snapshot_*.json --role button
-webnav util json-search /tmp/snapshot_*.json --ref @e42
-```
-
-**Debug JS issues:**
-
-```bash
-webnav observe                              # includes console + errors in output
-webnav evaluate "document.querySelector('#app').__vue__"
-```
-
-**Multi-tab workflow:**
-
-```bash
-webnav goto "https://site-a.com"
-webnav goto "https://site-b.com" --new-tab
-webnav group tabs
-webnav group switch <tabId>
+# Or positional: webnav act 'fill "Email" "user@example.com"' 'click -t "Sign In"'
 ```
 
 ## Tips
 
-- Prefer `fill` over click + type for form fields
-- Prefer `observe` over `elements` — snapshot provides hierarchy, roles, and `@ref` IDs for precise targeting; also captures console + errors
-- Use `elements` only when you need bounding box coordinates
-- Use `observe` instead of separate `console` / `errors` calls — it captures everything in one round trip
-- Use `act` to batch multiple actions in one round trip
-- Use `click --wait-*` instead of click then wait-for
-- Navigation commands (`goto`, `back`, `forward`, `reload`) auto-wait for page load
-- Use `--screenshot` on action commands instead of separate screenshot call
-- Use text matching (`-t`) over selectors when possible — more robust
-- Use snapshot refs (`-r @e5`) for precise targeting after `observe`
+- **Targeting priority:** prefer `-r @eN` (precise) > `-t text` (readable) > `-s selector` (fragile)
+- **Page state:** use `observe` for combined view; use standalone `snapshot -s selector` for scoped subtree, standalone `console -c` / `errors -c` to clear after reading
+- **Forms:** use `fill` over click + type — it handles focus, clear, and input events
+- **Waiting:** use `click --wait-url` / `--wait-text` / `--wait-selector` over separate click then wait-for
+- **Efficiency:** use `--screenshot` on action commands instead of a separate screenshot call; use `act` to batch multiple actions
+- **After page changes:** always re-observe — refs from the previous snapshot are stale
+- **Navigation commands** (`goto`, `back`, `forward`, `reload`) auto-wait for page load
 
 ## Error Handling
 
-All errors return `{"ok":false, "error":"...", "code":"...", "hint":"..."}`.
+All errors return `{"ok":false, "error":"...", "code":"...", "hint":{...}}`. The `hint` object includes `summary`, `steps`, and `diagnostics`.
+
+| Code                     | Meaning & Recovery                                                                   |
+| ------------------------ | ------------------------------------------------------------------------------------ |
+| `ELEMENT_NOT_FOUND`      | Target not on page. Re-observe, check snapshot, try different targeting method.      |
+| `TIMEOUT`                | Page may be loading slowly. Wait for load to finish, increase `--timeout`, or retry. |
+| `NOT_CONNECTED`          | Extension not loaded. Ask user to open Chrome and reload the extension.              |
+| `CONNECTION_FAILED`      | Stale socket. Ask user to run `rm ~/.webnav/webnav.sock` then reload extension.      |
+| `SETUP_REQUIRED`         | First-time setup needed. Follow the `hint.steps` in the error response.              |
+| `EXTENSION_ERROR`        | Extension-side failure. Check error message; page may block script injection.        |
+| `EXTENSION_DISCONNECTED` | Native host running but extension unresponsive. Ask user to reload extension.        |
 
 ## Architecture
 
