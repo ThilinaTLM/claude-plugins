@@ -13,7 +13,6 @@ import { keyCommand } from "./commands/key";
 import { screenshotCommand } from "./commands/screenshot";
 import { setupCommand } from "./commands/setup";
 import { statusCommand } from "./commands/status";
-import { tabsCommand } from "./commands/tabs";
 import { typeCommand } from "./commands/type";
 import { waitForCommand } from "./commands/wait-for";
 
@@ -31,7 +30,6 @@ const main = defineCommand({
 		// Status and info
 		status: statusCommand,
 		info: infoCommand,
-		tabs: tabsCommand,
 		history: historyCommand,
 
 		// Tab group management
@@ -39,30 +37,21 @@ const main = defineCommand({
 
 		// Navigation
 		goto: gotoCommand,
-		navigate: gotoCommand,
-		nav: gotoCommand,
 
 		// Screenshot
 		screenshot: screenshotCommand,
-		ss: screenshotCommand,
-		screen: screenshotCommand,
 
 		// Interaction
 		click: clickCommand,
-		tap: clickCommand,
 		type: typeCommand,
-		input: typeCommand,
 		key: keyCommand,
 		fill: fillCommand,
 
 		// Wait
 		"wait-for": waitForCommand,
-		waitfor: waitForCommand,
-		await: waitForCommand,
 
 		// Elements
 		elements: elementsCommand,
-		els: elementsCommand,
 	},
 });
 

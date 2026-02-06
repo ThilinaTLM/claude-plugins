@@ -330,8 +330,6 @@ async function executeCommand(action, payload = {}) {
       return await handleGoto(payload);
     case "info":
       return await handleInfo(payload);
-    case "tabs":
-      return await handleTabs(payload);
     case "status":
       return await handleStatus(payload);
     case "click":
@@ -464,20 +462,6 @@ async function handleInfo(payload) {
     status: tab.status,
     active: tab.active,
     windowId: tab.windowId,
-  };
-}
-
-// Tabs: list all tabs
-async function handleTabs(payload) {
-  const tabs = await chrome.tabs.query({});
-  return {
-    tabs: tabs.map((tab) => ({
-      id: tab.id,
-      url: tab.url,
-      title: tab.title,
-      active: tab.active,
-      windowId: tab.windowId,
-    })),
   };
 }
 
@@ -1002,16 +986,28 @@ function waitForElement({ text, selector, timeout }) {
 function getInteractiveElements() {
   const elements = [];
   const selectors = [
+    // Core interactive elements
     "a[href]",
     "button",
     "input",
     "textarea",
     "select",
+    // ARIA roles
     '[role="button"]',
     '[role="link"]',
     '[role="checkbox"]',
     '[role="radio"]',
+    '[role="menuitem"]',
+    '[role="tab"]',
+    '[role="switch"]',
+    '[role="option"]',
+    '[role="slider"]',
+    '[role="spinbutton"]',
+    '[role="combobox"]',
+    // Other interactive patterns
     "[onclick]",
+    "[tabindex]:not([tabindex='-1'])",
+    "[contenteditable='true']",
   ];
 
   const seen = new Set();
@@ -1020,6 +1016,9 @@ function getInteractiveElements() {
     for (const el of document.querySelectorAll(selector)) {
       if (seen.has(el)) continue;
       seen.add(el);
+
+      // Skip disabled elements
+      if (el.disabled || el.getAttribute("aria-disabled") === "true") continue;
 
       const rect = el.getBoundingClientRect();
       if (rect.width === 0 || rect.height === 0) continue;

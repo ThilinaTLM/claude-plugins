@@ -88,15 +88,6 @@ webnav info
 
 **Response:** `{"ok":true,"action":"info","id":123,"url":"https://example.com","title":"Example","status":"complete","active":true}`
 
-### tabs
-List all browser tabs.
-
-```bash
-webnav tabs
-```
-
-**Response:** `{"ok":true,"action":"tabs","count":3,"tabs":[...]}`
-
 ### goto
 Navigate to a URL.
 
