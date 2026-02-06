@@ -1,20 +1,38 @@
 import { defineCommand } from "citty";
 import { sendCommand } from "../lib/client";
 import { jsonOk } from "../lib/output";
+import { saveJson } from "../lib/save-json";
 import type { ElementInfo } from "../types";
+
+const FILE_THRESHOLD = 50;
 
 export const elementsCommand = defineCommand({
 	meta: {
 		name: "elements",
 		description: "List interactive elements on the page",
 	},
-	async run() {
+	args: {
+		dir: {
+			type: "string",
+			alias: "d",
+			description: "Output directory for large results (default: system temp)",
+		},
+	},
+	async run({ args }) {
 		const result = await sendCommand<{ elements: ElementInfo[] }>("elements");
 
-		jsonOk({
+		const count = result.elements.length;
+		const output: Record<string, unknown> = {
 			action: "elements",
-			count: result.elements.length,
-			elements: result.elements,
-		});
+			count,
+		};
+
+		if (count > FILE_THRESHOLD) {
+			output.file = saveJson(result.elements, "elements", args.dir as string);
+		} else {
+			output.elements = result.elements;
+		}
+
+		jsonOk(output);
 	},
 });

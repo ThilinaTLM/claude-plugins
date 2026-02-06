@@ -41,6 +41,7 @@ import { snapshotCommand } from "./commands/snapshot";
 import { statusCommand } from "./commands/status";
 import { typeCommand } from "./commands/type";
 import { uncheckCommand } from "./commands/uncheck";
+import { utilCommand } from "./commands/util";
 import { waitForCommand } from "./commands/wait-for";
 import { waitforloadCommand } from "./commands/waitforload";
 import { waitforurlCommand } from "./commands/waitforurl";
@@ -118,6 +119,9 @@ const main = defineCommand({
 		dialog: dialogCommand,
 		console: consoleCommand,
 		errors: errorsCommand,
+
+		// Utilities
+		util: utilCommand,
 	},
 });
 

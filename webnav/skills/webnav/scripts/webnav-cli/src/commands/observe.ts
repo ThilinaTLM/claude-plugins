@@ -1,7 +1,10 @@
 import { defineCommand } from "citty";
 import { sendCommand } from "../lib/client";
 import { jsonOk } from "../lib/output";
+import { saveJson } from "../lib/save-json";
 import { saveScreenshot } from "../lib/screenshot";
+
+const FILE_THRESHOLD = 50;
 
 export const observeCommand = defineCommand({
 	meta: {
@@ -29,7 +32,8 @@ export const observeCommand = defineCommand({
 		dir: {
 			type: "string",
 			alias: "d",
-			description: "Screenshot output directory (default: system temp)",
+			description:
+				"Output directory for screenshots and large results (default: system temp)",
 		},
 	},
 	async run({ args }) {
@@ -47,6 +51,7 @@ export const observeCommand = defineCommand({
 			compact: args.compact || undefined,
 		});
 
+		const dir = args.dir as string;
 		const output: Record<string, unknown> = {
 			action: "observe",
 			url: result.url,
@@ -54,15 +59,23 @@ export const observeCommand = defineCommand({
 		};
 
 		if (result.image) {
-			output.screenshot = saveScreenshot(result.image, args.dir as string);
+			output.screenshot = saveScreenshot(result.image, dir);
 		}
 
-		output.elements = result.elements;
 		output.count = result.count;
+		if (result.count > FILE_THRESHOLD) {
+			output.elementsFile = saveJson(result.elements, "elements", dir);
+		} else {
+			output.elements = result.elements;
+		}
 
 		if (result.tree !== undefined) {
-			output.tree = result.tree;
 			output.nodeCount = result.nodeCount;
+			if ((result.nodeCount ?? 0) > FILE_THRESHOLD) {
+				output.snapshotFile = saveJson(result.tree, "snapshot", dir);
+			} else {
+				output.tree = result.tree;
+			}
 		}
 
 		jsonOk(output);
