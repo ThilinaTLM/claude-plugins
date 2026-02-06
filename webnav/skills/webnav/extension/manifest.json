@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "WebNav - Claude Browser Control",
-  "version": "1.5.0",
+  "version": "1.6.0",
   "description": "Allows Claude Code to control browser tabs via native messaging",
   "permissions": [
     "activeTab",

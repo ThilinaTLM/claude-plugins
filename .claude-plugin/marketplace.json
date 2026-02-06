@@ -71,7 +71,7 @@
       "name": "webnav",
       "source": "./webnav",
       "description": "Browser automation via Chrome extension and native messaging",
-      "version": "1.5.0",
+      "version": "1.6.0",
       "author": {
         "name": "ThilinaTLM"
       },
