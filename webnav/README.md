@@ -1,6 +1,24 @@
 # webnav
 
-Browser automation via Chrome extension for AI agents.
+A Claude Code plugin that gives Claude the ability to control your browser. It works through a Chrome extension and a native messaging bridge — Claude sends commands via the CLI, and the extension executes them in your browser.
+
+## What Can It Do?
+
+- **Browse the web** — Navigate to pages, go back/forward, reload, scroll, open new tabs
+- **See what's on screen** — Take screenshots, read page structure via accessibility snapshots
+- **Interact with pages** — Click buttons/links, fill forms, select dropdowns, check/uncheck boxes, type text, press keys
+- **Wait for things** — Wait for elements to appear, pages to load, URLs to change
+- **Read page data** — Get text content, input values, element attributes, check visibility and state
+- **Run multiple actions** — Batch commands for efficient multi-step workflows
+- **Debug pages** — View console logs, JS errors, network requests, execute JavaScript
+- **Manage tabs** — Open, switch between, and close browser tabs
+
+## Supported Browsers
+
+- Google Chrome
+- Brave
+- Microsoft Edge
+- Chromium
 
 ## Installation
 
@@ -20,106 +38,67 @@ npx skills add ThilinaTLM/agent-skills/webnav
 ## Prerequisites
 
 - [Bun](https://bun.sh) runtime
-- Google Chrome browser
-- Unix-like OS (Linux or macOS)
+- A supported Chromium-based browser (see above)
+- Linux, macOS, or Windows
 
 ## Setup
 
-1. **Load extension in Chrome:**
-   - Open `chrome://extensions`
-   - Enable "Developer mode"
-   - Click "Load unpacked" and select the `skills/webnav/extension/dist/` directory
-   - Copy the Extension ID (32-character string)
+### 1. Load extension in your browser
 
-2. **Install native host:**
-   ```bash
-   webnav setup --extension-id <your-extension-id>
-   ```
+- Open your browser's extensions page (e.g. `chrome://extensions`, `brave://extensions`, `edge://extensions`)
+- Enable **Developer mode**
+- Click **Load unpacked** and select the `extension/dist/` directory inside the plugin
+- Copy the **Extension ID** (32-character string shown on the extension card)
 
-3. **Reload extension** in Chrome to connect
+### 2. Install native host
 
-4. **Verify:**
-   ```bash
-   webnav status
-   ```
+```bash
+webnav setup install <extension-id>
+```
 
-See `skills/webnav/SETUP.md` for detailed instructions.
+For browsers other than Chrome, use the `-b` flag:
 
-## Features
+```bash
+webnav setup install <extension-id> -b brave
+webnav setup install <extension-id> -b edge
+webnav setup install <extension-id> -b chromium
+```
 
-- **Text-based targeting** - Click elements by text content, no coordinate hunting
-- **Screenshot capture** - Get screenshots of the current tab
-- **Form automation** - Fill text fields by label/placeholder
-- **Keyboard events** - Send enter, tab, escape, and more
-- **Wait conditions** - Wait for elements to appear before proceeding
-- **JSON-first output** - All commands output JSON by default for AI consumption
+On Windows, use the PowerShell wrapper:
 
-## CLI Commands
+```powershell
+webnav.ps1 setup install <extension-id> -b chrome
+```
 
-All commands output JSON by default for AI consumption.
+### 3. Reload the extension
 
-### Status & Information
+Go back to your browser's extensions page and click the reload button on the webnav extension. This connects it to the native host.
 
-| Command          | Description                      |
-| ---------------- | -------------------------------- |
-| `webnav status`  | Check if extension is connected  |
-| `webnav info`    | Current tab information          |
-| `webnav tabs`    | List all browser tabs            |
+### 4. Verify
 
-### Navigation
+```bash
+webnav status
+```
 
-| Command              | Description          |
-| -------------------- | -------------------- |
-| `webnav goto <url>`  | Navigate to URL      |
-| `webnav screenshot`  | Capture tab screenshot |
-
-### Interaction
-
-| Command                        | Description                     |
-| ------------------------------ | ------------------------------- |
-| `webnav click -t <text>`       | Click element by text           |
-| `webnav click -s <selector>`   | Click element by CSS selector   |
-| `webnav fill <label> <value>`  | Fill input by label/placeholder |
-| `webnav type <text>`           | Type into focused element       |
-| `webnav key <keyname>`         | Send keyboard event             |
-
-### Wait & Inspect
-
-| Command                    | Description                  |
-| -------------------------- | ---------------------------- |
-| `webnav wait-for -t <text>` | Wait for text to appear     |
-| `webnav wait-for -s <sel>`  | Wait for selector to appear |
-| `webnav elements`          | List interactive elements    |
-
-### Command Options
-
-| Command      | Option                   | Description                             |
-| ------------ | ------------------------ | --------------------------------------- |
-| `setup`      | `--extension-id, -e`     | Chrome extension ID (required)          |
-| `screenshot` | `--dir, -d <path>`       | Output directory (default: system temp) |
-| `click`      | `--text, -t <text>`      | Find element by text                    |
-| `click`      | `--selector, -s <sel>`   | Find element by CSS selector            |
-| `click`      | `--index, -i <n>`        | Index if multiple matches (default: 0)  |
-| `wait-for`   | `--text, -t <text>`      | Text to wait for                        |
-| `wait-for`   | `--selector, -s <sel>`   | Selector to wait for                    |
-| `wait-for`   | `--timeout <ms>`         | Timeout in milliseconds (default: 10000) |
-
-### Keyboard Keys
-
-Valid keys for `webnav key`: `enter`, `tab`, `escape`, `backspace`, `delete`, `arrowup`, `arrowdown`, `arrowleft`, `arrowright`, `space`
+You should see a successful connection response.
 
 ## Architecture
 
 ```
-┌─────────────────┐    Unix Socket    ┌──────────────────┐    Native Msg    ┌───────────────┐
-│   CLI commands  │ ←───────────────→ │   Native Host    │ ←──────────────→ │   Extension   │
-│    (bun)        │      JSON         │     (relay)      │      stdio       │  (stateful)   │
-└─────────────────┘                   └──────────────────┘                  └───────────────┘
+CLI (webnav) → Unix Socket → Native Host → Native Messaging → Browser Extension
 ```
 
-- **CLI**: Simple client that sends commands and receives JSON responses
-- **Native Host**: Relay process spawned by Chrome via native messaging
-- **Extension**: Service worker with full DOM access via content scripts
+- **CLI** — Sends commands and receives JSON responses. Uses shell wrapper (`webnav` on Unix, `webnav.ps1` on Windows).
+- **Native Host** — Relay process spawned by the browser via native messaging. Bridges the Unix socket and Chrome's stdio-based native messaging protocol.
+- **Extension** — MV3 service worker that executes commands in the browser using content scripts and the Chrome APIs.
+
+## Troubleshooting
+
+| Problem | Fix |
+|---------|-----|
+| Extension not connected | Reload the extension from your browser's extensions page |
+| Connection failed / stale socket | Remove the socket file (`rm ~/.webnav/webnav.sock`) then reload the extension |
+| Setup required | Run `webnav setup install <extension-id>` (see Setup above) |
 
 ## License
 
