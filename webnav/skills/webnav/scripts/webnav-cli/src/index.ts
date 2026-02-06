@@ -9,7 +9,6 @@ import { checkCommand } from "./commands/check";
 import { clearCommand } from "./commands/clear";
 import { clickCommand } from "./commands/click";
 import { consoleCommand } from "./commands/console";
-import { daemonCommand } from "./commands/daemon";
 import { dblclickCommand } from "./commands/dblclick";
 import { dialogCommand } from "./commands/dialog";
 import { elementsCommand } from "./commands/elements";
@@ -30,6 +29,7 @@ import { ischeckedCommand } from "./commands/ischecked";
 import { isenabledCommand } from "./commands/isenabled";
 import { isvisibleCommand } from "./commands/isvisible";
 import { keyCommand } from "./commands/key";
+import { nativeHostCommand } from "./commands/native-host";
 import { observeCommand } from "./commands/observe";
 import { reloadCommand } from "./commands/reload";
 import { screenshotCommand } from "./commands/screenshot";
@@ -52,9 +52,9 @@ const main = defineCommand({
 		description: "Browser automation via Chromium-based browser extension",
 	},
 	subCommands: {
-		// Setup and daemon
+		// Setup
 		setup: setupCommand,
-		daemon: daemonCommand,
+		"native-host": nativeHostCommand,
 
 		// Status and info
 		status: statusCommand,

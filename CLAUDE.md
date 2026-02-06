@@ -172,13 +172,13 @@ Requires ADB in PATH and connected Android device/emulator.
 
 ## webnav-cli Commands
 
-Requires Chrome extension installed and native host daemon running.
+Requires Chrome extension installed and native host running.
 
 | Command | Description |
 |---------|-------------|
 | `webnav setup install` | Install native host manifest for browser |
 | `webnav setup uninstall` | Remove native host manifest |
-| `webnav daemon` | Start native host relay daemon |
+| `webnav native-host` | [internal] Native messaging relay (spawned by browser) |
 | `webnav status` | Check connection to extension |
 | `webnav info` | Current tab info |
 | `webnav goto <url>` | Navigate to URL |
@@ -201,13 +201,13 @@ Requires Chrome extension installed and native host daemon running.
 Unlike other plugins, webnav uses a 3-layer architecture:
 
 ```
-CLI (webnav) → Unix Socket → Native Host Daemon → Chrome Native Messaging → Extension
+CLI (webnav) → Unix Socket → Native Host → Chrome Native Messaging → Extension
 ```
 
 - **CLI (`src/commands/`)** - User-facing commands that connect via Unix socket
-- **Native Host (`src/lib/native-host.ts`)** - Daemon process that bridges socket server and Chrome's native messaging protocol (4-byte length-prefixed JSON)
+- **Native Host (`src/lib/native-host.ts`)** - Relay process that bridges socket server and Chrome's native messaging protocol (4-byte length-prefixed JSON)
 - **Chrome Extension (`skills/webnav/extension/`)** - MV3 service worker built from TypeScript sources (`extension/src/`) into `dist/background.js` and `dist/content.js`
-- **Socket Client (`src/lib/client.ts`)** - Sends commands to the daemon and receives responses
+- **Socket Client (`src/lib/client.ts`)** - Sends commands to the native host and receives responses
 
 **Other key files:**
 - `src/lib/browsers.ts` - Multi-browser support (Chrome, Edge, Brave, Vivaldi) and manifest path resolution

@@ -53,7 +53,7 @@ export function manifestExists(): boolean {
 }
 
 /**
- * Check if the socket exists (indicates daemon is running).
+ * Check if the socket exists (indicates native host is running).
  */
 export function socketExists(): boolean {
 	return existsSync(SOCKET_PATH);
@@ -161,12 +161,12 @@ export function getNotConnectedHint(browser?: BrowserSlug): ErrorHint {
 			`Check extension errors: ${label} > ${extUrl} > WebNav > Errors`,
 		],
 		context:
-			"The native messaging manifest exists but the daemon socket is not present. This usually means the extension hasn't connected yet or the browser is not running.",
+			"The native messaging manifest exists but the native host socket is not present. This usually means the extension hasn't connected yet or the browser is not running.",
 	};
 }
 
 /**
- * Hint when socket exists but connection fails (stale socket, daemon crashed).
+ * Hint when socket exists but connection fails (stale socket, native host crashed).
  */
 export function getConnectionFailedHint(browser?: BrowserSlug): ErrorHint {
 	const label = browserLabel(browser);
@@ -174,7 +174,7 @@ export function getConnectionFailedHint(browser?: BrowserSlug): ErrorHint {
 
 	return {
 		summary:
-			"Connection to WebNav failed. The socket exists but the daemon may have crashed or the socket is stale.",
+			"Connection to WebNav failed. The socket exists but the native host may have crashed or the socket is stale.",
 		steps: [
 			"Step 1: Remove stale socket",
 			"  - Run: rm ~/.webnav/webnav.sock",
@@ -191,7 +191,7 @@ export function getConnectionFailedHint(browser?: BrowserSlug): ErrorHint {
 			`Check if ${label} is running: pgrep -x chrome || pgrep -x 'Google Chrome'`,
 		],
 		context:
-			"The socket file exists but the daemon process is not responding. This can happen if the browser crashed or the extension was disabled.",
+			"The socket file exists but the native host process is not responding. This can happen if the browser crashed or the extension was disabled.",
 	};
 }
 
@@ -221,11 +221,11 @@ export function getExtensionDisconnectedHint(browser?: BrowserSlug): ErrorHint {
 			"  - Run: webnav status",
 		],
 		diagnostics: [
-			"Check daemon logs: webnav daemon (run manually to see stderr)",
+			"Check native host logs: webnav native-host (run manually to see stderr)",
 			"Check socket: ls -la ~/.webnav/",
 		],
 		context:
-			"The daemon socket is accepting connections but the extension is not sending responses. The extension may have been disabled or encountered an error.",
+			"The native host socket is accepting connections but the extension is not sending responses. The extension may have been disabled or encountered an error.",
 	};
 }
 

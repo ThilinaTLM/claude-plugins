@@ -112,13 +112,13 @@ Valid keys for `webnav key`: `enter`, `tab`, `escape`, `backspace`, `delete`, `a
 
 ```
 ┌─────────────────┐    Unix Socket    ┌──────────────────┐    Native Msg    ┌───────────────┐
-│   CLI commands  │ ←───────────────→ │  webnav daemon   │ ←──────────────→ │   Extension   │
+│   CLI commands  │ ←───────────────→ │   Native Host    │ ←──────────────→ │   Extension   │
 │    (bun)        │      JSON         │     (relay)      │      stdio       │  (stateful)   │
 └─────────────────┘                   └──────────────────┘                  └───────────────┘
 ```
 
 - **CLI**: Simple client that sends commands and receives JSON responses
-- **Daemon**: Native host relay (runs as `webnav daemon`, spawned by Chrome)
+- **Native Host**: Relay process spawned by Chrome via native messaging
 - **Extension**: Service worker with full DOM access via content scripts
 
 ## License
