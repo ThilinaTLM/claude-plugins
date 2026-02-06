@@ -23,11 +23,17 @@ export const dblclickCommand = defineCommand({
 			alias: "i",
 			description: "Index if multiple matches (default: 0)",
 		},
+		exact: {
+			type: "boolean",
+			alias: "x",
+			description: "Exact text match instead of substring",
+		},
 	},
 	async run({ args }) {
 		const text = args.text as string | undefined;
 		const selector = args.selector as string | undefined;
 		const index = args.index ? Number.parseInt(args.index as string, 10) : 0;
+		const exact = args.exact as boolean | undefined;
 
 		if (!text && !selector) {
 			jsonError(
@@ -41,7 +47,7 @@ export const dblclickCommand = defineCommand({
 			dblclicked: boolean;
 			tag: string;
 			text: string;
-		}>("dblclick", { text, selector, index });
+		}>("dblclick", { text, selector, index, exact });
 
 		jsonOk({ action: "dblclick", ...result });
 	},

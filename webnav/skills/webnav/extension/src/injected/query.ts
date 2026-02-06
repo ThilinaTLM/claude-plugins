@@ -19,12 +19,22 @@ export function queryElement({
 			NodeFilter.SHOW_TEXT,
 			null,
 		);
-
+		const candidates: Element[] = [];
 		while (walker.nextNode()) {
 			if (walker.currentNode.textContent?.includes(text)) {
-				element = walker.currentNode.parentElement;
-				break;
+				if (walker.currentNode.parentElement) {
+					candidates.push(walker.currentNode.parentElement);
+				}
 			}
+		}
+		if (candidates.length > 0) {
+			candidates.sort((a, b) => {
+				const aExact = a.textContent?.trim() === text;
+				const bExact = b.textContent?.trim() === text;
+				if (aExact !== bExact) return aExact ? -1 : 1;
+				return (a.textContent?.length || 0) - (b.textContent?.length || 0);
+			});
+			element = candidates[0];
 		}
 	}
 

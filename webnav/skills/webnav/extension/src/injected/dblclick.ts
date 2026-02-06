@@ -2,7 +2,8 @@ export function dblclickElement({
 	text,
 	selector,
 	index = 0,
-}: { text?: string; selector?: string; index?: number }) {
+	exact = false,
+}: { text?: string; selector?: string; index?: number; exact?: boolean }) {
 	let elements: Element[] = [];
 
 	if (selector) {
@@ -16,7 +17,8 @@ export function dblclickElement({
 
 		const textNodes: Text[] = [];
 		while (walker.nextNode()) {
-			if (walker.currentNode.textContent?.includes(text)) {
+			const content = walker.currentNode.textContent || "";
+			if (exact ? content.trim() === text : content.includes(text)) {
 				textNodes.push(walker.currentNode as Text);
 			}
 		}
@@ -40,6 +42,32 @@ export function dblclickElement({
 				elements.push(node.parentElement);
 			}
 		}
+
+		// Deduplicate and sort: prefer exact text matches, then interactive elements, then shorter text
+		elements = [...new Set(elements)];
+		const isInteractive = (el: Element) => {
+			const tag = el.tagName;
+			return (
+				tag === "A" ||
+				tag === "BUTTON" ||
+				tag === "INPUT" ||
+				tag === "SELECT" ||
+				tag === "TEXTAREA" ||
+				el.getAttribute("role") === "button" ||
+				el.getAttribute("role") === "link"
+			);
+		};
+		elements.sort((a, b) => {
+			const aExact = a.textContent?.trim() === text;
+			const bExact = b.textContent?.trim() === text;
+			if (aExact !== bExact) return aExact ? -1 : 1;
+
+			const aInt = isInteractive(a);
+			const bInt = isInteractive(b);
+			if (aInt !== bInt) return aInt ? -1 : 1;
+
+			return (a.textContent?.length || 0) - (b.textContent?.length || 0);
+		});
 	}
 
 	if (elements.length === 0) {

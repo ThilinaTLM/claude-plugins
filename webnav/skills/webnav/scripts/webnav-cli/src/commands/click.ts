@@ -28,12 +28,18 @@ export const clickCommand = defineCommand({
 			alias: "r",
 			description: "Element ref from snapshot (e.g. @e5)",
 		},
+		exact: {
+			type: "boolean",
+			alias: "x",
+			description: "Exact text match instead of substring",
+		},
 	},
 	async run({ args }) {
 		const text = args.text as string | undefined;
 		const selector = args.selector as string | undefined;
 		const ref = args.ref as string | undefined;
 		const index = args.index ? Number.parseInt(args.index as string, 10) : 0;
+		const exact = args.exact as boolean | undefined;
 
 		if (!text && !selector && !ref) {
 			jsonError(
@@ -47,7 +53,7 @@ export const clickCommand = defineCommand({
 			clicked: boolean;
 			tag: string;
 			text: string;
-		}>("click", { text, selector, index, ref });
+		}>("click", { text, selector, index, ref, exact });
 
 		jsonOk({
 			action: "click",

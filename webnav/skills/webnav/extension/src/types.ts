@@ -42,6 +42,8 @@ export interface CommandPayload {
 	maxDepth?: number;
 	compact?: boolean;
 	ref?: string;
+	// Text matching
+	exact?: boolean;
 	// Evaluate / Dialog
 	expression?: string;
 	dialogAction?: "accept" | "dismiss";

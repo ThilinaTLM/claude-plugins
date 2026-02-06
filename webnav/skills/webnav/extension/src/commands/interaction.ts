@@ -25,11 +25,13 @@ async function inject(
 	tabId: number,
 	func: (...args: never[]) => unknown,
 	args: unknown[] = [],
+	world?: "MAIN" | "ISOLATED",
 ): Promise<Record<string, unknown>> {
 	const results = (await chrome.scripting.executeScript({
 		target: { tabId },
 		func: func as () => void,
 		args,
+		...(world && { world }),
 	} as chrome.scripting.ScriptInjection)) as unknown as ScriptResult[];
 
 	const result = results[0]?.result;
@@ -50,13 +52,15 @@ async function resolveRefToSelector(
 export async function handleClick(
 	payload: CommandPayload,
 ): Promise<Record<string, unknown>> {
-	let { text, selector, index } = payload;
+	let { text, selector, index, exact } = payload;
 	const tab = await getActiveTab();
 	if (payload.ref) {
 		selector = await resolveRefToSelector(tab.id!, payload.ref);
 		text = undefined;
 	}
-	return await inject(tab.id!, clickElement, [{ text, selector, index }]);
+	return await inject(tab.id!, clickElement, [
+		{ text, selector, index, exact },
+	]);
 }
 
 export async function handleType(
@@ -173,9 +177,11 @@ export async function handleHover(
 export async function handleDblclick(
 	payload: CommandPayload,
 ): Promise<Record<string, unknown>> {
-	const { text, selector, index } = payload;
+	const { text, selector, index, exact } = payload;
 	const tab = await getActiveTab();
-	return await inject(tab.id!, dblclickElement, [{ text, selector, index }]);
+	return await inject(tab.id!, dblclickElement, [
+		{ text, selector, index, exact },
+	]);
 }
 
 export async function handleSnapshot(
@@ -196,7 +202,7 @@ export async function handleEvaluate(
 		throw new Error("Expression is required");
 	}
 	const tab = await getActiveTab();
-	return await inject(tab.id!, evaluateExpression, [{ expression }]);
+	return await inject(tab.id!, evaluateExpression, [{ expression }], "MAIN");
 }
 
 export async function handleDialog(

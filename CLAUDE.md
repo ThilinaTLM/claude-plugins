@@ -191,9 +191,9 @@ Requires Chrome extension installed and native host daemon running.
 | `webnav elements` | List interactive elements |
 | `webnav history` | Show command history |
 | `webnav group add <name>` | Create tab group |
-| `webnav group remove <name>` | Remove tab group |
-| `webnav group switch <name>` | Switch to tab group |
-| `webnav group close <name>` | Close tab group |
+| `webnav group remove <tabId>` | Remove tab from group (keeps tab open) |
+| `webnav group switch <tabId>` | Switch to tab by ID |
+| `webnav group close <tabId>` | Close tab by ID |
 | `webnav group tabs [name]` | List tabs in group |
 
 ### webnav Architecture
