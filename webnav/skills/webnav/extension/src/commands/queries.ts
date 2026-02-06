@@ -32,3 +32,27 @@ export async function handleQuery(
 	const tab = await getActiveTab();
 	return await inject(tab.id!, queryElement, [{ type, selector, text, name }]);
 }
+
+export async function handleBatchQuery(
+	payload: CommandPayload,
+): Promise<Record<string, unknown>> {
+	const { queries } = payload;
+	if (!queries || !Array.isArray(queries) || queries.length === 0) {
+		throw new Error("Queries array is required");
+	}
+	const tab = await getActiveTab();
+	const results: Array<Record<string, unknown>> = [];
+	for (const q of queries) {
+		try {
+			const result = await inject(tab.id!, queryElement, [q]);
+			results.push({ type: q.type, ok: true, ...result });
+		} catch (err) {
+			results.push({
+				type: q.type,
+				ok: false,
+				error: err instanceof Error ? err.message : String(err),
+			});
+		}
+	}
+	return { results, completed: results.length, total: queries.length };
+}

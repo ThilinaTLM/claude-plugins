@@ -1,6 +1,7 @@
 import { defineCommand } from "citty";
 import { sendCommand } from "../lib/client";
 import { jsonError, jsonOk } from "../lib/output";
+import { saveScreenshot } from "../lib/screenshot";
 
 export const selectCommand = defineCommand({
 	meta: {
@@ -28,6 +29,16 @@ export const selectCommand = defineCommand({
 			alias: "o",
 			description: "Option text to select",
 		},
+		screenshot: {
+			type: "boolean",
+			description: "Capture screenshot after select",
+			default: false,
+		},
+		dir: {
+			type: "string",
+			alias: "d",
+			description: "Screenshot output directory (default: system temp)",
+		},
 	},
 	async run({ args }) {
 		const selector = args.selector as string | undefined;
@@ -54,8 +65,25 @@ export const selectCommand = defineCommand({
 		const result = await sendCommand<{
 			selectedValue: string;
 			selectedText: string;
-		}>("select", { selector, text, optionValue, optionText });
+			image?: string;
+		}>("select", {
+			selector,
+			text,
+			optionValue,
+			optionText,
+			screenshot: args.screenshot || undefined,
+		});
 
-		jsonOk({ action: "select", ...result });
+		const output: Record<string, unknown> = {
+			action: "select",
+			selectedValue: result.selectedValue,
+			selectedText: result.selectedText,
+		};
+
+		if (result.image) {
+			output.screenshot = saveScreenshot(result.image, args.dir as string);
+		}
+
+		jsonOk(output);
 	},
 });

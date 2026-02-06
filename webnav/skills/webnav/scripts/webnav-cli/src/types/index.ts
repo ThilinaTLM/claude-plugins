@@ -58,6 +58,11 @@ export interface ElementInfo {
 	name: string;
 	id: string;
 	href: string;
+	label: string;
+	value: string;
+	disabled: boolean;
+	required: boolean;
+	role: string;
 	bounds: {
 		x: number;
 		y: number;

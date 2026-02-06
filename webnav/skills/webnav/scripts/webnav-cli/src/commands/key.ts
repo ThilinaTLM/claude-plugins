@@ -1,6 +1,7 @@
 import { defineCommand } from "citty";
 import { sendCommand } from "../lib/client";
 import { jsonError, jsonOk } from "../lib/output";
+import { saveScreenshot } from "../lib/screenshot";
 
 const VALID_KEYS = [
 	"enter",
@@ -31,6 +32,16 @@ export const keyCommand = defineCommand({
 			alias: "r",
 			description: "Element ref from snapshot to focus first (e.g. @e5)",
 		},
+		screenshot: {
+			type: "boolean",
+			description: "Capture screenshot after key event",
+			default: false,
+		},
+		dir: {
+			type: "string",
+			alias: "d",
+			description: "Screenshot output directory (default: system temp)",
+		},
 	},
 	async run({ args }) {
 		const key = (args.key as string).toLowerCase();
@@ -48,14 +59,22 @@ export const keyCommand = defineCommand({
 			);
 		}
 
-		const result = await sendCommand<{ sent: boolean; key: string }>("key", {
-			key,
-			ref,
-		});
+		const result = await sendCommand<{
+			sent: boolean;
+			key: string;
+			image?: string;
+		}>("key", { key, ref, screenshot: args.screenshot || undefined });
 
-		jsonOk({
+		const output: Record<string, unknown> = {
 			action: "key",
-			...result,
-		});
+			sent: result.sent,
+			key: result.key,
+		};
+
+		if (result.image) {
+			output.screenshot = saveScreenshot(result.image, args.dir as string);
+		}
+
+		jsonOk(output);
 	},
 });

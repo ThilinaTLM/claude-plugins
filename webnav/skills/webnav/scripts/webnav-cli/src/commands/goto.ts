@@ -1,6 +1,7 @@
 import { defineCommand } from "citty";
 import { sendCommand } from "../lib/client";
 import { jsonError, jsonOk } from "../lib/output";
+import { saveScreenshot } from "../lib/screenshot";
 
 export const gotoCommand = defineCommand({
 	meta: {
@@ -18,6 +19,16 @@ export const gotoCommand = defineCommand({
 			alias: "n",
 			description: "Open in a new tab within the webnav group",
 			default: false,
+		},
+		screenshot: {
+			type: "boolean",
+			description: "Capture screenshot after navigation",
+			default: false,
+		},
+		dir: {
+			type: "string",
+			alias: "d",
+			description: "Screenshot output directory (default: system temp)",
 		},
 	},
 	async run({ args }) {
@@ -37,16 +48,26 @@ export const gotoCommand = defineCommand({
 		if (args["new-tab"]) {
 			payload.newTab = true;
 		}
+		if (args.screenshot) {
+			payload.screenshot = true;
+		}
 
-		const result = await sendCommand<{ url: string; title: string }>(
-			"goto",
-			payload,
-		);
+		const result = await sendCommand<{
+			url: string;
+			title: string;
+			image?: string;
+		}>("goto", payload);
 
-		jsonOk({
+		const output: Record<string, unknown> = {
 			action: "goto",
 			url: result.url,
 			title: result.title,
-		});
+		};
+
+		if (result.image) {
+			output.screenshot = saveScreenshot(result.image, args.dir as string);
+		}
+
+		jsonOk(output);
 	},
 });

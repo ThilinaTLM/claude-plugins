@@ -52,20 +52,20 @@ The CLI is located at `./scripts/webnav-cli/` relative to this SKILL.md file.
 # Check connection
 webnav status
 
-# Get current tab info
-webnav info
+# Navigate and screenshot in one call
+webnav goto "https://example.com" --screenshot
 
-# Navigate to URL
-webnav goto "https://example.com"
+# Observe page state (screenshot + elements in one call)
+webnav observe
 
-# Take screenshot
-webnav screenshot
-
-# Click by text
-webnav click -t "Sign In"
+# Click and wait for navigation
+webnav click -t "Sign In" --wait-url "*/dashboard*"
 
 # Fill form field
 webnav fill "Email" "user@example.com"
+
+# Batch multiple actions in one round trip
+webnav act --json '[{"action":"fill","label":"Email","value":"user@example.com"},{"action":"click","text":"Submit"}]'
 ```
 
 ## Core Commands
@@ -89,17 +89,22 @@ webnav info
 **Response:** `{"ok":true,"action":"info","id":123,"url":"https://example.com","title":"Example","status":"complete","active":true}`
 
 ### goto
-Navigate to a URL.
+Navigate to a URL. Auto-waits for page load.
 
 ```bash
 webnav goto "https://example.com"
 webnav goto "example.com"              # https:// added automatically
+webnav goto "example.com" --screenshot # Navigate + capture screenshot
 ```
+
+**Flags:** `--new-tab/-n`, `--screenshot`, `--dir/-d`
 
 **Response:** `{"ok":true,"action":"goto","url":"https://example.com","title":"Example Domain"}`
 
+**With `--screenshot`:** `{"ok":true,"action":"goto","url":"...","title":"...","screenshot":"/tmp/screenshot_20240101_120000.png"}`
+
 ### back
-Navigate back in browser history.
+Navigate back in browser history. Auto-waits for page load.
 
 ```bash
 webnav back
@@ -108,7 +113,7 @@ webnav back
 **Response:** `{"ok":true,"action":"back","url":"https://example.com","title":"Example"}`
 
 ### forward
-Navigate forward in browser history.
+Navigate forward in browser history. Auto-waits for page load.
 
 ```bash
 webnav forward
@@ -117,7 +122,7 @@ webnav forward
 **Response:** `{"ok":true,"action":"forward","url":"https://example.com","title":"Example"}`
 
 ### reload
-Reload the current page.
+Reload the current page. Auto-waits for page load.
 
 ```bash
 webnav reload
@@ -153,9 +158,25 @@ Capture screenshot of the current tab.
 ```bash
 webnav screenshot
 webnav screenshot --dir /path/to/output
+webnav screenshot --full-page              # Full scrollable page
+webnav screenshot --selector ".hero"       # Specific element
 ```
 
 **Response:** `{"ok":true,"action":"screenshot","screenshot":"/tmp/screenshot_20240101_120000.png","url":"https://example.com","title":"Example"}`
+
+### observe
+Get page state in a single round trip: screenshot + URL/title + interactive elements. Optionally includes accessibility tree snapshot.
+
+```bash
+webnav observe                        # Screenshot + elements
+webnav observe --no-screenshot        # Elements only (faster)
+webnav observe --snapshot             # Include accessibility tree
+webnav observe --snapshot -c          # Compact tree format
+```
+
+**Response:** `{"ok":true,"action":"observe","url":"...","title":"...","screenshot":"/tmp/screenshot_20240101_120000.png","elements":[...],"count":12}`
+
+**With `--snapshot`:** Also includes `"tree":[...],"nodeCount":45`
 
 ### click
 Click an element by text or CSS selector.
@@ -164,16 +185,38 @@ Click an element by text or CSS selector.
 webnav click -t "Sign In"              # By text
 webnav click -s "button.submit"        # By CSS selector
 webnav click -t "Item" --index 2       # Third match (0-indexed)
+webnav click -x -t "Login"             # Exact text match
+webnav click -r @e5                    # By snapshot ref
+```
+
+**Wait flags (avoid separate wait-for call):**
+
+```bash
+webnav click -t "Login" --wait-url "*/dashboard*"     # Wait for URL after click
+webnav click -t "Submit" --wait-text "Success"         # Wait for text after click
+webnav click -t "Load" --wait-selector ".results"      # Wait for element after click
+webnav click -t "Submit" --wait-text "Done" --wait-timeout 15000
+```
+
+**Screenshot flag:**
+
+```bash
+webnav click -t "Sign In" --screenshot   # Click + capture screenshot
 ```
 
 **Response:** `{"ok":true,"action":"click","clicked":true,"tag":"button","text":"Sign In"}`
+
+**With `--wait-*`:** Also includes `"waited":{"type":"url","matched":true,"url":"..."}`
 
 ### type
 Type text into the focused element.
 
 ```bash
 webnav type "Hello World"
+webnav type "Hello" --screenshot     # Type + capture screenshot
 ```
+
+**Flags:** `--ref/-r`, `--screenshot`, `--dir/-d`
 
 **Response:** `{"ok":true,"action":"type","typed":true,"value":"Hello World"}`
 
@@ -188,6 +231,8 @@ webnav key escape
 
 **Valid keys:** `enter`, `tab`, `escape`, `backspace`, `delete`, `arrowup`, `arrowdown`, `arrowleft`, `arrowright`, `space`
 
+**Flags:** `--ref/-r`, `--screenshot`, `--dir/-d`
+
 **Response:** `{"ok":true,"action":"key","sent":true,"key":"enter"}`
 
 ### fill
@@ -196,7 +241,11 @@ Find an input by label/placeholder and fill with value.
 ```bash
 webnav fill "Email" "user@example.com"
 webnav fill "Password" "secret123"
+webnav fill -r @e7 "value"            # Fill by snapshot ref
+webnav fill "Email" "user@example.com" --screenshot
 ```
+
+**Flags:** `--ref/-r`, `--screenshot`, `--dir/-d`
 
 **Response:** `{"ok":true,"action":"fill","filled":true,"label":"Email","value":"user@example.com"}`
 
@@ -226,6 +275,8 @@ webnav select -s "#country" -v "US"            # By option value
 webnav select -s "#country" -o "United States"  # By option text
 ```
 
+**Flags:** `--screenshot`, `--dir/-d`
+
 **Response:** `{"ok":true,"action":"select","selectedValue":"US","selectedText":"United States"}`
 
 ### check
@@ -234,6 +285,8 @@ Check a checkbox or radio button.
 ```bash
 webnav check -s "#terms"
 ```
+
+**Flags:** `--screenshot`, `--dir/-d`
 
 **Response:** `{"ok":true,"action":"check","checked":true,"changed":true}`
 
@@ -278,13 +331,13 @@ webnav wait-for -t "Done" --timeout 5000
 **Response:** `{"ok":true,"action":"wait-for","found":true}`
 
 ### elements
-List interactive elements on the page.
+List interactive elements on the page. Each element includes: `tag`, `type`, `text`, `placeholder`, `ariaLabel`, `name`, `id`, `href`, `label` (associated label text), `value` (current input value), `disabled`, `required`, `role`, `bounds`.
 
 ```bash
 webnav elements
 ```
 
-**Response:** `{"ok":true,"action":"elements","count":25,"elements":[{"tag":"button","text":"Submit",...}]}`
+**Response:** `{"ok":true,"action":"elements","count":25,"elements":[{"tag":"input","type":"email","text":"","placeholder":"Enter email","label":"Email Address","value":"","disabled":false,"required":true,"role":"","bounds":{...}}]}`
 
 ### gettext
 Get text content of an element.
@@ -417,19 +470,8 @@ webnav errors --clear                # Get errors and clear buffer
 
 **Response:** `{"ok":true,"action":"errors","errors":[{"message":"TypeError: x is not a function","source":"app.js","line":42}],"count":1}`
 
-### screenshot (advanced options)
-Enhanced screenshot with full-page and element capture.
-
-```bash
-webnav screenshot                              # Viewport screenshot
-webnav screenshot --full-page                  # Full scrollable page
-webnav screenshot --selector ".hero-section"   # Specific element
-```
-
-**Response:** `{"ok":true,"action":"screenshot","screenshot":"/tmp/screenshot_20240101_120000.png","url":"https://example.com","title":"Example"}`
-
 ### waitforload
-Wait for the page to finish loading.
+Wait for the page to finish loading. Navigation commands (`goto`, `back`, `forward`, `reload`) auto-wait for page load, so `waitforload` is only needed after external navigations (e.g. JS redirects, form submissions not triggered by webnav).
 
 ```bash
 webnav waitforload                   # Wait up to 30s (default)
@@ -448,44 +490,105 @@ webnav waitforurl -p "*/success*" -t 10000
 
 **Response:** `{"ok":true,"action":"waitforurl","matched":true,"url":"https://example.com/dashboard","pattern":"*://example.com/dashboard*"}`
 
+## Batch Commands
+
+Batch commands reduce round trips for multi-step workflows by sending multiple operations in a single call.
+
+### query
+Run multiple read-only queries in one round trip.
+
+```bash
+# JSON format
+webnav query --json '[{"type":"gettext","selector":"h1"},{"type":"isvisible","selector":"#modal"},{"type":"inputvalue","selector":"#email"}]'
+
+# Positional format
+webnav query 'gettext -s "h1"' 'isvisible -s "#modal"' 'inputvalue -s "#email"'
+```
+
+**Supported query types:** `gettext`, `inputvalue`, `getattribute`, `isvisible`, `isenabled`, `ischecked`, `boundingbox`
+
+**Response:** `{"ok":true,"action":"query","results":[{"type":"gettext","ok":true,"text":"Welcome"},{"type":"isvisible","ok":true,"visible":false}],"completed":2,"total":2}`
+
+### act
+Run multiple actions sequentially in one round trip. Stops on first error.
+
+```bash
+# JSON format
+webnav act --json '[
+  {"action":"goto","url":"https://example.com/login"},
+  {"action":"fill","label":"Username","value":"tomsmith"},
+  {"action":"fill","label":"Password","value":"secret"},
+  {"action":"click","text":"Login"},
+  {"action":"waitforurl","pattern":"*/secure*"}
+]'
+
+# Positional format
+webnav act 'goto "https://example.com"' 'screenshot' 'click -t "More information"'
+
+# With custom timeout (default: 60s)
+webnav act --timeout 120000 --json '[...]'
+```
+
+**Flags:** `--json`, `--timeout`, `--dir/-d` (for screenshots in results)
+
+**Response:** `{"ok":true,"action":"act","results":[{"action":"goto","ok":true,"url":"..."},{"action":"fill","ok":true,"filled":true}],"completed":5,"total":5}`
+
+## `--screenshot` Flag
+
+Available on: `goto`, `click`, `fill`, `type`, `key`, `check`, `select`
+
+Captures a viewport screenshot after the action completes. Saves to `--dir` or system temp.
+
+```bash
+webnav goto "https://example.com" --screenshot
+webnav click -t "Submit" --screenshot --dir ./screenshots
+webnav fill "Email" "user@example.com" --screenshot
+```
+
 ## Form Filling Workflow
 
 ```bash
-# Navigate to form
-webnav goto "https://example.com/login"
+# Navigate and observe in one call
+webnav goto "https://example.com/login" --screenshot
 
 # Fill fields
 webnav fill "Email" "user@example.com"
 webnav fill "Password" "secret123"
 
-# Submit
-webnav click -t "Sign In"
-
-# Verify success
-webnav wait-for -t "Welcome"
+# Submit and wait for navigation
+webnav click -t "Sign In" --wait-url "*/dashboard*" --screenshot
 ```
 
-## Testing Workflow
+## Agent Workflow (Minimal Round Trips)
 
 ```bash
-# 1. Take screenshot to see current state
-webnav screenshot
+# 1. Navigate + screenshot in one call
+webnav goto "https://example.com/login" --screenshot
 
-# 2. Read the screenshot with Claude's Read tool
+# 2. Observe page state (elements + screenshot)
+webnav observe
 
-# 3. Interact based on what you see
-webnav click -t "Get Started"
+# 3. Batch fill + submit + wait
+webnav act --json '[
+  {"action":"fill","label":"Email","value":"user@example.com"},
+  {"action":"fill","label":"Password","value":"secret123"},
+  {"action":"click","text":"Sign In","waitUrl":"*/dashboard*","screenshot":true}
+]'
 
-# 4. Verify the action worked
-webnav wait-for -t "Step 1"
+# 4. Batch queries to verify state
+webnav query --json '[{"type":"gettext","selector":"h1"},{"type":"isvisible","selector":".welcome"}]'
 ```
 
 ## Tips
 
 - **Use text matching** (`-t`) when possible - more robust than coordinates
 - **Use `fill`** instead of click + type for form fields
-- **Use `wait-for`** instead of blind waiting for reliable verification
-- **Check `elements`** if you need to find clickable items
+- **Use `observe`** to get screenshot + elements in one call
+- **Use `--screenshot`** on action commands instead of separate screenshot calls
+- **Use `click --wait-*`** instead of separate click + wait-for calls
+- **Use `act`** to batch multiple actions into one round trip
+- **Use `query`** to batch multiple queries into one round trip
+- **Navigation auto-waits:** `goto`, `back`, `forward`, `reload` wait for page load automatically — no need for `waitforload` after these commands
 - **Screenshots** are saved to system temp directory by default
 
 ## Error Handling

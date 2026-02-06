@@ -1,6 +1,7 @@
 import { defineCommand } from "citty";
 import { sendCommand } from "../lib/client";
 import { jsonError, jsonOk } from "../lib/output";
+import { saveScreenshot } from "../lib/screenshot";
 
 export const fillCommand = defineCommand({
 	meta: {
@@ -22,6 +23,16 @@ export const fillCommand = defineCommand({
 			alias: "r",
 			description: "Element ref from snapshot (e.g. @e5)",
 		},
+		screenshot: {
+			type: "boolean",
+			description: "Capture screenshot after fill",
+			default: false,
+		},
+		dir: {
+			type: "string",
+			alias: "d",
+			description: "Screenshot output directory (default: system temp)",
+		},
 	},
 	async run({ args }) {
 		const label = args.label as string | undefined;
@@ -40,11 +51,25 @@ export const fillCommand = defineCommand({
 			filled: boolean;
 			label: string;
 			value: string;
-		}>("fill", { label, value, ref });
-
-		jsonOk({
-			action: "fill",
-			...result,
+			image?: string;
+		}>("fill", {
+			label,
+			value,
+			ref,
+			screenshot: args.screenshot || undefined,
 		});
+
+		const output: Record<string, unknown> = {
+			action: "fill",
+			filled: result.filled,
+			label: result.label,
+			value: result.value,
+		};
+
+		if (result.image) {
+			output.screenshot = saveScreenshot(result.image, args.dir as string);
+		}
+
+		jsonOk(output);
 	},
 });

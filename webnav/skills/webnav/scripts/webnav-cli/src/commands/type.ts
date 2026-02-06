@@ -1,6 +1,7 @@
 import { defineCommand } from "citty";
 import { sendCommand } from "../lib/client";
 import { jsonError, jsonOk } from "../lib/output";
+import { saveScreenshot } from "../lib/screenshot";
 
 export const typeCommand = defineCommand({
 	meta: {
@@ -18,6 +19,16 @@ export const typeCommand = defineCommand({
 			alias: "r",
 			description: "Element ref from snapshot to focus first (e.g. @e5)",
 		},
+		screenshot: {
+			type: "boolean",
+			description: "Capture screenshot after typing",
+			default: false,
+		},
+		dir: {
+			type: "string",
+			alias: "d",
+			description: "Screenshot output directory (default: system temp)",
+		},
 	},
 	async run({ args }) {
 		const text = args.text as string;
@@ -27,14 +38,22 @@ export const typeCommand = defineCommand({
 			jsonError("Text is required", "INVALID_ARGS");
 		}
 
-		const result = await sendCommand<{ typed: boolean; value: string }>(
-			"type",
-			{ text, ref },
-		);
+		const result = await sendCommand<{
+			typed: boolean;
+			value: string;
+			image?: string;
+		}>("type", { text, ref, screenshot: args.screenshot || undefined });
 
-		jsonOk({
+		const output: Record<string, unknown> = {
 			action: "type",
-			...result,
-		});
+			typed: result.typed,
+			value: result.value,
+		};
+
+		if (result.image) {
+			output.screenshot = saveScreenshot(result.image, args.dir as string);
+		}
+
+		jsonOk(output);
 	},
 });

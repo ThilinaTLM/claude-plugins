@@ -1,6 +1,7 @@
 import { defineCommand } from "citty";
 import { sendCommand } from "../lib/client";
 import { jsonError, jsonOk } from "../lib/output";
+import { saveScreenshot } from "../lib/screenshot";
 
 export const checkCommand = defineCommand({
 	meta: {
@@ -18,6 +19,16 @@ export const checkCommand = defineCommand({
 			alias: "s",
 			description: "CSS selector to find element",
 		},
+		screenshot: {
+			type: "boolean",
+			description: "Capture screenshot after check",
+			default: false,
+		},
+		dir: {
+			type: "string",
+			alias: "d",
+			description: "Screenshot output directory (default: system temp)",
+		},
 	},
 	async run({ args }) {
 		const text = args.text as string | undefined;
@@ -34,8 +45,23 @@ export const checkCommand = defineCommand({
 		const result = await sendCommand<{
 			checked: boolean;
 			changed: boolean;
-		}>("check", { text, selector });
+			image?: string;
+		}>("check", {
+			text,
+			selector,
+			screenshot: args.screenshot || undefined,
+		});
 
-		jsonOk({ action: "check", ...result });
+		const output: Record<string, unknown> = {
+			action: "check",
+			checked: result.checked,
+			changed: result.changed,
+		};
+
+		if (result.image) {
+			output.screenshot = saveScreenshot(result.image, args.dir as string);
+		}
+
+		jsonOk(output);
 	},
 });

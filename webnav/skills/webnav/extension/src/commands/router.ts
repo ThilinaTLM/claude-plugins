@@ -31,6 +31,7 @@ import {
 	handleForward,
 	handleGoto,
 	handleInfo,
+	handleObserve,
 	handleReload,
 	handleScreenshot,
 	handleScroll,
@@ -39,7 +40,7 @@ import {
 	handleWaitForLoad,
 	handleWaitForUrl,
 } from "./navigation";
-import { handleQuery } from "./queries";
+import { handleBatchQuery, handleQuery } from "./queries";
 
 export async function executeCommand(
 	action: string,
@@ -72,6 +73,8 @@ export async function executeCommand(
 			return await handleErrors(payload);
 		case "status":
 			return await handleStatus(payload);
+		case "observe":
+			return await handleObserve(payload);
 		case "click":
 			return await handleClick(payload);
 		case "type":
@@ -106,6 +109,48 @@ export async function executeCommand(
 			return await handleDialog(payload);
 		case "query":
 			return await handleQuery(payload);
+		case "batch-query":
+			return await handleBatchQuery(payload);
+		case "batch-act": {
+			const { actions } = payload;
+			if (!actions || !Array.isArray(actions) || actions.length === 0) {
+				throw new Error("Actions array is required");
+			}
+			const results: Array<Record<string, unknown>> = [];
+			for (const item of actions) {
+				const { action: subAction, ...subPayload } = item as {
+					action: string;
+					[key: string]: unknown;
+				};
+				if (subAction === "batch-act" || subAction === "batch-query") {
+					results.push({
+						action: subAction,
+						ok: false,
+						error: "Nested batches not allowed",
+					});
+					break;
+				}
+				try {
+					const result = await executeCommand(
+						subAction,
+						subPayload as CommandPayload,
+					);
+					results.push({ action: subAction, ok: true, ...result });
+				} catch (err) {
+					results.push({
+						action: subAction,
+						ok: false,
+						error: err instanceof Error ? err.message : String(err),
+					});
+					break;
+				}
+			}
+			return {
+				results,
+				completed: results.length,
+				total: actions.length,
+			};
+		}
 		case "group-tabs":
 			return await handleGroupTabs(payload);
 		case "group-switch":

@@ -53,6 +53,18 @@ export interface CommandPayload {
 	pattern?: string;
 	// Screenshot
 	fullPage?: boolean;
+	screenshot?: boolean;
+	// Click wait conditions
+	waitUrl?: string;
+	waitText?: string;
+	waitSelector?: string;
+	waitTimeout?: number;
+	// Observe
+	noScreenshot?: boolean;
+	snapshot?: boolean;
+	// Batch commands
+	queries?: Array<Record<string, unknown>>;
+	actions?: Array<Record<string, unknown>>;
 	// Query
 	type?: string;
 	name?: string;
@@ -85,6 +97,11 @@ export interface ElementInfo {
 	name: string;
 	id: string;
 	href: string;
+	label: string;
+	value: string;
+	disabled: boolean;
+	required: boolean;
+	role: string;
 	bounds: {
 		x: number;
 		y: number;

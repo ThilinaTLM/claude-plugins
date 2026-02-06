@@ -16,6 +16,7 @@ import { typeText } from "../injected/type";
 import { waitForElement } from "../injected/wait-for";
 import { getActiveTab } from "../tabs";
 import type { CommandPayload } from "../types";
+import { handleScreenshot, handleWaitForUrl } from "./navigation";
 
 // chrome.scripting.executeScript types are overly strict for func+args usage.
 // We cast to satisfy the type checker while preserving runtime correctness.
@@ -41,6 +42,17 @@ async function inject(
 	return result || {};
 }
 
+async function maybeScreenshot(
+	payload: CommandPayload,
+	result: Record<string, unknown>,
+): Promise<Record<string, unknown>> {
+	if (payload.screenshot) {
+		const screenshot = await handleScreenshot({});
+		result.image = screenshot.image;
+	}
+	return result;
+}
+
 async function resolveRefToSelector(
 	tabId: number,
 	ref: string,
@@ -58,9 +70,33 @@ export async function handleClick(
 		selector = await resolveRefToSelector(tab.id!, payload.ref);
 		text = undefined;
 	}
-	return await inject(tab.id!, clickElement, [
+	const result = await inject(tab.id!, clickElement, [
 		{ text, selector, index, exact },
 	]);
+
+	// Handle wait conditions
+	if (payload.waitUrl) {
+		const waitResult = await handleWaitForUrl({
+			pattern: payload.waitUrl,
+			timeout: payload.waitTimeout ?? 10000,
+		});
+		result.waited = { type: "url", ...waitResult };
+	} else if (payload.waitText) {
+		const waitResult = await inject(tab.id!, waitForElement, [
+			{ text: payload.waitText, timeout: payload.waitTimeout ?? 10000 },
+		]);
+		result.waited = { type: "text", ...waitResult };
+	} else if (payload.waitSelector) {
+		const waitResult = await inject(tab.id!, waitForElement, [
+			{
+				selector: payload.waitSelector,
+				timeout: payload.waitTimeout ?? 10000,
+			},
+		]);
+		result.waited = { type: "selector", ...waitResult };
+	}
+
+	return await maybeScreenshot(payload, result);
 }
 
 export async function handleType(
@@ -75,7 +111,8 @@ export async function handleType(
 		const sel = await resolveRefToSelector(tab.id!, payload.ref);
 		await inject(tab.id!, focusElement, [{ selector: sel }]);
 	}
-	return await inject(tab.id!, typeText, [text]);
+	const result = await inject(tab.id!, typeText, [text]);
+	return await maybeScreenshot(payload, result);
 }
 
 export async function handleKey(
@@ -90,26 +127,30 @@ export async function handleKey(
 		const sel = await resolveRefToSelector(tab.id!, payload.ref);
 		await inject(tab.id!, focusElement, [{ selector: sel }]);
 	}
-	return await inject(tab.id!, sendKey, [key]);
+	const result = await inject(tab.id!, sendKey, [key]);
+	return await maybeScreenshot(payload, result);
 }
 
 export async function handleFill(
 	payload: CommandPayload,
 ): Promise<Record<string, unknown>> {
 	const tab = await getActiveTab();
+	let result: Record<string, unknown>;
 	if (payload.ref) {
 		const sel = await resolveRefToSelector(tab.id!, payload.ref);
 		if (payload.value === undefined) {
 			throw new Error("Value is required");
 		}
 		await inject(tab.id!, focusElement, [{ selector: sel }]);
-		return await inject(tab.id!, typeText, [payload.value]);
+		result = await inject(tab.id!, typeText, [payload.value]);
+	} else {
+		const { label, value } = payload;
+		if (!label || value === undefined) {
+			throw new Error("Label and value are required");
+		}
+		result = await inject(tab.id!, fillInput, [label, value]);
 	}
-	const { label, value } = payload;
-	if (!label || value === undefined) {
-		throw new Error("Label and value are required");
-	}
-	return await inject(tab.id!, fillInput, [label, value]);
+	return await maybeScreenshot(payload, result);
 }
 
 export async function handleWaitFor(
@@ -153,9 +194,10 @@ export async function handleSelect(
 ): Promise<Record<string, unknown>> {
 	const { selector, text, optionValue, optionText } = payload;
 	const tab = await getActiveTab();
-	return await inject(tab.id!, selectOption, [
+	const result = await inject(tab.id!, selectOption, [
 		{ selector, text, optionValue, optionText },
 	]);
+	return await maybeScreenshot(payload, result);
 }
 
 export async function handleCheck(
@@ -163,7 +205,10 @@ export async function handleCheck(
 ): Promise<Record<string, unknown>> {
 	const { text, selector, checked = true } = payload;
 	const tab = await getActiveTab();
-	return await inject(tab.id!, checkElement, [{ text, selector, checked }]);
+	const result = await inject(tab.id!, checkElement, [
+		{ text, selector, checked },
+	]);
+	return await maybeScreenshot(payload, result);
 }
 
 export async function handleHover(
@@ -189,9 +234,14 @@ export async function handleSnapshot(
 ): Promise<Record<string, unknown>> {
 	const { interactive, selector, maxDepth, compact } = payload;
 	const tab = await getActiveTab();
-	return await inject(tab.id!, takeSnapshot, [
+	const result = await inject(tab.id!, takeSnapshot, [
 		{ interactive, selector, maxDepth, compact },
 	]);
+	// Ensure compact tree data is always present (inject() may lose string data)
+	if (compact && !result.tree) {
+		return { tree: "", nodeCount: 0, compact: true };
+	}
+	return result;
 }
 
 export async function handleEvaluate(

@@ -1,6 +1,8 @@
 import { getElementBounds } from "../injected/element-screenshot";
+import { getInteractiveElements } from "../injected/elements";
 import { scrollPage } from "../injected/scroll";
 import { scrollIntoViewElement } from "../injected/scrollintoview";
+import { takeSnapshot } from "../injected/snapshot";
 import { attachDebugger, detachDebugger, sendCdpCommand } from "../lib/cdp";
 import {
 	activeWebnavTabId,
@@ -143,10 +145,17 @@ export async function handleGoto(
 	await waitForTabLoad(tab.id!);
 
 	const updatedTab = await chrome.tabs.get(tab.id!);
-	return {
+	const result: Record<string, unknown> = {
 		url: updatedTab.url,
 		title: updatedTab.title,
 	};
+
+	if (payload.screenshot) {
+		const screenshot = await handleScreenshot({});
+		result.image = screenshot.image;
+	}
+
+	return result;
 }
 
 export async function handleInfo(
@@ -283,6 +292,38 @@ export async function handleErrors(
 		clear: payload.clear ?? false,
 	});
 	return { errors: response.errors, count: response.errors.length };
+}
+
+export async function handleObserve(
+	payload: CommandPayload,
+): Promise<Record<string, unknown>> {
+	const tab = await getActiveTab();
+	const result: Record<string, unknown> = {
+		url: tab.url,
+		title: tab.title,
+	};
+
+	// Screenshot unless opted out
+	if (!payload.noScreenshot) {
+		const screenshot = await handleScreenshot({});
+		result.image = screenshot.image;
+	}
+
+	// Interactive elements
+	const elementsResult = await inject(tab.id!, getInteractiveElements);
+	result.elements = elementsResult.elements;
+	result.count = (elementsResult.elements as unknown[]).length;
+
+	// Optional accessibility snapshot
+	if (payload.snapshot) {
+		const snapshotResult = await inject(tab.id!, takeSnapshot, [
+			{ interactive: true, compact: payload.compact ?? false },
+		]);
+		result.tree = snapshotResult.tree;
+		result.nodeCount = snapshotResult.nodeCount;
+	}
+
+	return result;
 }
 
 export async function handleStatus(

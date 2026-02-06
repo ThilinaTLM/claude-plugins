@@ -8,6 +8,11 @@ export function getInteractiveElements() {
 		name: string;
 		id: string;
 		href: string;
+		label: string;
+		value: string;
+		disabled: boolean;
+		required: boolean;
+		role: string;
 		bounds: { x: number; y: number; width: number; height: number };
 	}> = [];
 
@@ -60,6 +65,34 @@ export function getInteractiveElements() {
 			const id = el.getAttribute("id") || "";
 			const type = el.getAttribute("type") || "";
 			const href = el.getAttribute("href") || "";
+			const role = el.getAttribute("role") || "";
+
+			// Resolve associated <label>
+			let label = "";
+			if (id) {
+				const labelEl = document.querySelector(`label[for="${id}"]`);
+				if (labelEl) {
+					label = (labelEl.textContent || "").trim().slice(0, 100);
+				}
+			}
+			if (!label) {
+				// Check for wrapping <label>
+				const parentLabel = el.closest("label");
+				if (parentLabel) {
+					label = (parentLabel.textContent || "").trim().slice(0, 100);
+				}
+			}
+
+			const htmlEl = el as HTMLInputElement;
+			const value =
+				htmlEl.tagName === "INPUT" ||
+				htmlEl.tagName === "TEXTAREA" ||
+				htmlEl.tagName === "SELECT"
+					? htmlEl.value || ""
+					: "";
+			const required = !!(
+				htmlEl.required || el.getAttribute("aria-required") === "true"
+			);
 
 			elements.push({
 				tag: el.tagName.toLowerCase(),
@@ -70,6 +103,11 @@ export function getInteractiveElements() {
 				name,
 				id,
 				href: href.slice(0, 200),
+				label,
+				value: value.slice(0, 200),
+				disabled: false,
+				required,
+				role,
 				bounds: {
 					x: Math.round(rect.x),
 					y: Math.round(rect.y),

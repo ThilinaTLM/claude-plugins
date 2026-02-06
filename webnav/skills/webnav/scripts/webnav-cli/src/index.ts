@@ -1,7 +1,9 @@
 #!/usr/bin/env bun
 import { defineCommand, runMain } from "citty";
 import pkg from "../package.json";
+import { actCommand } from "./commands/act";
 import { backCommand } from "./commands/back";
+import { batchQueryCommand } from "./commands/batch-query";
 import { boundingboxCommand } from "./commands/boundingbox";
 import { checkCommand } from "./commands/check";
 import { clearCommand } from "./commands/clear";
@@ -28,6 +30,7 @@ import { ischeckedCommand } from "./commands/ischecked";
 import { isenabledCommand } from "./commands/isenabled";
 import { isvisibleCommand } from "./commands/isvisible";
 import { keyCommand } from "./commands/key";
+import { observeCommand } from "./commands/observe";
 import { reloadCommand } from "./commands/reload";
 import { screenshotCommand } from "./commands/screenshot";
 import { scrollCommand } from "./commands/scroll";
@@ -95,6 +98,7 @@ const main = defineCommand({
 		// Elements & Accessibility
 		elements: elementsCommand,
 		snapshot: snapshotCommand,
+		observe: observeCommand,
 
 		// Queries
 		gettext: gettextCommand,
@@ -104,6 +108,10 @@ const main = defineCommand({
 		isenabled: isenabledCommand,
 		ischecked: ischeckedCommand,
 		boundingbox: boundingboxCommand,
+
+		// Batch commands
+		query: batchQueryCommand,
+		act: actCommand,
 
 		// Advanced
 		evaluate: evaluateCommand,
