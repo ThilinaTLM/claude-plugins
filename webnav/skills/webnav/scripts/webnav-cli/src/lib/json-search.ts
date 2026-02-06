@@ -45,7 +45,8 @@ export interface SearchResult {
 		| "snapshot-tree"
 		| "snapshot-compact"
 		| "console"
-		| "errors";
+		| "errors"
+		| "network";
 }
 
 type FileType = SearchResult["fileType"];
@@ -70,16 +71,19 @@ function detectFileType(data: unknown): { type: FileType; data: unknown } {
 			if ("message" in first && "line" in first && "col" in first) {
 				return { type: "errors", data };
 			}
+			if ("url" in first && "method" in first && "status" in first) {
+				return { type: "network", data };
+			}
 			if ("tag" in first && "type" in first) {
 				return { type: "elements", data };
 			}
 		}
 		throw new Error(
-			"Unsupported file format. json-search only supports files created by webnav snapshot, elements, console, errors, or observe commands.",
+			"Unsupported file format. json-search only supports files created by webnav snapshot, elements, console, errors, network, or observe commands.",
 		);
 	}
 	throw new Error(
-		"Unsupported file format. json-search only supports files created by webnav snapshot, elements, console, errors, or observe commands.",
+		"Unsupported file format. json-search only supports files created by webnav snapshot, elements, console, errors, network, or observe commands.",
 	);
 }
 
@@ -166,6 +170,11 @@ function matchesFilters(item: FlatItem, options: SearchOptions): boolean {
 			// Error fields
 			...(typeof item.message === "string" ? [item.message] : []),
 			...(typeof item.source === "string" ? [item.source] : []),
+			// Network fields
+			...(typeof item.url === "string" ? [item.url] : []),
+			...(typeof item.method === "string" ? [item.method] : []),
+			...(typeof item.statusText === "string" ? [item.statusText] : []),
+			...(typeof item.type === "string" ? [item.type] : []),
 		];
 		const found = searchable.some(
 			(v) => typeof v === "string" && v.toLowerCase().includes(p),
@@ -189,6 +198,7 @@ export function searchJsonFile(
 		case "elements":
 		case "console":
 		case "errors":
+		case "network":
 			items = (data as FlatItem[]) || [];
 			break;
 		case "snapshot-tree":

@@ -45,6 +45,7 @@ Every interaction follows the **observe → read → act → verify** loop:
   },
   "console": { "count": 0 },
   "errors": { "count": 0 },
+  "network": { "count": 0 },
   "hint": "For large files use `webnav util json-search <file> [pattern]` to search; small files can be read directly"
 }
 ```
@@ -71,21 +72,21 @@ Run `webnav status` to check connection. If not set up, the output includes step
 
 ### Observe (read page state)
 
-| Command        | Args / Flags                                                              | Description                                                      |
-| -------------- | ------------------------------------------------------------------------- | ---------------------------------------------------------------- |
-| `status`       | —                                                                         | Check extension connection                                       |
-| `info`         | —                                                                         | Current tab URL, title, status                                   |
-| `observe`      | `--no-screenshot`, `-f` full-tree, `-d` dir                               | Full page state: screenshot + snapshot + console + errors        |
-| `screenshot`   | `-d` dir, `-f` full-page, `-s` selector                                   | Capture viewport or element screenshot                           |
-| `elements`     | `-d` dir                                                                  | List all interactive elements with metadata                      |
-| `snapshot`     | `--all` include-all, `-s` selector, `-d` max-depth, `-c` compact, `--dir` | Accessibility tree with `@ref` IDs (interactive-only by default) |
-| `gettext`      | `-t` text, `-s` selector                                                  | Get element text content                                         |
-| `inputvalue`   | `-t` text, `-s` selector                                                  | Get current input value                                          |
-| `getattribute` | `-t` text, `-s` selector, `-n` name (required)                            | Get element attribute value                                      |
-| `isvisible`    | `-t` text, `-s` selector                                                  | Check element visibility                                         |
-| `isenabled`    | `-t` text, `-s` selector                                                  | Check if element is enabled                                      |
-| `ischecked`    | `-t` text, `-s` selector                                                  | Check checkbox/radio state                                       |
-| `boundingbox`  | `-t` text, `-s` selector                                                  | Get element bounding rectangle                                   |
+| Command        | Args / Flags                                                              | Description                                                         |
+| -------------- | ------------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| `status`       | —                                                                         | Check extension connection                                          |
+| `info`         | —                                                                         | Current tab URL, title, status                                      |
+| `observe`      | `--no-screenshot`, `-f` full-tree, `-d` dir                               | Full page state: screenshot + snapshot + console + errors + network |
+| `screenshot`   | `-d` dir, `-f` full-page, `-s` selector                                   | Capture viewport or element screenshot                              |
+| `elements`     | `-d` dir                                                                  | List all interactive elements with metadata                         |
+| `snapshot`     | `--all` include-all, `-s` selector, `-d` max-depth, `-c` compact, `--dir` | Accessibility tree with `@ref` IDs (interactive-only by default)    |
+| `gettext`      | `-t` text, `-s` selector                                                  | Get element text content                                            |
+| `inputvalue`   | `-t` text, `-s` selector                                                  | Get current input value                                             |
+| `getattribute` | `-t` text, `-s` selector, `-n` name (required)                            | Get element attribute value                                         |
+| `isvisible`    | `-t` text, `-s` selector                                                  | Check element visibility                                            |
+| `isenabled`    | `-t` text, `-s` selector                                                  | Check if element is enabled                                         |
+| `ischecked`    | `-t` text, `-s` selector                                                  | Check checkbox/radio state                                          |
+| `boundingbox`  | `-t` text, `-s` selector                                                  | Get element bounding rectangle                                      |
 
 `observe` returns compact text snapshot by default; use `-f` for full JSON tree. Results are always saved to files; the response includes file paths and a `tokens` estimate.
 
@@ -128,12 +129,13 @@ Text matching (`-t`): substring by default, `-x` for exact match. When multiple 
 
 ### Advanced (JS, debugging, dialogs)
 
-| Command    | Args / Flags                            | Description                               |
-| ---------- | --------------------------------------- | ----------------------------------------- |
-| `evaluate` | `<expression>`                          | Execute JS in page context, return result |
-| `console`  | `-c` clear, `-d` dir                    | Get captured console logs                 |
-| `errors`   | `-c` clear, `-d` dir                    | Get captured JS errors                    |
-| `dialog`   | `-a` action (accept/dismiss), `-t` text | Configure alert/confirm/prompt handling   |
+| Command    | Args / Flags                            | Description                                   |
+| ---------- | --------------------------------------- | --------------------------------------------- |
+| `evaluate` | `<expression>`                          | Execute JS in page context, return result     |
+| `console`  | `-c` clear, `-d` dir                    | Get captured console logs                     |
+| `errors`   | `-c` clear, `-d` dir                    | Get captured JS errors                        |
+| `network`  | `-c` clear, `-d` dir                    | Get captured network requests (fetch and XHR) |
+| `dialog`   | `-a` action (accept/dismiss), `-t` text | Configure alert/confirm/prompt handling       |
 
 ### Batch (multi-command in single round trip)
 
@@ -159,9 +161,9 @@ Text matching (`-t`): substring by default, `-x` for exact match. When multiple 
 
 ### Utilities
 
-| Command            | Args / Flags                                                                    | Description                                     |
-| ------------------ | ------------------------------------------------------------------------------- | ----------------------------------------------- |
-| `util json-search` | `<file>` `[pattern]`, `-t` tag, `-r` role, `--ref`, `-n` limit (50), `--offset` | Search JSON file from elements/snapshot/observe |
+| Command            | Args / Flags                                                                    | Description                                             |
+| ------------------ | ------------------------------------------------------------------------------- | ------------------------------------------------------- |
+| `util json-search` | `<file>` `[pattern]`, `-t` tag, `-r` role, `--ref`, `-n` limit (50), `--offset` | Search JSON file from elements/snapshot/network/observe |
 
 ### Setup
 
@@ -180,15 +182,15 @@ Text matching (`-t`): substring by default, `-x` for exact match. When multiple 
 
 ## Reading Output Files
 
-`observe` saves screenshot, snapshot, console, and errors to files. How to read them:
+`observe` saves screenshot, snapshot, console, errors, and network to files. How to read them:
 
 - **Screenshot PNG** — always read with the Read tool to see the page visually
-- **Snapshot / console / errors** — check the `tokens` field in the response:
+- **Snapshot / console / errors / network** — check the `tokens` field in the response:
   - Small (`tokens` < 4000): read the file directly
   - Large: use `webnav util json-search <file> [pattern]` to search
 - **`json-search`** supports: text pattern, `--role button`, `--tag input`, `--ref @eN`
 
-Standalone `elements`, `snapshot`, `console`, `errors` also auto-save to files when results exceed 10 items.
+Standalone `elements`, `snapshot`, `console`, `errors`, `network` also auto-save to files when results exceed 10 items.
 
 ## Workflows
 
@@ -221,6 +223,17 @@ webnav observe
 webnav evaluate "document.querySelector('#app').dataset.version"
 ```
 
+**Debug network requests:**
+
+```bash
+webnav observe
+# → Check network.count in response
+# → If count > 0, read the network file or search it:
+webnav util json-search /tmp/network_*.json "api"
+# Or standalone with clear:
+webnav network -c
+```
+
 **Precise targeting with refs:**
 
 ```bash
@@ -244,7 +257,7 @@ webnav act --json '[
 ## Tips
 
 - **Targeting priority:** prefer `-r @eN` (precise) > `-t text` (readable) > `-s selector` (fragile)
-- **Page state:** use `observe` for combined view; use standalone `snapshot -s selector` for scoped subtree, standalone `console -c` / `errors -c` to clear after reading
+- **Page state:** use `observe` for combined view; use standalone `snapshot -s selector` for scoped subtree, standalone `console -c` / `errors -c` / `network -c` to clear after reading
 - **Forms:** use `fill` over click + type — it handles focus, clear, and input events
 - **Waiting:** use `click --wait-url` / `--wait-text` / `--wait-selector` over separate click then wait-for
 - **Efficiency:** use `--screenshot` on action commands instead of a separate screenshot call; use `act` to batch multiple actions

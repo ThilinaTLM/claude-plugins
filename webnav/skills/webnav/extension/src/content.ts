@@ -17,10 +17,22 @@ interface ErrorEntry {
 	timestamp: string;
 }
 
+interface NetworkEntry {
+	method: string;
+	url: string;
+	status: number;
+	statusText: string;
+	type: string;
+	duration: number;
+	timestamp: string;
+}
+
 const WEBNAV_MSG = "__webnav__";
 const MAX_ENTRIES = 100;
+const MAX_NETWORK_ENTRIES = 200;
 const consoleLogs: ConsoleEntry[] = [];
 const errorLogs: ErrorEntry[] = [];
+const networkLogs: NetworkEntry[] = [];
 
 // Receive captured entries from the MAIN world script
 window.addEventListener("message", (event) => {
@@ -44,6 +56,17 @@ window.addEventListener("message", (event) => {
 			timestamp: data.timestamp,
 		});
 		if (errorLogs.length > MAX_ENTRIES) errorLogs.shift();
+	} else if (data.kind === "network") {
+		networkLogs.push({
+			method: data.method,
+			url: data.url,
+			status: data.status,
+			statusText: data.statusText,
+			type: data.requestType,
+			duration: data.duration,
+			timestamp: data.timestamp,
+		});
+		if (networkLogs.length > MAX_NETWORK_ENTRIES) networkLogs.shift();
 	}
 });
 
@@ -59,6 +82,12 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
 		const result = [...errorLogs];
 		if (message.clear) errorLogs.length = 0;
 		sendResponse({ errors: result });
+		return true;
+	}
+	if (message.type === "getNetwork") {
+		const result = [...networkLogs];
+		if (message.clear) networkLogs.length = 0;
+		sendResponse({ requests: result });
 		return true;
 	}
 	return false;

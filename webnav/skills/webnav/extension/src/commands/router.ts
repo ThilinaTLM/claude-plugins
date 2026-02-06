@@ -31,6 +31,7 @@ import {
 	handleForward,
 	handleGoto,
 	handleInfo,
+	handleNetwork,
 	handleObserve,
 	handleReload,
 	handleScreenshot,
@@ -71,6 +72,8 @@ export async function executeCommand(
 			return await handleConsole(payload);
 		case "errors":
 			return await handleErrors(payload);
+		case "network":
+			return await handleNetwork(payload);
 		case "status":
 			return await handleStatus(payload);
 		case "observe":

@@ -41,6 +41,8 @@ export const observeCommand = defineCommand({
 			consoleCount: number;
 			errors: unknown[];
 			errorsCount: number;
+			network: unknown[];
+			networkCount: number;
 		}>("observe", {
 			noScreenshot: args["no-screenshot"] || undefined,
 			compact: args.full ? false : undefined,
@@ -87,6 +89,18 @@ export const observeCommand = defineCommand({
 			};
 		} else {
 			output.errors = { count: 0 };
+		}
+
+		// Network — file only when there are requests
+		if (result.networkCount > 0) {
+			const networkFile = saveJson(result.network, "network", dir);
+			output.network = {
+				file: networkFile,
+				count: result.networkCount,
+				tokens: estimateTokens(result.network),
+			};
+		} else {
+			output.network = { count: 0 };
 		}
 
 		output.hint =

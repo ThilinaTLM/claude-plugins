@@ -30,6 +30,7 @@ import { isenabledCommand } from "./commands/isenabled";
 import { isvisibleCommand } from "./commands/isvisible";
 import { keyCommand } from "./commands/key";
 import { nativeHostCommand } from "./commands/native-host";
+import { networkCommand } from "./commands/network";
 import { observeCommand } from "./commands/observe";
 import { reloadCommand } from "./commands/reload";
 import { screenshotCommand } from "./commands/screenshot";
@@ -119,6 +120,7 @@ const main = defineCommand({
 		dialog: dialogCommand,
 		console: consoleCommand,
 		errors: errorsCommand,
+		network: networkCommand,
 
 		// Utilities
 		util: utilCommand,

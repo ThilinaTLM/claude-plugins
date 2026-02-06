@@ -293,6 +293,17 @@ export async function handleErrors(
 	return { errors: response.errors, count: response.errors.length };
 }
 
+export async function handleNetwork(
+	payload: CommandPayload,
+): Promise<Record<string, unknown>> {
+	const tab = await getActiveTab();
+	const response = await chrome.tabs.sendMessage(tab.id!, {
+		type: "getNetwork",
+		clear: payload.clear ?? false,
+	});
+	return { requests: response.requests, count: response.requests.length };
+}
+
 export async function handleObserve(
 	payload: CommandPayload,
 ): Promise<Record<string, unknown>> {
@@ -336,6 +347,16 @@ export async function handleObserve(
 	} catch (_e) {
 		result.errors = [];
 		result.errorsCount = 0;
+	}
+
+	// Network requests (read-only, reuse existing handler)
+	try {
+		const networkRes = await handleNetwork({ clear: false });
+		result.network = networkRes.requests;
+		result.networkCount = networkRes.count;
+	} catch (_e) {
+		result.network = [];
+		result.networkCount = 0;
 	}
 
 	return result;

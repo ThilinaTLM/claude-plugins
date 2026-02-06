@@ -70,5 +70,12 @@ function sanitizeResult(
 		sanitized.hasTree = true;
 	}
 
+	// Summarize network request arrays
+	if (sanitized.network && Array.isArray(sanitized.network)) {
+		const count = sanitized.network.length;
+		sanitized.network = undefined;
+		sanitized.networkCount = count;
+	}
+
 	return sanitized;
 }

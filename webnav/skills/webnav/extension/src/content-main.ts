@@ -22,6 +22,18 @@ interface CapturedError {
 	timestamp: string;
 }
 
+interface CapturedNetwork {
+	type: typeof WEBNAV_MSG;
+	kind: "network";
+	method: string;
+	url: string;
+	status: number;
+	statusText: string;
+	requestType: string;
+	duration: number;
+	timestamp: string;
+}
+
 // Wrap console methods
 const origLog = console.log;
 const origWarn = console.warn;
@@ -98,3 +110,81 @@ window.addEventListener("unhandledrejection", (event) => {
 	};
 	window.postMessage(msg, "*");
 });
+
+// Wrap fetch to capture network requests
+const origFetch = window.fetch;
+window.fetch = async function (...args: Parameters<typeof fetch>) {
+	const start = Date.now();
+	const req = new Request(...args);
+	const method = req.method;
+	const url = req.url;
+	try {
+		const response = await origFetch.apply(this, args);
+		const msg: CapturedNetwork = {
+			type: WEBNAV_MSG,
+			kind: "network",
+			method,
+			url,
+			status: response.status,
+			statusText: response.statusText,
+			requestType: "fetch",
+			duration: Date.now() - start,
+			timestamp: new Date().toISOString(),
+		};
+		window.postMessage(msg, "*");
+		return response;
+	} catch (err) {
+		const msg: CapturedNetwork = {
+			type: WEBNAV_MSG,
+			kind: "network",
+			method,
+			url,
+			status: 0,
+			statusText: err instanceof Error ? err.message : "Network error",
+			requestType: "fetch",
+			duration: Date.now() - start,
+			timestamp: new Date().toISOString(),
+		};
+		window.postMessage(msg, "*");
+		throw err;
+	}
+};
+
+// Wrap XMLHttpRequest to capture network requests
+const origXHROpen = XMLHttpRequest.prototype.open;
+const origXHRSend = XMLHttpRequest.prototype.send;
+
+XMLHttpRequest.prototype.open = function (
+	method: string,
+	url: string | URL,
+	...rest: unknown[]
+) {
+	(this as XMLHttpRequest & { _wnMethod: string; _wnUrl: string })._wnMethod =
+		method;
+	(this as XMLHttpRequest & { _wnUrl: string })._wnUrl = String(url);
+	return origXHROpen.apply(this, [method, url, ...rest] as Parameters<
+		typeof origXHROpen
+	>);
+};
+
+XMLHttpRequest.prototype.send = function (
+	...args: Parameters<typeof origXHRSend>
+) {
+	const start = Date.now();
+	const xhr = this as XMLHttpRequest & { _wnMethod: string; _wnUrl: string };
+	xhr.addEventListener("loadend", () => {
+		const msg: CapturedNetwork = {
+			type: WEBNAV_MSG,
+			kind: "network",
+			method: xhr._wnMethod || "GET",
+			url: xhr._wnUrl || "",
+			status: xhr.status,
+			statusText: xhr.statusText || "",
+			requestType: "xhr",
+			duration: Date.now() - start,
+			timestamp: new Date().toISOString(),
+		};
+		window.postMessage(msg, "*");
+	});
+	return origXHRSend.apply(this, args);
+};
