@@ -4,24 +4,25 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Repository Overview
 
-Claude Code plugin marketplace (`tlmtech`) containing multiple plugins. Marketplace manifest: `.claude-plugin/marketplace.json`.
+Claude Code plugin marketplace (`tlmtech`) containing multiple plugins.
 
 | Plugin | Purpose |
 |--------|---------|
 | `specdev/` | Specification-driven development workflow with skill and CLI |
 | `droid/` | Android device automation via ADB (TypeScript CLI) |
 | `pgtool/` | PostgreSQL database exploration and debugging |
+| `webnav/` | Browser automation via Chrome extension and native messaging |
 
 ## Plugin Structure
 
-Each plugin follows this structure:
 ```
+.claude-plugin/marketplace.json  # Root marketplace manifest (versions must sync with plugin.json)
 plugin-name/
-├── .claude-plugin/plugin.json   # Plugin manifest
-├── skills/                      # Claude Code skills (SKILL.md files)
-├── commands/                    # Slash commands
-├── agents/                      # Custom agents
-└── hooks/                       # Event hooks
+├── .claude-plugin/plugin.json   # Plugin manifest with version
+├── skills/plugin-name/
+│   ├── SKILL.md                 # Skill definition
+│   └── scripts/plugin-name-cli/ # CLI tool (Bun + citty)
+└── README.md                    # User documentation
 ```
 
 ## Local Development
@@ -34,12 +35,13 @@ Test plugins locally:
 
 ## CLI Tools
 
-All three CLIs (`specdev-cli`, `pgtool-cli`, `droid-cli`) follow the same development pattern:
+All four CLIs (`specdev-cli`, `pgtool-cli`, `droid-cli`, `webnav-cli`) follow the same development pattern:
 
 ```bash
 cd specdev/skills/specdev/scripts/specdev-cli && bun install  # specdev-cli
 cd pgtool/skills/pgtool/scripts/pgtool-cli && bun install     # pgtool-cli
 cd droid/skills/droid/scripts/droid-cli && bun install        # droid-cli
+cd webnav/skills/webnav/scripts/webnav-cli && bun install     # webnav-cli
 bun run dev [command]           # Run in development
 bun run lint                    # Check with Biome
 bun run lint:fix                # Auto-fix lint issues
@@ -59,9 +61,20 @@ Push a semantic version tag to trigger GitHub Action release:
 git tag v1.0.0 && git push origin v1.0.0
 ```
 
-## specdev-cli Commands
+### Version Management
 
-All commands output JSON by default. Use `--plain` for human-readable output.
+Plugin versions appear in two places that must stay in sync:
+- `.claude-plugin/marketplace.json` (root) - marketplace listing
+- `{plugin}/.claude-plugin/plugin.json` - plugin manifest
+
+## CLI Global Options
+
+All CLIs output JSON by default. Common options:
+- `--plain` - Human-readable output instead of JSON
+- `--root, -r <path>` - Project root directory (default: auto-detect)
+- `--quiet, -q` - Minimal output (available on most commands)
+
+## specdev-cli Commands
 
 | Command | Description |
 |---------|-------------|
@@ -72,6 +85,7 @@ All commands output JSON by default. Use `--plain` for human-readable output.
 | `specdev path {spec}` | Analyze task dependencies |
 | `specdev archive {spec}` | Move completed spec to `.specs/archived/` |
 | `specdev validate {path}` | Check spec completeness |
+| `specdev hook {event}` | Hook handlers for Claude Code integration |
 
 ### specdev-cli Architecture
 
@@ -155,3 +169,74 @@ Requires ADB in PATH and connected Android device/emulator.
 - `ui-element.ts` - Element finding and matching
 - `keycodes.ts` - Android keycode mappings
 - `output.ts` - JSON output formatting
+
+## webnav-cli Commands
+
+Requires Chrome extension installed and native host running.
+
+| Command | Description |
+|---------|-------------|
+| `webnav setup install` | Install native host manifest for browser |
+| `webnav setup uninstall` | Remove native host manifest |
+| `webnav native-host` | [internal] Native messaging relay (spawned by browser) |
+| `webnav status` | Check connection to extension |
+| `webnav info` | Current tab info |
+| `webnav goto <url>` | Navigate to URL |
+| `webnav screenshot` | Capture page screenshot |
+| `webnav click` | Click element by text or selector |
+| `webnav type <text>` | Type into focused element |
+| `webnav fill <selector> <text>` | Fill specific field |
+| `webnav key <key>` | Send key event |
+| `webnav wait-for` | Wait for element to appear |
+| `webnav elements` | List interactive elements |
+| `webnav history` | Show command history |
+| `webnav tab new [url]` | Open new tab (optional URL) |
+| `webnav tab list` | List managed tabs |
+| `webnav tab switch <tabId>` | Switch active tab |
+| `webnav tab close <tabId>` | Close tab |
+
+### webnav Architecture
+
+Unlike other plugins, webnav uses a 3-layer architecture:
+
+```
+CLI (webnav) → Unix Socket → Native Host → Chrome Native Messaging → Extension
+```
+
+- **CLI (`src/commands/`)** - User-facing commands that connect via Unix socket
+- **Native Host (`src/lib/native-host.ts`)** - Relay process that bridges socket server and Chrome's native messaging protocol (4-byte length-prefixed JSON)
+- **Chrome Extension (`skills/webnav/extension/`)** - MV3 service worker built from TypeScript sources (`extension/src/`) into `dist/background.js` and `dist/content.js`
+- **Socket Client (`src/lib/client.ts`)** - Sends commands to the native host and receives responses
+
+**Other key files:**
+- `src/lib/browsers.ts` - Multi-browser support (Chrome, Edge, Brave, Vivaldi) and manifest path resolution
+- `src/lib/errors.ts` - Centralized error codes and self-documenting error hints
+- `src/types/index.ts` - Shared TypeScript types
+- `src/commands/setup/` - Install/uninstall subcommands for native host manifest registration
+
+### webnav Extension (Chrome)
+
+The extension source is TypeScript in `webnav/skills/webnav/extension/src/`, built to `background.js` and `content.js` which are tracked in git.
+
+```bash
+cd webnav/skills/webnav/extension && bun install  # Install dev deps
+bun run build                       # Build TS → JS
+bun run build:watch                 # Watch mode
+bun run typecheck                   # Type check
+bun run lint                        # Check with Biome
+bun run lint:fix                    # Auto-fix lint issues
+bun run format                      # Format with Biome
+```
+
+**Extension source structure (`extension/src/`):**
+- `index.ts` - Entry point: restoreState → connectToNativeHost
+- `types.ts` - TypeScript interfaces
+- `state.ts` - Constants, global state, persistState/restoreState
+- `native-messaging.ts` - Native host connection, message handling
+- `history.ts` - Command history recording and sanitization
+- `tabs.ts` - Tab group helpers, event listeners, getActiveTab
+- `commands/router.ts` - Command dispatcher
+- `commands/navigation.ts` - screenshot, goto, info, status handlers
+- `commands/interaction.ts` - click, type, key, fill, wait-for, elements handlers
+- `commands/groups.ts` - Tab group and history handlers
+- `injected/` - Functions injected into page context via `chrome.scripting.executeScript`

@@ -1,5 +1,7 @@
 # Build outputs
 specdev/specdev-cli/dist/
+
+# Dependencies
 specdev/specdev-cli/node_modules/
 
 # OS files
@@ -18,3 +20,6 @@ Thumbs.db
 # Environment
 .env
 .env.local
+
+# Archived specs (optional, can be large)
+# .specs/archived/
