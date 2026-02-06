@@ -15,7 +15,13 @@ if (-not (Test-Path "$ExtDir\node_modules")) {
     bun install --cwd $ExtDir --silent
 }
 
-if (-not (Test-Path "$ExtDir\dist\background.js")) {
+$needsBuild = (-not (Test-Path "$ExtDir\dist\background.js"))
+if (!$needsBuild -and (Test-Path "$ExtDir\dist\manifest.json")) {
+    $srcHash = (Get-FileHash "$ExtDir\manifest.json").Hash
+    $dstHash = (Get-FileHash "$ExtDir\dist\manifest.json").Hash
+    if ($srcHash -ne $dstHash) { $needsBuild = $true }
+}
+if ($needsBuild) {
     bun run --cwd $ExtDir build --silent
 }
 

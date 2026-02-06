@@ -1,6 +1,6 @@
 {
   "name": "webnav-cli",
-  "version": "1.2.0",
+  "version": "1.4.0",
   "type": "module",
   "bin": {
     "webnav": "./src/index.ts"

@@ -258,6 +258,28 @@ export function getTimeoutHint(timeoutMs: number): ErrorHint {
 }
 
 /**
+ * Hint when extension version doesn't match CLI version.
+ */
+export function getExtensionOutdatedHint(
+	extensionVersion: string,
+	cliVersion: string,
+): ErrorHint {
+	const extUrl = extensionsUrl();
+	return {
+		summary: `Extension version (${extensionVersion}) does not match CLI version (${cliVersion}). Update the extension to get the latest features and fixes.`,
+		steps: [
+			"Step 1: Reload the extension",
+			`  - Open: ${extUrl}`,
+			"  - Find WebNav and click the reload icon",
+			"",
+			"Step 2: Verify",
+			"  - Run: webnav status",
+		],
+		context: `CLI version: ${cliVersion}, Extension version: ${extensionVersion}. The extension dist is rebuilt automatically when the CLI runs, but the browser needs to reload the extension to pick up the changes.`,
+	};
+}
+
+/**
  * Hint for invalid extension ID format.
  */
 export function getInvalidExtensionIdHint(

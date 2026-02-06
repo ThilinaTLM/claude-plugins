@@ -16,7 +16,7 @@ if [ ! -d "$EXT_DIR/node_modules" ]; then
     bun install --cwd "$EXT_DIR" --silent
 fi
 
-if [ ! -f "$EXT_DIR/dist/background.js" ]; then
+if [ ! -f "$EXT_DIR/dist/background.js" ] || ! cmp -s "$EXT_DIR/manifest.json" "$EXT_DIR/dist/manifest.json"; then
     bun run --cwd "$EXT_DIR" build --silent
 fi
 

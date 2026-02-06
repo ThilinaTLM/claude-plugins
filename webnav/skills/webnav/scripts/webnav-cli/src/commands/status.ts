@@ -1,8 +1,10 @@
 import { defineCommand } from "citty";
+import pkg from "../../package.json";
 import { isSocketAvailable, sendCommand } from "../lib/client";
 import {
 	getConnectionErrorHint,
 	getExtensionDisconnectedHint,
+	getExtensionOutdatedHint,
 } from "../lib/errors";
 import { jsonError, jsonOk } from "../lib/output";
 
@@ -27,11 +29,17 @@ export const statusCommand = defineCommand({
 				{},
 				{ timeout: 5000 },
 			);
-			jsonOk({
+			const response: Record<string, unknown> = {
 				action: "status",
 				connected: result.connected,
 				version: result.version,
-			});
+				cliVersion: pkg.version,
+			};
+			if (result.version !== pkg.version) {
+				response.versionMismatch = true;
+				response.hint = getExtensionOutdatedHint(result.version, pkg.version);
+			}
+			jsonOk(response);
 		} catch {
 			jsonError(
 				"Extension not responding",
