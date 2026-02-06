@@ -137,6 +137,7 @@ export function getSetupRequiredHint(browser?: BrowserSlug): ErrorHint {
 			"Check manifest: ls -la ~/.config/*/NativeMessagingHosts/ ~/Library/Application\\ Support/*/NativeMessagingHosts/ 2>/dev/null",
 			"Check socket: ls -la ~/.webnav/",
 		],
+		context: `SETUP_REQUIRED: The AI agent should guide the user through setup interactively:\n1. Tell the user to load the extension:\n   - Open their browser's extensions page (${extUrl})\n   - Enable 'Developer mode'\n   - Click 'Load unpacked' and select: ${EXTENSION_DIST_PATH}\n2. Ask the user to provide:\n   - The 32-character extension ID shown on the extension card\n   - Which browser they installed it in (chrome, brave, edge, chromium)\n3. Run: webnav setup install <extension-id> --browser <browser>\n4. Ask the user to reload the extension (click reload icon on extensions page)\n5. Run: webnav status — to verify the connection`,
 	};
 }
 
@@ -181,8 +182,7 @@ export function getNotConnectedHint(browser?: BrowserSlug): ErrorHint {
 						`WARNING: Extension dist directory not found at ${EXTENSION_DIST_PATH}. Run 'bun run build' in the extension directory first.`,
 					]),
 		],
-		context:
-			"The native messaging manifest exists but the native host socket is not present. Two possible causes: (1) the extension was never loaded into the browser or was removed — the user needs to load it via 'Load unpacked', or (2) the extension is installed but the browser is not running or the extension needs a reload. Ask the user whether they see WebNav listed in their extensions page to determine which scenario applies.",
+		context: `NOT_CONNECTED: The native messaging manifest exists but the extension is not connected. The AI agent should:\n1. Ask the user: 'Is the WebNav extension installed and visible in your browser extensions page?'\n2. If NOT installed — guide them to install it:\n   - Open extensions page, enable Developer mode, Load unpacked from: ${EXTENSION_DIST_PATH}\n   - Then ask for the extension ID and browser, run: webnav setup install <id> --browser <browser>\n   - Ask user to reload the extension\n3. If IS installed — ask user to:\n   - Make sure ${label} is running\n   - Reload the extension (click reload icon on extensions page)\n4. Run: webnav status — to verify the connection`,
 	};
 }
 
@@ -212,7 +212,7 @@ export function getConnectionFailedHint(browser?: BrowserSlug): ErrorHint {
 			`Check if ${label} is running: pgrep -x chrome || pgrep -x 'Google Chrome'`,
 		],
 		context:
-			"The socket file exists but the native host process is not responding. This can happen if the browser crashed or the extension was disabled.",
+			"CONNECTION_FAILED: The socket file exists but the native host is not responding (likely stale). The AI agent should:\n1. Run: rm ~/.webnav/webnav.sock\n2. Ask the user to reload the extension in their browser's extensions page\n3. Run: webnav status — to verify the connection",
 	};
 }
 
