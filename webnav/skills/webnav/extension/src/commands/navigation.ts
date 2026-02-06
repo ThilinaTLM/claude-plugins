@@ -1,5 +1,4 @@
 import { getElementBounds } from "../injected/element-screenshot";
-import { getInteractiveElements } from "../injected/elements";
 import { scrollPage } from "../injected/scroll";
 import { scrollIntoViewElement } from "../injected/scrollintoview";
 import { takeSnapshot } from "../injected/snapshot";
@@ -309,18 +308,14 @@ export async function handleObserve(
 		result.image = screenshot.image;
 	}
 
-	// Interactive elements
-	const elementsResult = await inject(tab.id!, getInteractiveElements);
-	result.elements = elementsResult.elements;
-	result.count = (elementsResult.elements as unknown[]).length;
-
-	// Optional accessibility snapshot
-	if (payload.snapshot) {
-		const snapshotResult = await inject(tab.id!, takeSnapshot, [
-			{ interactive: true, compact: payload.compact ?? false },
-		]);
-		result.tree = snapshotResult.tree;
-		result.nodeCount = snapshotResult.nodeCount;
+	// Accessibility snapshot (always included, compact by default)
+	const snapshotResult = await inject(tab.id!, takeSnapshot, [
+		{ interactive: true, compact: payload.compact ?? true },
+	]);
+	result.tree = snapshotResult.tree;
+	result.nodeCount = snapshotResult.nodeCount;
+	if (payload.compact !== undefined) {
+		result.compact = payload.compact;
 	}
 
 	return result;

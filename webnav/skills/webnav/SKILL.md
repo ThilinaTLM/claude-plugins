@@ -33,7 +33,7 @@ Run `webnav status` to check connection. If not set up, the output includes step
 | -------------- | ------------------------------------------------------------------ | --------------------------------------------------- |
 | `status`       | —                                                                  | Check extension connection                          |
 | `info`         | —                                                                  | Current tab URL, title, status                      |
-| `observe`      | `--no-screenshot`, `--snapshot`, `-c` compact, `-d` dir            | Screenshot + elements + optional accessibility tree |
+| `observe`      | `--no-screenshot`, `-f` full-tree, `-d` dir                        | Screenshot + accessibility tree snapshot (compact)  |
 | `screenshot`   | `-d` dir, `-f` full-page, `-s` selector                            | Capture viewport or element screenshot              |
 | `elements`     | `-d` dir                                                           | List all interactive elements with metadata         |
 | `snapshot`     | `--all` include-all, `-s` selector, `-d` max-depth, `-c` compact, `--dir` | Accessibility tree with `@ref` IDs (interactive-only by default) |
@@ -126,13 +126,13 @@ Run `webnav status` to check connection. If not set up, the output includes step
 
 ## Key Concepts
 
-**Snapshot refs** — `observe --snapshot` or `snapshot` assigns `@e1`, `@e2`, ... to elements. Use with `-r @e5` on `click`, `type`, `key`, `fill`, `wait-for` for precise targeting.
+**Snapshot refs** — `observe` and `snapshot` assign `@e1`, `@e2`, ... to elements. Use with `-r @e5` on `click`, `type`, `key`, `fill`, `wait-for` for precise targeting.
 
 **`--screenshot` flag** — Available on `goto`, `click`, `fill`, `type`, `key`, `check`, `select`. Captures viewport after action. Saves to `--dir` or system temp.
 
 **`click --wait-*` flags** — Combine click + wait in one call: `--wait-url "*/dashboard*"`, `--wait-text "Success"`, `--wait-selector ".results"`, `--wait-timeout 15000`.
 
-**File output** — `elements`, `snapshot`, and `observe` auto-save to file when results exceed 50 items. Output includes count + file path instead of inline data. Use `util json-search` to query the file.
+**File output** — `elements`, `snapshot`, and `observe` auto-save to file when results exceed 50 items. Output includes `nodeCount` + file path instead of inline data. Use `util json-search` to query the file.
 
 ## Workflows
 
@@ -169,7 +169,7 @@ webnav act --json '[
 **Precise targeting with snapshot refs:**
 
 ```bash
-webnav observe --snapshot
+webnav observe
 webnav click -r @e5
 webnav fill -r @e7 "value"
 ```
@@ -177,9 +177,9 @@ webnav fill -r @e7 "value"
 **Search through large result sets:**
 
 ```bash
-webnav observe                              # returns elementsFile if >50 elements
-webnav util json-search /tmp/elements_*.json "Login"
-webnav util json-search /tmp/elements_*.json --role button
+webnav observe                               # returns snapshotFile if >50 nodes
+webnav util json-search /tmp/snapshot_*.json "Login"
+webnav util json-search /tmp/snapshot_*.json --role button
 webnav util json-search /tmp/snapshot_*.json --ref @e42
 ```
 
@@ -203,13 +203,14 @@ webnav group switch <tabId>
 ## Tips
 
 - Prefer `fill` over click + type for form fields
-- Use `observe` instead of separate screenshot + elements calls
+- Prefer `observe` over `elements` — snapshot provides hierarchy, roles, and `@ref` IDs for precise targeting
+- Use `elements` only when you need bounding box coordinates
 - Use `act` to batch multiple actions in one round trip
 - Use `click --wait-*` instead of click then wait-for
 - Navigation commands (`goto`, `back`, `forward`, `reload`) auto-wait for page load
 - Use `--screenshot` on action commands instead of separate screenshot call
 - Use text matching (`-t`) over selectors when possible — more robust
-- Use snapshot refs (`-r @e5`) for precise targeting after `observe --snapshot`
+- Use snapshot refs (`-r @e5`) for precise targeting after `observe`
 
 ## Error Handling
 

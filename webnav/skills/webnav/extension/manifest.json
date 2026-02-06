@@ -8,6 +8,7 @@
 		"tabs",
 		"nativeMessaging",
 		"scripting",
+		"storage",
 		"tabGroups",
 		"debugger"
 	],

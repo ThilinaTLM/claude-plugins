@@ -64,5 +64,11 @@ function sanitizeResult(
 		sanitized.elementCount = count;
 	}
 
+	// Omit large snapshot tree data
+	if (sanitized.tree) {
+		sanitized.tree = undefined;
+		sanitized.hasTree = true;
+	}
+
 	return sanitized;
 }

@@ -10,7 +10,7 @@ export const observeCommand = defineCommand({
 	meta: {
 		name: "observe",
 		description:
-			"Get page state: screenshot + interactive elements + optional snapshot",
+			"Get page state: screenshot + accessibility tree snapshot (compact)",
 	},
 	args: {
 		"no-screenshot": {
@@ -18,15 +18,10 @@ export const observeCommand = defineCommand({
 			description: "Skip screenshot capture",
 			default: false,
 		},
-		snapshot: {
+		full: {
 			type: "boolean",
-			description: "Include accessibility tree snapshot",
-			default: false,
-		},
-		compact: {
-			type: "boolean",
-			alias: "c",
-			description: "Compact text format for snapshot",
+			alias: "f",
+			description: "Full JSON tree instead of compact text format",
 			default: false,
 		},
 		dir: {
@@ -41,14 +36,12 @@ export const observeCommand = defineCommand({
 			url: string;
 			title: string;
 			image?: string;
-			elements: unknown[];
-			count: number;
-			tree?: unknown;
-			nodeCount?: number;
+			tree: unknown;
+			nodeCount: number;
+			compact?: boolean;
 		}>("observe", {
 			noScreenshot: args["no-screenshot"] || undefined,
-			snapshot: args.snapshot || undefined,
-			compact: args.compact || undefined,
+			compact: args.full ? false : undefined,
 		});
 
 		const dir = args.dir as string;
@@ -62,20 +55,11 @@ export const observeCommand = defineCommand({
 			output.screenshot = saveScreenshot(result.image, dir);
 		}
 
-		output.count = result.count;
-		if (result.count > FILE_THRESHOLD) {
-			output.elementsFile = saveJson(result.elements, "elements", dir);
+		output.nodeCount = result.nodeCount;
+		if (result.nodeCount > FILE_THRESHOLD) {
+			output.snapshotFile = saveJson(result.tree, "snapshot", dir);
 		} else {
-			output.elements = result.elements;
-		}
-
-		if (result.tree !== undefined) {
-			output.nodeCount = result.nodeCount;
-			if ((result.nodeCount ?? 0) > FILE_THRESHOLD) {
-				output.snapshotFile = saveJson(result.tree, "snapshot", dir);
-			} else {
-				output.tree = result.tree;
-			}
+			output.tree = result.tree;
 		}
 
 		jsonOk(output);

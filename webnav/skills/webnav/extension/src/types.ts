@@ -61,7 +61,6 @@ export interface CommandPayload {
 	waitTimeout?: number;
 	// Observe
 	noScreenshot?: boolean;
-	snapshot?: boolean;
 	// Batch commands
 	queries?: Array<Record<string, unknown>>;
 	actions?: Array<Record<string, unknown>>;
