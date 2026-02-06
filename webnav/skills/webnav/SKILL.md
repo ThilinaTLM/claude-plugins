@@ -85,8 +85,8 @@ Run `webnav status` to check connection. If not set up, the output includes step
 | Command    | Args / Flags                            | Description                               |
 | ---------- | --------------------------------------- | ----------------------------------------- |
 | `evaluate` | `<expression>`                          | Execute JS in page context, return result |
-| `console`  | `-c` clear                              | Get captured console logs                 |
-| `errors`   | `-c` clear                              | Get captured JS errors                    |
+| `console`  | `-c` clear, `-d` dir                    | Get captured console logs                 |
+| `errors`   | `-c` clear, `-d` dir                    | Get captured JS errors                    |
 | `dialog`   | `-a` action (accept/dismiss), `-t` text | Configure alert/confirm/prompt handling   |
 
 ### Batch (multi-command in single round trip)
@@ -132,7 +132,7 @@ Run `webnav status` to check connection. If not set up, the output includes step
 
 **`click --wait-*` flags** — Combine click + wait in one call: `--wait-url "*/dashboard*"`, `--wait-text "Success"`, `--wait-selector ".results"`, `--wait-timeout 15000`.
 
-**File output** — `elements`, `snapshot`, and `observe` auto-save to file when results exceed 50 items. Output includes `nodeCount` + file path instead of inline data. Use `util json-search` to query the file.
+**File output** — `elements`, `snapshot`, `observe`, `console`, and `errors` auto-save to file when results exceed 50 items. Output includes `nodeCount` + file path instead of inline data. Use `util json-search` to query the file.
 
 ## Workflows
 

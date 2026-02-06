@@ -11,6 +11,7 @@ const buildOptions: esbuild.BuildOptions = {
 	entryPoints: {
 		background: "src/index.ts",
 		content: "src/content.ts",
+		"content-main": "src/content-main.ts",
 	},
 	bundle: true,
 	outdir: "dist",

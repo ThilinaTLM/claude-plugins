@@ -1,3 +1,8 @@
+// Runs in ISOLATED world. Receives captured console/error entries from the
+// MAIN world script (content-main.ts) via window.postMessage, and responds
+// to extension queries via chrome.runtime.onMessage.
+export {};
+
 interface ConsoleEntry {
 	level: string;
 	text: string;
@@ -12,69 +17,34 @@ interface ErrorEntry {
 	timestamp: string;
 }
 
+const WEBNAV_MSG = "__webnav__";
 const MAX_ENTRIES = 100;
 const consoleLogs: ConsoleEntry[] = [];
 const errorLogs: ErrorEntry[] = [];
 
-// Intercept console methods
-const origLog = console.log;
-const origWarn = console.warn;
-const origError = console.error;
-const origInfo = console.info;
+// Receive captured entries from the MAIN world script
+window.addEventListener("message", (event) => {
+	if (event.source !== window) return;
+	const data = event.data;
+	if (!data || data.type !== WEBNAV_MSG) return;
 
-function captureConsole(level: string, args: unknown[]) {
-	const text = args
-		.map((a) => {
-			try {
-				return typeof a === "string" ? a : JSON.stringify(a);
-			} catch {
-				return String(a);
-			}
-		})
-		.join(" ");
-
-	consoleLogs.push({ level, text, timestamp: new Date().toISOString() });
-	if (consoleLogs.length > MAX_ENTRIES) consoleLogs.shift();
-}
-
-console.log = (...args: unknown[]) => {
-	captureConsole("log", args);
-	origLog.apply(console, args);
-};
-console.warn = (...args: unknown[]) => {
-	captureConsole("warn", args);
-	origWarn.apply(console, args);
-};
-console.error = (...args: unknown[]) => {
-	captureConsole("error", args);
-	origError.apply(console, args);
-};
-console.info = (...args: unknown[]) => {
-	captureConsole("info", args);
-	origInfo.apply(console, args);
-};
-
-// Capture errors
-window.addEventListener("error", (event) => {
-	errorLogs.push({
-		message: event.message,
-		source: event.filename || "",
-		line: event.lineno || 0,
-		col: event.colno || 0,
-		timestamp: new Date().toISOString(),
-	});
-	if (errorLogs.length > MAX_ENTRIES) errorLogs.shift();
-});
-
-window.addEventListener("unhandledrejection", (event) => {
-	errorLogs.push({
-		message: String(event.reason),
-		source: "",
-		line: 0,
-		col: 0,
-		timestamp: new Date().toISOString(),
-	});
-	if (errorLogs.length > MAX_ENTRIES) errorLogs.shift();
+	if (data.kind === "console") {
+		consoleLogs.push({
+			level: data.level,
+			text: data.text,
+			timestamp: data.timestamp,
+		});
+		if (consoleLogs.length > MAX_ENTRIES) consoleLogs.shift();
+	} else if (data.kind === "error") {
+		errorLogs.push({
+			message: data.message,
+			source: data.source,
+			line: data.line,
+			col: data.col,
+			timestamp: data.timestamp,
+		});
+		if (errorLogs.length > MAX_ENTRIES) errorLogs.shift();
+	}
 });
 
 // Respond to messages from the extension

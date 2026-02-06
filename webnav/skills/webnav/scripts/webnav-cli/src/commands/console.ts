@@ -1,6 +1,9 @@
 import { defineCommand } from "citty";
 import { sendCommand } from "../lib/client";
 import { jsonOk } from "../lib/output";
+import { saveJson } from "../lib/save-json";
+
+const FILE_THRESHOLD = 50;
 
 export const consoleCommand = defineCommand({
 	meta: {
@@ -14,6 +17,11 @@ export const consoleCommand = defineCommand({
 			description: "Clear logs after reading",
 			default: false,
 		},
+		dir: {
+			type: "string",
+			alias: "d",
+			description: "Output directory for large results (default: system temp)",
+		},
 	},
 	async run({ args }) {
 		const result = await sendCommand<{
@@ -21,6 +29,17 @@ export const consoleCommand = defineCommand({
 			count: number;
 		}>("console", { clear: args.clear });
 
-		jsonOk({ action: "console", ...result });
+		const output: Record<string, unknown> = {
+			action: "console",
+			count: result.count,
+		};
+
+		if (result.count > FILE_THRESHOLD) {
+			output.file = saveJson(result.logs, "console", args.dir as string);
+		} else {
+			output.logs = result.logs;
+		}
+
+		jsonOk(output);
 	},
 });
