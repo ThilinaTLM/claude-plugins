@@ -8,7 +8,7 @@ import {
 import { addTabToGroup, autoSelectActiveTab, ensureWebnavGroup } from "../tabs";
 import type { CommandPayload } from "../types";
 
-export async function handleGroupTabs(
+export async function handleTabList(
 	_payload: CommandPayload,
 ): Promise<Record<string, unknown>> {
 	await ensureWebnavGroup();
@@ -30,7 +30,7 @@ export async function handleGroupTabs(
 	};
 }
 
-export async function handleGroupSwitch(
+export async function handleTabSwitch(
 	payload: CommandPayload,
 ): Promise<Record<string, unknown>> {
 	const { tabId } = payload;
@@ -49,8 +49,8 @@ export async function handleGroupSwitch(
 		throw new Error(`Tab ${tabId} is not in the webnav group`);
 	}
 
+	// Virtual switch only — no chrome.tabs.update({ active: true })
 	setActiveWebnavTabId(tabId);
-	await chrome.tabs.update(tabId, { active: true });
 	await persistState();
 
 	return {
@@ -60,78 +60,30 @@ export async function handleGroupSwitch(
 	};
 }
 
-export async function handleGroupAdd(
+export async function handleTabNew(
 	payload: CommandPayload,
 ): Promise<Record<string, unknown>> {
-	let { tabId } = payload;
-
-	// If no tabId specified, use browser's currently active tab
-	if (tabId == null) {
-		const [browserTab] = await chrome.tabs.query({
-			active: true,
-			currentWindow: true,
-		});
-		if (!browserTab) {
-			throw new Error("No active browser tab found");
-		}
-		tabId = browserTab.id!;
-	}
-
-	const tab = await chrome.tabs.get(tabId);
-	if (!tab) {
-		throw new Error(`Tab ${tabId} not found`);
-	}
-
-	await addTabToGroup(tabId);
-	setActiveWebnavTabId(tabId);
-	await persistState();
-
-	return {
-		tabId,
-		url: tab.url,
-		title: tab.title,
-		groupId: webnavGroupId,
-	};
-}
-
-export async function handleGroupRemove(
-	payload: CommandPayload,
-): Promise<Record<string, unknown>> {
-	const { tabId } = payload;
-	if (tabId == null) {
-		throw new Error("tabId is required");
-	}
+	const { url } = payload;
 
 	await ensureWebnavGroup();
 
-	const tab = await chrome.tabs.get(tabId);
-	if (!tab) {
-		throw new Error(`Tab ${tabId} not found`);
-	}
-	if (webnavGroupId != null && tab.groupId !== webnavGroupId) {
-		throw new Error(`Tab ${tabId} is not in the webnav group`);
-	}
-
-	// Ungroup the tab (keeps it open)
-	await chrome.tabs.ungroup(tabId);
-
-	// If it was the active tab, auto-select another
-	if (tabId === activeWebnavTabId) {
-		setActiveWebnavTabId(null);
-		await autoSelectActiveTab();
-	}
-
+	const tab = await chrome.tabs.create({
+		url: url || "about:blank",
+		active: false,
+	});
+	await addTabToGroup(tab.id!);
+	setActiveWebnavTabId(tab.id!);
 	await persistState();
 
 	return {
-		tabId,
+		tabId: tab.id,
 		url: tab.url,
 		title: tab.title,
-		removed: true,
+		activeTabId: tab.id,
 	};
 }
 
-export async function handleGroupClose(
+export async function handleTabClose(
 	payload: CommandPayload,
 ): Promise<Record<string, unknown>> {
 	const { tabId } = payload;

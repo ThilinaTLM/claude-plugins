@@ -151,7 +151,10 @@ export async function getActiveTab(): Promise<chrome.tabs.Tab> {
 	}
 
 	// 4. No group or empty group — create a new blank tab and group it
-	const newTab = await chrome.tabs.create({ url: "about:blank", active: true });
+	const newTab = await chrome.tabs.create({
+		url: "about:blank",
+		active: false,
+	});
 	await createWebnavGroupWithTab(newTab.id!);
 	setActiveWebnavTabId(newTab.id!);
 	await persistState();

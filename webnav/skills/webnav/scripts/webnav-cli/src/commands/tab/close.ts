@@ -1,17 +1,17 @@
 import { defineCommand } from "citty";
 import { sendCommand } from "../../lib/client";
 import { jsonError, jsonOk } from "../../lib/output";
-import type { GroupSwitchResponse } from "../../types";
+import type { TabCloseResponse } from "../../types";
 
-export const groupSwitchCommand = defineCommand({
+export const tabCloseCommand = defineCommand({
 	meta: {
-		name: "switch",
-		description: "Switch the active webnav tab",
+		name: "close",
+		description: "Close a tab",
 	},
 	args: {
 		tabId: {
 			type: "positional",
-			description: "Tab ID to switch to",
+			description: "Tab ID to close",
 			required: true,
 		},
 	},
@@ -21,15 +21,16 @@ export const groupSwitchCommand = defineCommand({
 			jsonError("tabId must be a number", "INVALID_ARGS");
 		}
 
-		const result = await sendCommand<GroupSwitchResponse>("group-switch", {
+		const result = await sendCommand<TabCloseResponse>("tab-close", {
 			tabId,
 		});
 
 		jsonOk({
-			action: "group-switch",
-			activeTabId: result.activeTabId,
+			action: "tab-close",
+			tabId: result.tabId,
 			url: result.url,
 			title: result.title,
+			closed: result.closed,
 		});
 	},
 });

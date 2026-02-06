@@ -17,7 +17,7 @@ export const gotoCommand = defineCommand({
 		"new-tab": {
 			type: "boolean",
 			alias: "n",
-			description: "Open in a new tab within the webnav group",
+			description: "Open in a new tab",
 			default: false,
 		},
 		screenshot: {

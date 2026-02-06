@@ -8,7 +8,7 @@ import {
 	persistState,
 	setActiveWebnavTabId,
 } from "../state";
-import { commandHistory, webnavGroupId } from "../state";
+import { commandHistory } from "../state";
 import {
 	addTabToGroup,
 	ensureWebnavGroup,
@@ -43,7 +43,7 @@ export async function handleScreenshot(
 ): Promise<Record<string, unknown>> {
 	const tab = await getActiveTab();
 
-	// Ensure the tab is active/visible
+	// Chrome requires the tab to be active/visible for captureVisibleTab
 	await chrome.tabs.update(tab.id!, { active: true });
 	await new Promise((resolve) => setTimeout(resolve, 100));
 
@@ -131,7 +131,7 @@ export async function handleGoto(
 	if (newTab) {
 		// Create a new tab in the webnav group
 		await ensureWebnavGroup();
-		tab = await chrome.tabs.create({ url, active: true });
+		tab = await chrome.tabs.create({ url, active: false });
 		await addTabToGroup(tab.id!);
 		setActiveWebnavTabId(tab.id!);
 		await persistState();
@@ -369,8 +369,7 @@ export async function handleStatus(
 	return {
 		connected: true,
 		version: chrome.runtime.getManifest().version,
-		group: {
-			groupId: webnavGroupId,
+		tabs: {
 			activeTabId: activeWebnavTabId,
 			tabCount,
 		},

@@ -1,13 +1,5 @@
 import type { CommandPayload } from "../types";
 import {
-	handleGroupAdd,
-	handleGroupClose,
-	handleGroupRemove,
-	handleGroupSwitch,
-	handleGroupTabs,
-	handleHistory,
-} from "./groups";
-import {
 	handleCheck,
 	handleClear,
 	handleClick,
@@ -42,6 +34,13 @@ import {
 	handleWaitForUrl,
 } from "./navigation";
 import { handleBatchQuery, handleQuery } from "./queries";
+import {
+	handleHistory,
+	handleTabClose,
+	handleTabList,
+	handleTabNew,
+	handleTabSwitch,
+} from "./tab-commands";
 
 export async function executeCommand(
 	action: string,
@@ -154,16 +153,14 @@ export async function executeCommand(
 				total: actions.length,
 			};
 		}
-		case "group-tabs":
-			return await handleGroupTabs(payload);
-		case "group-switch":
-			return await handleGroupSwitch(payload);
-		case "group-add":
-			return await handleGroupAdd(payload);
-		case "group-remove":
-			return await handleGroupRemove(payload);
-		case "group-close":
-			return await handleGroupClose(payload);
+		case "tab-list":
+			return await handleTabList(payload);
+		case "tab-switch":
+			return await handleTabSwitch(payload);
+		case "tab-new":
+			return await handleTabNew(payload);
+		case "tab-close":
+			return await handleTabClose(payload);
 		case "history":
 			return await handleHistory(payload);
 		default:

@@ -1,17 +1,17 @@
 import { defineCommand } from "citty";
 import { sendCommand } from "../../lib/client";
 import { jsonError, jsonOk } from "../../lib/output";
-import type { GroupRemoveResponse } from "../../types";
+import type { TabSwitchResponse } from "../../types";
 
-export const groupRemoveCommand = defineCommand({
+export const tabSwitchCommand = defineCommand({
 	meta: {
-		name: "remove",
-		description: "Remove a tab from the webnav group (keeps it open)",
+		name: "switch",
+		description: "Switch active tab",
 	},
 	args: {
 		tabId: {
 			type: "positional",
-			description: "Tab ID to remove from group",
+			description: "Tab ID to switch to",
 			required: true,
 		},
 	},
@@ -21,16 +21,15 @@ export const groupRemoveCommand = defineCommand({
 			jsonError("tabId must be a number", "INVALID_ARGS");
 		}
 
-		const result = await sendCommand<GroupRemoveResponse>("group-remove", {
+		const result = await sendCommand<TabSwitchResponse>("tab-switch", {
 			tabId,
 		});
 
 		jsonOk({
-			action: "group-remove",
-			tabId: result.tabId,
+			action: "tab-switch",
+			activeTabId: result.activeTabId,
 			url: result.url,
 			title: result.title,
-			removed: result.removed,
 		});
 	},
 });

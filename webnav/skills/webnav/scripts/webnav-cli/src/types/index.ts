@@ -71,42 +71,26 @@ export interface ElementInfo {
 	};
 }
 
-// Group tab info (includes active marker)
-export interface GroupTabInfo {
-	id: number;
-	url: string;
-	title: string;
-	active: boolean;
-	windowId: number;
-}
-
-// Group command responses
-export interface GroupTabsResponse {
-	tabs: GroupTabInfo[];
+// Tab command responses
+export interface TabListResponse {
+	tabs: TabInfo[];
 	activeTabId: number | null;
 }
 
-export interface GroupSwitchResponse {
+export interface TabSwitchResponse {
 	activeTabId: number;
 	url: string;
 	title: string;
 }
 
-export interface GroupAddResponse {
+export interface TabNewResponse {
 	tabId: number;
 	url: string;
 	title: string;
-	groupId: number;
+	activeTabId: number;
 }
 
-export interface GroupRemoveResponse {
-	tabId: number;
-	url: string;
-	title: string;
-	removed: boolean;
-}
-
-export interface GroupCloseResponse {
+export interface TabCloseResponse {
 	tabId: number;
 	url: string;
 	title: string;

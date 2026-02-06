@@ -20,7 +20,6 @@ import { forwardCommand } from "./commands/forward";
 import { getattributeCommand } from "./commands/getattribute";
 import { gettextCommand } from "./commands/gettext";
 import { gotoCommand } from "./commands/goto";
-import { groupCommand } from "./commands/group";
 import { historyCommand } from "./commands/history";
 import { hoverCommand } from "./commands/hover";
 import { infoCommand } from "./commands/info";
@@ -40,6 +39,7 @@ import { selectCommand } from "./commands/select";
 import { setupCommand } from "./commands/setup";
 import { snapshotCommand } from "./commands/snapshot";
 import { statusCommand } from "./commands/status";
+import { tabCommand } from "./commands/tab";
 import { typeCommand } from "./commands/type";
 import { uncheckCommand } from "./commands/uncheck";
 import { utilCommand } from "./commands/util";
@@ -63,8 +63,8 @@ const main = defineCommand({
 		info: infoCommand,
 		history: historyCommand,
 
-		// Tab group management
-		group: groupCommand,
+		// Tab management
+		tab: tabCommand,
 
 		// Navigation
 		goto: gotoCommand,

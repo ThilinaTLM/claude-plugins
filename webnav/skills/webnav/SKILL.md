@@ -150,14 +150,15 @@ Text matching (`-t`): substring by default, `-x` for exact match. When multiple 
 
 ### Tabs (multi-tab management)
 
-| Command        | Args / Flags                | Description                            |
-| -------------- | --------------------------- | -------------------------------------- |
-| `group tabs`   | —                           | List tabs in webnav group              |
-| `group switch` | `<tabId>`                   | Switch active tab                      |
-| `group add`    | `[tabId]`                   | Add tab to group (default: active tab) |
-| `group remove` | `<tabId>`                   | Remove tab from group (keeps tab open) |
-| `group close`  | `<tabId>`                   | Close tab                              |
-| `history`      | `-n` limit (50), `--offset` | View command history                   |
+Webnav isolates its tabs in a Chrome tab group. Tab switching is virtual — it changes which tab commands target without visually disrupting the browser. Use `tab new` to open additional tabs and `tab switch` to move between them.
+
+| Command      | Args / Flags                | Description                 |
+| ------------ | --------------------------- | --------------------------- |
+| `tab new`    | `[url]`                     | Open new tab (optional URL) |
+| `tab list`   | —                           | List managed tabs           |
+| `tab switch` | `<tabId>`                   | Switch active tab           |
+| `tab close`  | `<tabId>`                   | Close a tab                 |
+| `history`    | `-n` limit (50), `--offset` | View command history        |
 
 ### Utilities
 
