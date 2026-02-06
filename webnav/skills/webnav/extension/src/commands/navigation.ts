@@ -5,15 +5,15 @@ import { takeSnapshot } from "../injected/snapshot";
 import { attachDebugger, detachDebugger, sendCdpCommand } from "../lib/cdp";
 import {
 	activeWebnavTabId,
+	commandHistory,
 	persistState,
 	setActiveWebnavTabId,
+	webnavGroupId,
 } from "../state";
-import { commandHistory } from "../state";
 import {
 	addTabToGroup,
 	ensureWebnavGroup,
 	getActiveTab,
-	getGroupTabCount,
 	waitForTabLoad,
 } from "../tabs";
 import type { CommandPayload } from "../types";
@@ -42,10 +42,6 @@ export async function handleScreenshot(
 	payload: CommandPayload,
 ): Promise<Record<string, unknown>> {
 	const tab = await getActiveTab();
-
-	// Chrome requires the tab to be active/visible for captureVisibleTab
-	await chrome.tabs.update(tab.id!, { active: true });
-	await new Promise((resolve) => setTimeout(resolve, 100));
 
 	if (payload.fullPage) {
 		// Full-page screenshot via CDP
@@ -108,15 +104,22 @@ export async function handleScreenshot(
 		}
 	}
 
-	// Default: viewport screenshot
-	const dataUrl = await chrome.tabs.captureVisibleTab(tab.windowId, {
-		format: "png",
-	});
-	return {
-		image: dataUrl,
-		url: tab.url,
-		title: tab.title,
-	};
+	// Default: viewport screenshot via CDP (works on background tabs)
+	try {
+		await attachDebugger(tab.id!);
+		const result = await sendCdpCommand<{ data: string }>(
+			tab.id!,
+			"Page.captureScreenshot",
+			{ format: "png" },
+		);
+		return {
+			image: `data:image/png;base64,${result.data}`,
+			url: tab.url,
+			title: tab.title,
+		};
+	} finally {
+		await detachDebugger(tab.id!);
+	}
 }
 
 export async function handleGoto(
@@ -365,13 +368,25 @@ export async function handleObserve(
 export async function handleStatus(
 	_payload: CommandPayload,
 ): Promise<Record<string, unknown>> {
-	const tabCount = await getGroupTabCount();
+	await ensureWebnavGroup();
+	let tabs: Array<Record<string, unknown>> = [];
+	if (webnavGroupId != null) {
+		const groupTabs = await chrome.tabs.query({ groupId: webnavGroupId });
+		tabs = groupTabs.map((tab) => ({
+			id: tab.id,
+			url: tab.url,
+			title: tab.title,
+			active: tab.id === activeWebnavTabId,
+			windowId: tab.windowId,
+		}));
+	}
 	return {
 		connected: true,
 		version: chrome.runtime.getManifest().version,
 		tabs: {
+			list: tabs,
 			activeTabId: activeWebnavTabId,
-			tabCount,
+			count: tabs.length,
 		},
 		historyCount: commandHistory.length,
 	};

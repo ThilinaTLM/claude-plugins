@@ -7,6 +7,7 @@ import {
 	getExtensionOutdatedHint,
 } from "../lib/errors";
 import { jsonError, jsonOk } from "../lib/output";
+import type { TabInfo } from "../types";
 
 export const statusCommand = defineCommand({
 	meta: {
@@ -24,16 +25,19 @@ export const statusCommand = defineCommand({
 		}
 
 		try {
-			const result = await sendCommand<{ connected: boolean; version: string }>(
-				"status",
-				{},
-				{ timeout: 5000 },
-			);
+			const result = await sendCommand<{
+				connected: boolean;
+				version: string;
+				tabs: { list: TabInfo[]; activeTabId: number | null; count: number };
+				historyCount: number;
+			}>("status", {}, { timeout: 5000 });
 			const response: Record<string, unknown> = {
 				action: "status",
 				connected: result.connected,
 				version: result.version,
 				cliVersion: pkg.version,
+				tabs: result.tabs,
+				historyCount: result.historyCount,
 			};
 			if (result.version !== pkg.version) {
 				response.versionMismatch = true;
