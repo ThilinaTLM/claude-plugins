@@ -2,56 +2,47 @@ import { defineCommand } from "citty";
 import { sendCommand } from "../lib/client";
 import { jsonError, jsonOk } from "../lib/output";
 
-export const clickCommand = defineCommand({
+export const dblclickCommand = defineCommand({
 	meta: {
-		name: "click",
-		description: "Click an element by text or selector",
+		name: "dblclick",
+		description: "Double-click an element",
 	},
 	args: {
 		text: {
 			type: "string",
 			alias: "t",
-			description: "Text content to find and click",
+			description: "Text content to find and double-click",
 		},
 		selector: {
 			type: "string",
 			alias: "s",
-			description: "CSS selector to find and click",
+			description: "CSS selector to find and double-click",
 		},
 		index: {
 			type: "string",
 			alias: "i",
 			description: "Index if multiple matches (default: 0)",
 		},
-		ref: {
-			type: "string",
-			alias: "r",
-			description: "Element ref from snapshot (e.g. @e5)",
-		},
 	},
 	async run({ args }) {
 		const text = args.text as string | undefined;
 		const selector = args.selector as string | undefined;
-		const ref = args.ref as string | undefined;
 		const index = args.index ? Number.parseInt(args.index as string, 10) : 0;
 
-		if (!text && !selector && !ref) {
+		if (!text && !selector) {
 			jsonError(
-				"Either --text, --selector, or --ref is required",
+				"Either --text or --selector is required",
 				"INVALID_ARGS",
-				"Use -t for text, -s for CSS selector, or -r for snapshot ref",
+				"Use -t for text matching or -s for CSS selector",
 			);
 		}
 
 		const result = await sendCommand<{
-			clicked: boolean;
+			dblclicked: boolean;
 			tag: string;
 			text: string;
-		}>("click", { text, selector, index, ref });
+		}>("dblclick", { text, selector, index });
 
-		jsonOk({
-			action: "click",
-			...result,
-		});
+		jsonOk({ action: "dblclick", ...result });
 	},
 });

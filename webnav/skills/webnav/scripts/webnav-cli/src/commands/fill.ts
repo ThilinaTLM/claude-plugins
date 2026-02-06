@@ -11,20 +11,25 @@ export const fillCommand = defineCommand({
 		label: {
 			type: "positional",
 			description: "Label, placeholder, or name of the input field",
-			required: true,
 		},
 		value: {
 			type: "positional",
 			description: "Value to fill",
 			required: true,
 		},
+		ref: {
+			type: "string",
+			alias: "r",
+			description: "Element ref from snapshot (e.g. @e5)",
+		},
 	},
 	async run({ args }) {
-		const label = args.label as string;
+		const label = args.label as string | undefined;
 		const value = args.value as string;
+		const ref = args.ref as string | undefined;
 
-		if (!label) {
-			jsonError("Label is required", "INVALID_ARGS");
+		if (!label && !ref) {
+			jsonError("Label or --ref is required", "INVALID_ARGS");
 		}
 
 		if (value === undefined) {
@@ -35,7 +40,7 @@ export const fillCommand = defineCommand({
 			filled: boolean;
 			label: string;
 			value: string;
-		}>("fill", { label, value });
+		}>("fill", { label, value, ref });
 
 		jsonOk({
 			action: "fill",

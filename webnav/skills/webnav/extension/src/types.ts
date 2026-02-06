@@ -28,6 +28,32 @@ export interface CommandPayload {
 	label?: string;
 	value?: string;
 	timeout?: number;
+	// Scroll
+	direction?: "up" | "down" | "left" | "right";
+	x?: number;
+	y?: number;
+	amount?: number;
+	// Select / Check
+	optionValue?: string;
+	optionText?: string;
+	checked?: boolean;
+	// Snapshot
+	interactive?: boolean;
+	maxDepth?: number;
+	compact?: boolean;
+	ref?: string;
+	// Evaluate / Dialog
+	expression?: string;
+	dialogAction?: "accept" | "dismiss";
+	// Console / Errors
+	clear?: boolean;
+	// Wait
+	pattern?: string;
+	// Screenshot
+	fullPage?: boolean;
+	// Query
+	type?: string;
+	name?: string;
 	// Groups
 	tabId?: number;
 	// History

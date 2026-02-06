@@ -8,19 +8,38 @@ import {
 	handleHistory,
 } from "./groups";
 import {
+	handleCheck,
+	handleClear,
 	handleClick,
+	handleDblclick,
+	handleDialog,
 	handleElements,
+	handleEvaluate,
 	handleFill,
+	handleFocus,
+	handleHover,
 	handleKey,
+	handleSelect,
+	handleSnapshot,
 	handleType,
 	handleWaitFor,
 } from "./interaction";
 import {
+	handleBack,
+	handleConsole,
+	handleErrors,
+	handleForward,
 	handleGoto,
 	handleInfo,
+	handleReload,
 	handleScreenshot,
+	handleScroll,
+	handleScrollIntoView,
 	handleStatus,
+	handleWaitForLoad,
+	handleWaitForUrl,
 } from "./navigation";
+import { handleQuery } from "./queries";
 
 export async function executeCommand(
 	action: string,
@@ -33,6 +52,24 @@ export async function executeCommand(
 			return await handleGoto(payload);
 		case "info":
 			return await handleInfo(payload);
+		case "back":
+			return await handleBack(payload);
+		case "forward":
+			return await handleForward(payload);
+		case "reload":
+			return await handleReload(payload);
+		case "scroll":
+			return await handleScroll(payload);
+		case "scrollintoview":
+			return await handleScrollIntoView(payload);
+		case "waitforurl":
+			return await handleWaitForUrl(payload);
+		case "waitforload":
+			return await handleWaitForLoad(payload);
+		case "console":
+			return await handleConsole(payload);
+		case "errors":
+			return await handleErrors(payload);
 		case "status":
 			return await handleStatus(payload);
 		case "click":
@@ -47,6 +84,28 @@ export async function executeCommand(
 			return await handleWaitFor(payload);
 		case "elements":
 			return await handleElements(payload);
+		case "clear":
+			return await handleClear(payload);
+		case "focus":
+			return await handleFocus(payload);
+		case "select":
+			return await handleSelect(payload);
+		case "check":
+			return await handleCheck({ ...payload, checked: true });
+		case "uncheck":
+			return await handleCheck({ ...payload, checked: false });
+		case "hover":
+			return await handleHover(payload);
+		case "dblclick":
+			return await handleDblclick(payload);
+		case "snapshot":
+			return await handleSnapshot(payload);
+		case "evaluate":
+			return await handleEvaluate(payload);
+		case "dialog":
+			return await handleDialog(payload);
+		case "query":
+			return await handleQuery(payload);
 		case "group-tabs":
 			return await handleGroupTabs(payload);
 		case "group-switch":

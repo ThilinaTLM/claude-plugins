@@ -13,9 +13,15 @@ export const typeCommand = defineCommand({
 			description: "Text to type",
 			required: true,
 		},
+		ref: {
+			type: "string",
+			alias: "r",
+			description: "Element ref from snapshot to focus first (e.g. @e5)",
+		},
 	},
 	async run({ args }) {
 		const text = args.text as string;
+		const ref = args.ref as string | undefined;
 
 		if (!text) {
 			jsonError("Text is required", "INVALID_ARGS");
@@ -23,7 +29,7 @@ export const typeCommand = defineCommand({
 
 		const result = await sendCommand<{ typed: boolean; value: string }>(
 			"type",
-			{ text },
+			{ text, ref },
 		);
 
 		jsonOk({

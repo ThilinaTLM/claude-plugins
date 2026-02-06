@@ -26,9 +26,15 @@ export const keyCommand = defineCommand({
 			description: `Key to send (${VALID_KEYS.join(", ")})`,
 			required: true,
 		},
+		ref: {
+			type: "string",
+			alias: "r",
+			description: "Element ref from snapshot to focus first (e.g. @e5)",
+		},
 	},
 	async run({ args }) {
 		const key = (args.key as string).toLowerCase();
+		const ref = args.ref as string | undefined;
 
 		if (!key) {
 			jsonError("Key is required", "INVALID_ARGS");
@@ -44,6 +50,7 @@ export const keyCommand = defineCommand({
 
 		const result = await sendCommand<{ sent: boolean; key: string }>("key", {
 			key,
+			ref,
 		});
 
 		jsonOk({

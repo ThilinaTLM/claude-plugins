@@ -1,3 +1,7 @@
+import { getElementBounds } from "../injected/element-screenshot";
+import { scrollPage } from "../injected/scroll";
+import { scrollIntoViewElement } from "../injected/scrollintoview";
+import { attachDebugger, detachDebugger, sendCdpCommand } from "../lib/cdp";
 import {
 	activeWebnavTabId,
 	persistState,
@@ -13,16 +17,97 @@ import {
 } from "../tabs";
 import type { CommandPayload } from "../types";
 
+type ScriptResult = { result: Record<string, unknown> };
+
+async function inject(
+	tabId: number,
+	func: (...args: never[]) => unknown,
+	args: unknown[] = [],
+): Promise<Record<string, unknown>> {
+	const results = (await chrome.scripting.executeScript({
+		target: { tabId },
+		func: func as () => void,
+		args,
+	} as chrome.scripting.ScriptInjection)) as unknown as ScriptResult[];
+
+	const result = results[0]?.result;
+	if (result?.error) {
+		throw new Error(result.error as string);
+	}
+	return result || {};
+}
+
 export async function handleScreenshot(
-	_payload: CommandPayload,
+	payload: CommandPayload,
 ): Promise<Record<string, unknown>> {
 	const tab = await getActiveTab();
 
-	// Ensure the tab is active/visible so captureVisibleTab works
+	// Ensure the tab is active/visible
 	await chrome.tabs.update(tab.id!, { active: true });
-	// Brief delay to let the browser paint
 	await new Promise((resolve) => setTimeout(resolve, 100));
 
+	if (payload.fullPage) {
+		// Full-page screenshot via CDP
+		try {
+			await attachDebugger(tab.id!);
+			const layout = await sendCdpCommand<{
+				contentSize: { width: number; height: number };
+			}>(tab.id!, "Page.getLayoutMetrics");
+			const { width, height } = layout.contentSize;
+			const result = await sendCdpCommand<{ data: string }>(
+				tab.id!,
+				"Page.captureScreenshot",
+				{
+					format: "png",
+					captureBeyondViewport: true,
+					clip: { x: 0, y: 0, width, height, scale: 1 },
+				},
+			);
+			return {
+				image: `data:image/png;base64,${result.data}`,
+				url: tab.url,
+				title: tab.title,
+				fullPage: true,
+			};
+		} finally {
+			await detachDebugger(tab.id!);
+		}
+	}
+
+	if (payload.selector) {
+		// Element screenshot via CDP clip
+		const bounds = await inject(tab.id!, getElementBounds, [
+			{ selector: payload.selector },
+		]);
+		try {
+			await attachDebugger(tab.id!);
+			const result = await sendCdpCommand<{ data: string }>(
+				tab.id!,
+				"Page.captureScreenshot",
+				{
+					format: "png",
+					captureBeyondViewport: true,
+					clip: {
+						x: bounds.x as number,
+						y: bounds.y as number,
+						width: bounds.width as number,
+						height: bounds.height as number,
+						scale: 1,
+					},
+				},
+			);
+			return {
+				image: `data:image/png;base64,${result.data}`,
+				url: tab.url,
+				title: tab.title,
+				selector: payload.selector,
+			};
+		} finally {
+			await detachDebugger(tab.id!);
+		}
+	}
+
+	// Default: viewport screenshot
 	const dataUrl = await chrome.tabs.captureVisibleTab(tab.windowId, {
 		format: "png",
 	});
@@ -76,6 +161,128 @@ export async function handleInfo(
 		active: tab.active,
 		windowId: tab.windowId,
 	};
+}
+
+export async function handleBack(
+	_payload: CommandPayload,
+): Promise<Record<string, unknown>> {
+	const tab = await getActiveTab();
+	await chrome.scripting.executeScript({
+		target: { tabId: tab.id! },
+		func: () => history.back(),
+	});
+	await waitForTabLoad(tab.id!);
+	const updatedTab = await chrome.tabs.get(tab.id!);
+	return { url: updatedTab.url, title: updatedTab.title };
+}
+
+export async function handleForward(
+	_payload: CommandPayload,
+): Promise<Record<string, unknown>> {
+	const tab = await getActiveTab();
+	await chrome.scripting.executeScript({
+		target: { tabId: tab.id! },
+		func: () => history.forward(),
+	});
+	await waitForTabLoad(tab.id!);
+	const updatedTab = await chrome.tabs.get(tab.id!);
+	return { url: updatedTab.url, title: updatedTab.title };
+}
+
+export async function handleReload(
+	_payload: CommandPayload,
+): Promise<Record<string, unknown>> {
+	const tab = await getActiveTab();
+	await chrome.tabs.reload(tab.id!);
+	await waitForTabLoad(tab.id!);
+	const updatedTab = await chrome.tabs.get(tab.id!);
+	return { url: updatedTab.url, title: updatedTab.title };
+}
+
+export async function handleScroll(
+	payload: CommandPayload,
+): Promise<Record<string, unknown>> {
+	const { direction, x, y, amount, selector } = payload;
+	const tab = await getActiveTab();
+	return await inject(tab.id!, scrollPage, [
+		{ direction, x, y, amount, selector },
+	]);
+}
+
+export async function handleScrollIntoView(
+	payload: CommandPayload,
+): Promise<Record<string, unknown>> {
+	const { selector, text } = payload;
+	const tab = await getActiveTab();
+	return await inject(tab.id!, scrollIntoViewElement, [{ selector, text }]);
+}
+
+export async function handleWaitForUrl(
+	payload: CommandPayload,
+): Promise<Record<string, unknown>> {
+	const { pattern, timeout = 30000 } = payload;
+	if (!pattern) throw new Error("URL pattern is required");
+	const tab = await getActiveTab();
+
+	// Convert glob pattern to regex: * → [^ ]*
+	const regex = new RegExp(
+		`^${pattern.replace(/[.+?^${}()|[\]\\]/g, "\\$&").replace(/\*/g, ".*")}$`,
+	);
+
+	return new Promise((resolve, reject) => {
+		const listener = (tabId: number, changeInfo: { url?: string }) => {
+			if (tabId === tab.id! && changeInfo.url && regex.test(changeInfo.url)) {
+				chrome.tabs.onUpdated.removeListener(listener);
+				resolve({ matched: true, url: changeInfo.url, pattern });
+			}
+		};
+
+		chrome.tabs.onUpdated.addListener(listener);
+
+		// Check current URL immediately
+		if (tab.url && regex.test(tab.url)) {
+			chrome.tabs.onUpdated.removeListener(listener);
+			resolve({ matched: true, url: tab.url, pattern });
+			return;
+		}
+
+		setTimeout(() => {
+			chrome.tabs.onUpdated.removeListener(listener);
+			reject(new Error(`URL did not match "${pattern}" within ${timeout}ms`));
+		}, timeout);
+	});
+}
+
+export async function handleWaitForLoad(
+	payload: CommandPayload,
+): Promise<Record<string, unknown>> {
+	const { timeout = 30000 } = payload;
+	const tab = await getActiveTab();
+	await waitForTabLoad(tab.id!, timeout);
+	const updatedTab = await chrome.tabs.get(tab.id!);
+	return { loaded: true, url: updatedTab.url, title: updatedTab.title };
+}
+
+export async function handleConsole(
+	payload: CommandPayload,
+): Promise<Record<string, unknown>> {
+	const tab = await getActiveTab();
+	const response = await chrome.tabs.sendMessage(tab.id!, {
+		type: "getConsole",
+		clear: payload.clear ?? false,
+	});
+	return { logs: response.logs, count: response.logs.length };
+}
+
+export async function handleErrors(
+	payload: CommandPayload,
+): Promise<Record<string, unknown>> {
+	const tab = await getActiveTab();
+	const response = await chrome.tabs.sendMessage(tab.id!, {
+		type: "getErrors",
+		clear: payload.clear ?? false,
+	});
+	return { errors: response.errors, count: response.errors.length };
 }
 
 export async function handleStatus(
