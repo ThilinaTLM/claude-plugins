@@ -5,7 +5,7 @@
 
 import { existsSync } from "node:fs";
 import { homedir } from "node:os";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 import type { ErrorCode, ErrorHint } from "../types";
 import {
 	BROWSERS,
@@ -15,6 +15,10 @@ import {
 } from "./browsers";
 
 const SOCKET_PATH = join(homedir(), ".webnav", "webnav.sock");
+const EXTENSION_DIST_PATH = resolve(
+	import.meta.dir,
+	"../../../../extension/dist",
+);
 
 // ── Internal helpers ────────────────────────────────────────────────
 
@@ -112,7 +116,7 @@ export function getSetupRequiredHint(browser?: BrowserSlug): ErrorHint {
 			`  - Open ${label}: ${extUrl}`,
 			"  - Enable 'Developer mode' (top-right toggle)",
 			"  - Click 'Load unpacked'",
-			"  - Select: ${CLAUDE_PLUGIN_ROOT}/skills/webnav/extension/dist/",
+			`  - Select: ${EXTENSION_DIST_PATH}`,
 			"",
 			"Step 2: Copy the Extension ID",
 			`  - Find WebNav card in ${extUrl}`,

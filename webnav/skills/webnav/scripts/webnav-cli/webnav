@@ -6,8 +6,18 @@ if ! command -v bun &> /dev/null; then
     exit 1
 fi
 
+EXT_DIR="$SCRIPT_DIR/../../extension"
+
 if [ ! -d "$SCRIPT_DIR/node_modules" ]; then
     bun install --cwd "$SCRIPT_DIR" --silent
+fi
+
+if [ ! -d "$EXT_DIR/node_modules" ]; then
+    bun install --cwd "$EXT_DIR" --silent
+fi
+
+if [ ! -f "$EXT_DIR/dist/background.js" ]; then
+    bun run --cwd "$EXT_DIR" build --silent
 fi
 
 exec bun run "$SCRIPT_DIR/src/index.ts" "$@"

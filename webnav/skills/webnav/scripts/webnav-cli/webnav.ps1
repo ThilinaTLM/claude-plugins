@@ -5,8 +5,18 @@ if (-not (Get-Command bun -ErrorAction SilentlyContinue)) {
     exit 1
 }
 
+$ExtDir = Join-Path $ScriptDir "..\..\extension"
+
 if (-not (Test-Path "$ScriptDir\node_modules")) {
     bun install --cwd $ScriptDir --silent
+}
+
+if (-not (Test-Path "$ExtDir\node_modules")) {
+    bun install --cwd $ExtDir --silent
+}
+
+if (-not (Test-Path "$ExtDir\dist\background.js")) {
+    bun run --cwd $ExtDir build --silent
 }
 
 & bun run "$ScriptDir\src\index.ts" @args

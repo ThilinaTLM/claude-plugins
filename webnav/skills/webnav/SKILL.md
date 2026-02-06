@@ -22,29 +22,8 @@ The CLI is located at `./scripts/webnav-cli/` relative to this SKILL.md file.
 
 - Bun runtime (https://bun.sh)
 - Google Chrome browser
-- WebNav extension loaded in Chrome (unpacked)
-- Native host manifest installed via `webnav setup`
 
-## Setup (One-time)
-
-1. Load the extension in Chrome:
-   - Open `chrome://extensions`
-   - Enable "Developer mode"
-   - Click "Load unpacked"
-   - Select `${CLAUDE_PLUGIN_ROOT}/skills/webnav/extension/dist/`
-   - Copy the extension ID (32-character string)
-
-2. Install the native host:
-   ```bash
-   webnav setup --extension-id <your-extension-id>
-   ```
-
-3. Reload the extension in Chrome to connect
-
-4. Verify connection:
-   ```bash
-   webnav status
-   ```
+Run `webnav status` to check connection. If not set up, the output includes step-by-step setup instructions. Seek help from user to set up the extension.
 
 ## Quick Start
 
