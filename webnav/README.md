@@ -28,7 +28,7 @@ npx skills add ThilinaTLM/agent-skills/webnav
 1. **Load extension in Chrome:**
    - Open `chrome://extensions`
    - Enable "Developer mode"
-   - Click "Load unpacked" and select the `extension/` directory
+   - Click "Load unpacked" and select the `skills/webnav/extension/dist/` directory
    - Copy the Extension ID (32-character string)
 
 2. **Install native host:**

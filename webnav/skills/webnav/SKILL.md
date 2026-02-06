@@ -31,7 +31,7 @@ The CLI is located at `./scripts/webnav-cli/` relative to this SKILL.md file.
    - Open `chrome://extensions`
    - Enable "Developer mode"
    - Click "Load unpacked"
-   - Select `${CLAUDE_PLUGIN_ROOT}/extension/`
+   - Select `${CLAUDE_PLUGIN_ROOT}/skills/webnav/extension/dist/`
    - Copy the extension ID (32-character string)
 
 2. Install the native host:

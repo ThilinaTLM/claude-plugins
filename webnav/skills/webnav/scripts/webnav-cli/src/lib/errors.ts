@@ -112,7 +112,7 @@ export function getSetupRequiredHint(browser?: BrowserSlug): ErrorHint {
 			`  - Open ${label}: ${extUrl}`,
 			"  - Enable 'Developer mode' (top-right toggle)",
 			"  - Click 'Load unpacked'",
-			"  - Select: ${CLAUDE_PLUGIN_ROOT}/extension/",
+			"  - Select: ${CLAUDE_PLUGIN_ROOT}/skills/webnav/extension/dist/",
 			"",
 			"Step 2: Copy the Extension ID",
 			`  - Find WebNav card in ${extUrl}`,

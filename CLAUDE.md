@@ -206,7 +206,7 @@ CLI (webnav) → Unix Socket → Native Host Daemon → Chrome Native Messaging 
 
 - **CLI (`src/commands/`)** - User-facing commands that connect via Unix socket
 - **Native Host (`src/lib/native-host.ts`)** - Daemon process that bridges socket server and Chrome's native messaging protocol (4-byte length-prefixed JSON)
-- **Chrome Extension (`extension/`)** - MV3 service worker (`background.js`) that executes commands in the browser, manages tab groups, and tracks command history
+- **Chrome Extension (`skills/webnav/extension/`)** - MV3 service worker built from TypeScript sources (`extension/src/`) into `dist/background.js` and `dist/content.js`
 - **Socket Client (`src/lib/client.ts`)** - Sends commands to the daemon and receives responses
 
 **Other key files:**
@@ -214,3 +214,30 @@ CLI (webnav) → Unix Socket → Native Host Daemon → Chrome Native Messaging 
 - `src/lib/errors.ts` - Centralized error codes and self-documenting error hints
 - `src/types/index.ts` - Shared TypeScript types
 - `src/commands/setup/` - Install/uninstall subcommands for native host manifest registration
+
+### webnav Extension (Chrome)
+
+The extension source is TypeScript in `webnav/skills/webnav/extension/src/`, built to `background.js` and `content.js` which are tracked in git.
+
+```bash
+cd webnav/skills/webnav/extension && bun install  # Install dev deps
+bun run build                       # Build TS → JS
+bun run build:watch                 # Watch mode
+bun run typecheck                   # Type check
+bun run lint                        # Check with Biome
+bun run lint:fix                    # Auto-fix lint issues
+bun run format                      # Format with Biome
+```
+
+**Extension source structure (`extension/src/`):**
+- `index.ts` - Entry point: restoreState → connectToNativeHost
+- `types.ts` - TypeScript interfaces
+- `state.ts` - Constants, global state, persistState/restoreState
+- `native-messaging.ts` - Native host connection, message handling
+- `history.ts` - Command history recording and sanitization
+- `tabs.ts` - Tab group helpers, event listeners, getActiveTab
+- `commands/router.ts` - Command dispatcher
+- `commands/navigation.ts` - screenshot, goto, info, status handlers
+- `commands/interaction.ts` - click, type, key, fill, wait-for, elements handlers
+- `commands/groups.ts` - Tab group and history handlers
+- `injected/` - Functions injected into page context via `chrome.scripting.executeScript`

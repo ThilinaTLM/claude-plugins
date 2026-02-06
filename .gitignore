@@ -1,5 +1,7 @@
 # Build outputs
 specdev/specdev-cli/dist/
+
+# Dependencies
 specdev/specdev-cli/node_modules/
 
 # OS files
