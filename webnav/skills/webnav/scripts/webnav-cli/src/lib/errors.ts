@@ -324,7 +324,7 @@ export function getExtensionOutdatedHint(
 ): ErrorHint {
 	const extUrl = extensionsUrl();
 	return {
-		summary: `Extension version (${extensionVersion}) does not match CLI version (${cliVersion}). The extension must be reinstalled from the new path.`,
+		summary: `BLOCKING: Extension version (${extensionVersion}) does not match CLI version (${cliVersion}). WebNav cannot be used until the extension is reinstalled. Do NOT run any other webnav commands until this is resolved.`,
 		steps: [
 			"Step 1: Remove the old extension",
 			`  - Open: ${extUrl}`,
@@ -344,7 +344,14 @@ export function getExtensionOutdatedHint(
 			"Step 5: Verify",
 			"  - Run: webnav status",
 		],
-		context: `EXTENSION_OUTDATED: CLI version: ${cliVersion}, Extension version: ${extensionVersion}. A simple reload is NOT sufficient — after a plugin update the extension path changes, so the old extension must be fully removed and reinstalled.\n\n${reinstallContext(extUrl)}`,
+		context: `EXTENSION_OUTDATED — STOP: Do NOT run any other webnav commands. This version mismatch MUST be resolved first.
+
+CLI version: ${cliVersion}, Extension version: ${extensionVersion}.
+A simple reload is NOT sufficient — after a plugin update the extension path changes, so the old extension must be fully removed and reinstalled. Commands will produce unreliable results until versions match.
+
+[AI AGENT INSTRUCTIONS] You MUST stop and guide the user through the reinstall below. Do NOT skip this, do NOT retry commands, do NOT proceed with any browser automation until webnav status succeeds without error.
+
+${reinstallContext(extUrl)}`,
 	};
 }
 

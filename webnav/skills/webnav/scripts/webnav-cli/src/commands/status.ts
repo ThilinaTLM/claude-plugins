@@ -31,19 +31,23 @@ export const statusCommand = defineCommand({
 				tabs: { list: TabInfo[]; activeTabId: number | null; count: number };
 				historyCount: number;
 			}>("status", {}, { timeout: 5000 });
-			const response: Record<string, unknown> = {
+
+			if (result.version !== pkg.version) {
+				jsonError(
+					`Extension version (${result.version}) does not match CLI version (${pkg.version}). The extension MUST be reinstalled before use.`,
+					"EXTENSION_OUTDATED",
+					getExtensionOutdatedHint(result.version, pkg.version),
+				);
+			}
+
+			jsonOk({
 				action: "status",
 				connected: result.connected,
 				version: result.version,
 				cliVersion: pkg.version,
 				tabs: result.tabs,
 				historyCount: result.historyCount,
-			};
-			if (result.version !== pkg.version) {
-				response.versionMismatch = true;
-				response.hint = getExtensionOutdatedHint(result.version, pkg.version);
-			}
-			jsonOk(response);
+			});
 		} catch {
 			jsonError(
 				"Extension not responding",
