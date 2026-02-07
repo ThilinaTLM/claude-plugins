@@ -34,8 +34,13 @@ function readJson(path: string): any {
   return JSON.parse(readFileSync(path, "utf-8"));
 }
 
-function writeJson(path: string, data: any): void {
-  writeFileSync(path, JSON.stringify(data, null, 2) + "\n");
+function replaceVersion(path: string, newVersion: string): void {
+  const content = readFileSync(path, "utf-8");
+  const updated = content.replace(
+    /("version"\s*:\s*)"[^"]*"/,
+    `$1"${newVersion}"`,
+  );
+  writeFileSync(path, updated);
 }
 
 function bumpVersion(
@@ -149,16 +154,14 @@ async function main() {
   console.log(`\nBumping ${pluginName}: ${currentVersion} -> ${newVersion}\n`);
 
   // Update marketplace.json
-  plugin.version = newVersion;
-  writeJson(MARKETPLACE_PATH, marketplace);
+  replaceVersion(MARKETPLACE_PATH, newVersion);
   console.log("  Updated .claude-plugin/marketplace.json");
 
   // Update individual version files
   for (const file of versionFiles) {
     const json = readJson(file);
     const oldVersion = json.version;
-    json.version = newVersion;
-    writeJson(file, json);
+    replaceVersion(file, newVersion);
     const rel = file.replace(ROOT + "/", "");
     console.log(`  Updated ${rel} (${oldVersion} -> ${newVersion})`);
   }
