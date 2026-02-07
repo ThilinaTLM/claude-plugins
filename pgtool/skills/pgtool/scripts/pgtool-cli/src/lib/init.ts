@@ -8,8 +8,8 @@ import { closeConnection, initConnection } from "./connection";
 import { formatError, outputError } from "./output";
 
 interface InitResult {
-  config: PgToolConfig;
-  configPath: string;
+	config: PgToolConfig;
+	configPath: string;
 }
 
 /**
@@ -17,56 +17,56 @@ interface InitResult {
  * Exits with error if initialization fails.
  */
 export function initPgTool(
-  explicitRoot: string | undefined,
-  plain: boolean
+	explicitRoot: string | undefined,
+	plain: boolean,
 ): InitResult {
-  const configResult = loadConfig(explicitRoot);
+	const configResult = loadConfig(explicitRoot);
 
-  if (!configResult.ok) {
-    if (plain) {
-      console.error(formatError(configResult));
-      process.exit(1);
-    }
-    outputError(configResult);
-  }
+	if (!configResult.ok) {
+		if (plain) {
+			console.error(formatError(configResult));
+			process.exit(1);
+		}
+		outputError(configResult);
+	}
 
-  initConnection(configResult.config);
+	initConnection(configResult.config);
 
-  return {
-    config: configResult.config,
-    configPath: configResult.configPath,
-  };
+	return {
+		config: configResult.config,
+		configPath: configResult.configPath,
+	};
 }
 
 /**
  * Handle an error response with proper output formatting.
  */
 export function handleError(error: ErrorResponse, plain: boolean): never {
-  if (plain) {
-    console.error(formatError(error));
-    process.exit(1);
-  }
-  outputError(error);
+	if (plain) {
+		console.error(formatError(error));
+		process.exit(1);
+	}
+	outputError(error);
 }
 
 /**
  * Cleanup function to close connections.
  */
 export async function cleanup(): Promise<void> {
-  await closeConnection();
+	await closeConnection();
 }
 
 /**
  * Register cleanup on process exit.
  */
 export function registerCleanup(): void {
-  process.on("beforeExit", cleanup);
-  process.on("SIGINT", async () => {
-    await cleanup();
-    process.exit(0);
-  });
-  process.on("SIGTERM", async () => {
-    await cleanup();
-    process.exit(0);
-  });
+	process.on("beforeExit", cleanup);
+	process.on("SIGINT", async () => {
+		await cleanup();
+		process.exit(0);
+	});
+	process.on("SIGTERM", async () => {
+		await cleanup();
+		process.exit(0);
+	});
 }

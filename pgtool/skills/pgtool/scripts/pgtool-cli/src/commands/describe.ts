@@ -6,58 +6,58 @@ import { formatBytes, formatTable, outputJson } from "../lib/output";
 import type { ColumnInfo, DescribeResult, ForeignKeyRef } from "../types";
 
 export const describeCommand = defineCommand({
-  meta: {
-    name: "describe",
-    description: "Describe table columns with PK/FK info",
-  },
-  args: {
-    table: {
-      type: "positional",
-      description: "Table name (can include schema prefix: schema.table)",
-      required: true,
-    },
-    root: {
-      type: "string",
-      alias: "r",
-      description: "Project root directory",
-    },
-    plain: {
-      type: "boolean",
-      description: "Human-readable output instead of JSON",
-    },
-  },
-  async run({ args }) {
-    const plain = args.plain ?? false;
-    const { config } = initPgTool(args.root, plain);
-    registerCleanup();
+	meta: {
+		name: "describe",
+		description: "Describe table columns with PK/FK info",
+	},
+	args: {
+		table: {
+			type: "positional",
+			description: "Table name (can include schema prefix: schema.table)",
+			required: true,
+		},
+		root: {
+			type: "string",
+			alias: "r",
+			description: "Project root directory",
+		},
+		plain: {
+			type: "boolean",
+			description: "Human-readable output instead of JSON",
+		},
+	},
+	async run({ args }) {
+		const plain = args.plain ?? false;
+		const { config } = initPgTool(args.root, plain);
+		registerCleanup();
 
-    // Parse table name (may include schema prefix)
-    let schema: string;
-    let tableName: string;
+		// Parse table name (may include schema prefix)
+		let schema: string;
+		let tableName: string;
 
-    if (args.table.includes(".")) {
-      const parts = args.table.split(".");
-      schema = parts[0];
-      tableName = parts.slice(1).join(".");
-    } else {
-      schema = getDefaultSchema(config);
-      tableName = args.table;
-    }
+		if (args.table.includes(".")) {
+			const parts = args.table.split(".");
+			schema = parts[0];
+			tableName = parts.slice(1).join(".");
+		} else {
+			schema = getDefaultSchema(config);
+			tableName = args.table;
+		}
 
-    // Get columns with primary key and foreign key info
-    const columnsResult = await query<{
-      column_name: string;
-      data_type: string;
-      is_nullable: string;
-      column_default: string | null;
-      is_pk: boolean;
-      is_fk: boolean;
-      fk_schema: string | null;
-      fk_table: string | null;
-      fk_column: string | null;
-      description: string | null;
-    }>(
-      `
+		// Get columns with primary key and foreign key info
+		const columnsResult = await query<{
+			column_name: string;
+			data_type: string;
+			is_nullable: string;
+			column_default: string | null;
+			is_pk: boolean;
+			is_fk: boolean;
+			fk_schema: string | null;
+			fk_table: string | null;
+			fk_column: string | null;
+			description: string | null;
+		}>(
+			`
       WITH pk_columns AS (
         SELECT a.attname
         FROM pg_index i
@@ -109,31 +109,31 @@ export const describeCommand = defineCommand({
       WHERE c.table_schema = $1 AND c.table_name = $2
       ORDER BY c.ordinal_position
     `,
-      [schema, tableName]
-    );
+			[schema, tableName],
+		);
 
-    if (!columnsResult.ok) {
-      handleError(columnsResult, plain);
-    }
+		if (!columnsResult.ok) {
+			handleError(columnsResult, plain);
+		}
 
-    if (columnsResult.result.rows.length === 0) {
-      handleError(
-        {
-          ok: false,
-          error: `Table '${schema}.${tableName}' not found`,
-          code: "TABLE_NOT_FOUND",
-          hint: `Check that the table exists. Use 'pgtool tables ${schema}' to list available tables.`,
-        },
-        plain
-      );
-    }
+		if (columnsResult.result.rows.length === 0) {
+			handleError(
+				{
+					ok: false,
+					error: `Table '${schema}.${tableName}' not found`,
+					code: "TABLE_NOT_FOUND",
+					hint: `Check that the table exists. Use 'pgtool tables ${schema}' to list available tables.`,
+				},
+				plain,
+			);
+		}
 
-    // Get table stats
-    const statsResult = await query<{
-      row_estimate: string;
-      size_bytes: string;
-    }>(
-      `
+		// Get table stats
+		const statsResult = await query<{
+			row_estimate: string;
+			size_bytes: string;
+		}>(
+			`
       SELECT
         c.reltuples::bigint AS row_estimate,
         pg_catalog.pg_table_size(c.oid)::bigint AS size_bytes
@@ -141,79 +141,79 @@ export const describeCommand = defineCommand({
       LEFT JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
       WHERE n.nspname = $1 AND c.relname = $2
     `,
-      [schema, tableName]
-    );
+			[schema, tableName],
+		);
 
-    const columns: ColumnInfo[] = columnsResult.result.rows.map((row) => {
-      let foreignKeyRef: ForeignKeyRef | null = null;
-      if (row.is_fk && row.fk_schema && row.fk_table && row.fk_column) {
-        foreignKeyRef = {
-          schema: row.fk_schema,
-          table: row.fk_table,
-          column: row.fk_column,
-        };
-      }
+		const columns: ColumnInfo[] = columnsResult.result.rows.map((row) => {
+			let foreignKeyRef: ForeignKeyRef | null = null;
+			if (row.is_fk && row.fk_schema && row.fk_table && row.fk_column) {
+				foreignKeyRef = {
+					schema: row.fk_schema,
+					table: row.fk_table,
+					column: row.fk_column,
+				};
+			}
 
-      return {
-        name: row.column_name,
-        type: row.data_type,
-        nullable: row.is_nullable === "YES",
-        defaultValue: row.column_default,
-        isPrimaryKey: row.is_pk,
-        isForeignKey: row.is_fk,
-        foreignKeyRef,
-        comment: row.description,
-      };
-    });
+			return {
+				name: row.column_name,
+				type: row.data_type,
+				nullable: row.is_nullable === "YES",
+				defaultValue: row.column_default,
+				isPrimaryKey: row.is_pk,
+				isForeignKey: row.is_fk,
+				foreignKeyRef,
+				comment: row.description,
+			};
+		});
 
-    const stats = statsResult.ok ? statsResult.result.rows[0] : null;
-    const sizeBytes = stats ? Number(stats.size_bytes) : null;
+		const stats = statsResult.ok ? statsResult.result.rows[0] : null;
+		const sizeBytes = stats ? Number(stats.size_bytes) : null;
 
-    const response: { ok: true } & DescribeResult = {
-      ok: true,
-      schema,
-      table: tableName,
-      columns,
-      rowEstimate: stats ? Number(stats.row_estimate) : 0,
-      sizeHuman: formatBytes(sizeBytes),
-    };
+		const response: { ok: true } & DescribeResult = {
+			ok: true,
+			schema,
+			table: tableName,
+			columns,
+			rowEstimate: stats ? Number(stats.row_estimate) : 0,
+			sizeHuman: formatBytes(sizeBytes),
+		};
 
-    if (plain) {
-      console.log(`Table: ${schema}.${tableName}`);
-      if (stats) {
-        console.log(
-          `Rows: ~${Number(stats.row_estimate).toLocaleString()}  Size: ${formatBytes(sizeBytes) ?? "N/A"}`
-        );
-      }
-      console.log();
+		if (plain) {
+			console.log(`Table: ${schema}.${tableName}`);
+			if (stats) {
+				console.log(
+					`Rows: ~${Number(stats.row_estimate).toLocaleString()}  Size: ${formatBytes(sizeBytes) ?? "N/A"}`,
+				);
+			}
+			console.log();
 
-      console.log(
-        formatTable(
-          ["Column", "Type", "Nullable", "Default", "Key", "Reference"],
-          columns.map((c) => {
-            const keys: string[] = [];
-            if (c.isPrimaryKey) keys.push("PK");
-            if (c.isForeignKey) keys.push("FK");
+			console.log(
+				formatTable(
+					["Column", "Type", "Nullable", "Default", "Key", "Reference"],
+					columns.map((c) => {
+						const keys: string[] = [];
+						if (c.isPrimaryKey) keys.push("PK");
+						if (c.isForeignKey) keys.push("FK");
 
-            let ref = "";
-            if (c.foreignKeyRef) {
-              ref = `${c.foreignKeyRef.schema}.${c.foreignKeyRef.table}.${c.foreignKeyRef.column}`;
-            }
+						let ref = "";
+						if (c.foreignKeyRef) {
+							ref = `${c.foreignKeyRef.schema}.${c.foreignKeyRef.table}.${c.foreignKeyRef.column}`;
+						}
 
-            return [
-              c.name,
-              c.type,
-              c.nullable ? "YES" : "NO",
-              c.defaultValue ?? "",
-              keys.join(","),
-              ref,
-            ];
-          })
-        )
-      );
-      process.exit(0);
-    }
+						return [
+							c.name,
+							c.type,
+							c.nullable ? "YES" : "NO",
+							c.defaultValue ?? "",
+							keys.join(","),
+							ref,
+						];
+					}),
+				),
+			);
+			process.exit(0);
+		}
 
-    outputJson(response);
-  },
+		outputJson(response);
+	},
 });

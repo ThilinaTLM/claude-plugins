@@ -6,43 +6,43 @@ import { formatTable, outputJson } from "../lib/output";
 import type { RelationshipInfo, RelationshipsResult } from "../types";
 
 export const relationshipsCommand = defineCommand({
-  meta: {
-    name: "relationships",
-    description: "List all foreign key relationships in a schema",
-  },
-  args: {
-    schema: {
-      type: "positional",
-      description: "Schema name (default: from config or 'public')",
-      required: false,
-    },
-    root: {
-      type: "string",
-      alias: "r",
-      description: "Project root directory",
-    },
-    plain: {
-      type: "boolean",
-      description: "Human-readable output instead of JSON",
-    },
-  },
-  async run({ args }) {
-    const plain = args.plain ?? false;
-    const { config } = initPgTool(args.root, plain);
-    registerCleanup();
+	meta: {
+		name: "relationships",
+		description: "List all foreign key relationships in a schema",
+	},
+	args: {
+		schema: {
+			type: "positional",
+			description: "Schema name (default: from config or 'public')",
+			required: false,
+		},
+		root: {
+			type: "string",
+			alias: "r",
+			description: "Project root directory",
+		},
+		plain: {
+			type: "boolean",
+			description: "Human-readable output instead of JSON",
+		},
+	},
+	async run({ args }) {
+		const plain = args.plain ?? false;
+		const { config } = initPgTool(args.root, plain);
+		registerCleanup();
 
-    const schema = args.schema || getDefaultSchema(config);
+		const schema = args.schema || getDefaultSchema(config);
 
-    const result = await query<{
-      constraint_name: string;
-      from_schema: string;
-      from_table: string;
-      from_columns: string;
-      to_schema: string;
-      to_table: string;
-      to_columns: string;
-    }>(
-      `
+		const result = await query<{
+			constraint_name: string;
+			from_schema: string;
+			from_table: string;
+			from_columns: string;
+			to_schema: string;
+			to_table: string;
+			to_columns: string;
+		}>(
+			`
       SELECT
         c.conname AS constraint_name,
         ns.nspname AS from_schema,
@@ -63,48 +63,48 @@ export const relationshipsCommand = defineCommand({
       GROUP BY c.conname, ns.nspname, t.relname, nsr.nspname, r.relname
       ORDER BY ns.nspname, t.relname, c.conname
     `,
-      [schema]
-    );
+			[schema],
+		);
 
-    if (!result.ok) {
-      handleError(result, plain);
-    }
+		if (!result.ok) {
+			handleError(result, plain);
+		}
 
-    const relationships: RelationshipInfo[] = result.result.rows.map((row) => ({
-      constraintName: row.constraint_name,
-      fromSchema: row.from_schema,
-      fromTable: row.from_table,
-      fromColumns: row.from_columns.split(", "),
-      toSchema: row.to_schema,
-      toTable: row.to_table,
-      toColumns: row.to_columns.split(", "),
-    }));
+		const relationships: RelationshipInfo[] = result.result.rows.map((row) => ({
+			constraintName: row.constraint_name,
+			fromSchema: row.from_schema,
+			fromTable: row.from_table,
+			fromColumns: row.from_columns.split(", "),
+			toSchema: row.to_schema,
+			toTable: row.to_table,
+			toColumns: row.to_columns.split(", "),
+		}));
 
-    const response: { ok: true } & RelationshipsResult = {
-      ok: true,
-      relationships,
-    };
+		const response: { ok: true } & RelationshipsResult = {
+			ok: true,
+			relationships,
+		};
 
-    if (plain) {
-      console.log(`Foreign key relationships in/to schema '${schema}':\n`);
-      if (relationships.length === 0) {
-        console.log("No relationships found");
-      } else {
-        console.log(
-          formatTable(
-            ["From", "Columns", "To", "Columns"],
-            relationships.map((r) => [
-              `${r.fromSchema}.${r.fromTable}`,
-              r.fromColumns.join(", "),
-              `${r.toSchema}.${r.toTable}`,
-              r.toColumns.join(", "),
-            ])
-          )
-        );
-      }
-      process.exit(0);
-    }
+		if (plain) {
+			console.log(`Foreign key relationships in/to schema '${schema}':\n`);
+			if (relationships.length === 0) {
+				console.log("No relationships found");
+			} else {
+				console.log(
+					formatTable(
+						["From", "Columns", "To", "Columns"],
+						relationships.map((r) => [
+							`${r.fromSchema}.${r.fromTable}`,
+							r.fromColumns.join(", "),
+							`${r.toSchema}.${r.toTable}`,
+							r.toColumns.join(", "),
+						]),
+					),
+				);
+			}
+			process.exit(0);
+		}
 
-    outputJson(response);
-  },
+		outputJson(response);
+	},
 });

@@ -9,21 +9,21 @@ const CONFIG_FILE = ".pgtool.json";
  * @returns Project root path or null if not found
  */
 export function findProjectRoot(startDir?: string): string | null {
-  let current = resolve(startDir || process.cwd());
+	let current = resolve(startDir || process.cwd());
 
-  while (true) {
-    const configPath = resolve(current, CONFIG_FILE);
-    if (existsSync(configPath)) {
-      return current;
-    }
+	while (true) {
+		const configPath = resolve(current, CONFIG_FILE);
+		if (existsSync(configPath)) {
+			return current;
+		}
 
-    const parent = dirname(current);
-    // Reached filesystem root
-    if (parent === current) {
-      return null;
-    }
-    current = parent;
-  }
+		const parent = dirname(current);
+		// Reached filesystem root
+		if (parent === current) {
+			return null;
+		}
+		current = parent;
+	}
 }
 
 /**
@@ -32,31 +32,31 @@ export function findProjectRoot(startDir?: string): string | null {
  * @returns Object with configPath and projectRoot (or null if not found)
  */
 export function getConfigPath(explicitRoot?: string): {
-  configPath: string;
-  projectRoot: string | null;
-  autoDetected: boolean;
+	configPath: string;
+	projectRoot: string | null;
+	autoDetected: boolean;
 } {
-  if (explicitRoot) {
-    return {
-      configPath: resolve(explicitRoot, CONFIG_FILE),
-      projectRoot: explicitRoot,
-      autoDetected: false,
-    };
-  }
+	if (explicitRoot) {
+		return {
+			configPath: resolve(explicitRoot, CONFIG_FILE),
+			projectRoot: explicitRoot,
+			autoDetected: false,
+		};
+	}
 
-  const projectRoot = findProjectRoot();
-  if (projectRoot) {
-    return {
-      configPath: resolve(projectRoot, CONFIG_FILE),
-      projectRoot,
-      autoDetected: true,
-    };
-  }
+	const projectRoot = findProjectRoot();
+	if (projectRoot) {
+		return {
+			configPath: resolve(projectRoot, CONFIG_FILE),
+			projectRoot,
+			autoDetected: true,
+		};
+	}
 
-  // Fallback to cwd - will likely fail but provides better error context
-  return {
-    configPath: resolve(process.cwd(), CONFIG_FILE),
-    projectRoot: null,
-    autoDetected: false,
-  };
+	// Fallback to cwd - will likely fail but provides better error context
+	return {
+		configPath: resolve(process.cwd(), CONFIG_FILE),
+		projectRoot: null,
+		autoDetected: false,
+	};
 }
