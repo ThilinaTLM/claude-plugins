@@ -199,7 +199,7 @@ Standalone `elements`, `snapshot`, `console`, `errors`, `network` also auto-save
 
 ```bash
 webnav status
-webnav goto "https://example.com" --screenshot
+webnav goto "https://example.com"
 webnav observe
 # → Read screenshot PNG and snapshot file to understand the page
 ```
@@ -211,7 +211,8 @@ webnav observe
 # → Read snapshot to find form fields
 webnav fill "Email" "user@example.com"
 webnav fill "Password" "secret123"
-webnav click -t "Sign In" --wait-url "*/dashboard*" --screenshot
+webnav click -t "Sign In" --wait-url "*/dashboard*"
+webnav observe
 # → Read screenshot to verify navigation succeeded
 ```
 
@@ -261,9 +262,9 @@ webnav act --json '[
 - **Page state:** use `observe` for combined view; use standalone `snapshot -s selector` for scoped subtree, standalone `console -c` / `errors -c` / `network -c` to clear after reading
 - **Forms:** use `fill` over click + type — it handles focus, clear, and input events
 - **Waiting:** use `click --wait-url` / `--wait-text` / `--wait-selector` over separate click then wait-for
-- **Efficiency:** use `--screenshot` on action commands instead of a separate screenshot call; use `act` to batch multiple actions
 - **After page changes:** always re-observe — refs from the previous snapshot are stale
 - **Navigation commands** (`goto`, `back`, `forward`, `reload`) auto-wait for page load
+- **SPA:** if you are in a Single Page Application, using goto could refresh the page which may cause the page to lose state or data.
 
 ## Error Handling
 
