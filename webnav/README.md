@@ -43,44 +43,9 @@ npx skills add ThilinaTLM/agent-skills/webnav
 
 ## Setup
 
-### 1. Load extension in your browser
+After installing the plugin, just ask your AI agent to use WebNav (e.g. "take a screenshot of this page" or "automate my browser"). The agent will detect the setup state automatically and guide you through any required steps — loading the extension, installing the native host, and verifying the connection.
 
-- Open your browser's extensions page (e.g. `chrome://extensions`, `brave://extensions`, `edge://extensions`)
-- Enable **Developer mode**
-- Click **Load unpacked** and select the `extension/dist/` directory inside the plugin
-- Copy the **Extension ID** (32-character string shown on the extension card)
-
-### 2. Install native host
-
-```bash
-webnav setup install <extension-id>
-```
-
-For browsers other than Chrome, use the `-b` flag:
-
-```bash
-webnav setup install <extension-id> -b brave
-webnav setup install <extension-id> -b edge
-webnav setup install <extension-id> -b chromium
-```
-
-On Windows, use the PowerShell wrapper:
-
-```powershell
-webnav.ps1 setup install <extension-id> -b chrome
-```
-
-### 3. Reload the extension
-
-Go back to your browser's extensions page and click the reload button on the webnav extension. This connects it to the native host.
-
-### 4. Verify
-
-```bash
-webnav status
-```
-
-You should see a successful connection response.
+No manual setup is needed.
 
 ## Architecture
 
@@ -91,14 +56,6 @@ CLI (webnav) → Unix Socket → Native Host → Native Messaging → Browser Ex
 - **CLI** — Sends commands and receives JSON responses. Uses shell wrapper (`webnav` on Unix, `webnav.ps1` on Windows).
 - **Native Host** — Relay process spawned by the browser via native messaging. Bridges the Unix socket and Chrome's stdio-based native messaging protocol.
 - **Extension** — MV3 service worker that executes commands in the browser using content scripts and the Chrome APIs.
-
-## Troubleshooting
-
-| Problem | Fix |
-|---------|-----|
-| Extension not connected | Reload the extension from your browser's extensions page |
-| Connection failed / stale socket | Remove the socket file (`rm ~/.webnav/webnav.sock`) then reload the extension |
-| Setup required | Run `webnav setup install <extension-id>` (see Setup above) |
 
 ## License
 
