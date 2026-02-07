@@ -1,6 +1,14 @@
 # specdev
 
-Specification-driven development workflow for AI agents managing complex, multi-session software development tasks.
+A Claude Code plugin for specification-driven development. It helps AI agents manage complex, multi-session software tasks by breaking them into structured specs, plans, and trackable tasks.
+
+## What Can It Do?
+
+- **Structure large projects** — Break complex work into specs with requirements, plans, and tasks
+- **Track progress across sessions** — Resume where you left off with persistent task state
+- **Manage dependencies** — Analyze task dependencies and find the critical path
+- **Validate completeness** — Check that specs and plans meet required structure
+- **Archive finished work** — Move completed specs out of the active workspace
 
 ## Installation
 
@@ -21,21 +29,19 @@ npx skills add ThilinaTLM/agent-skills/specdev
 
 - [Bun runtime](https://bun.sh) - CLI runs via Bun with auto-dependency installation
 
-## Features
+## Setup
 
-- **Structured specifications** - Define requirements (WHAT) separately from implementation (HOW)
-- **Task tracking** - YAML-based task breakdown with dependencies and progress tracking
-- **Cross-session continuity** - Resume work seamlessly across multiple sessions
-- **Token optimization** - Compact notation reduces context usage
-- **JSON-first output** - All commands output JSON by default for AI consumption
+After installing the plugin, just ask your AI agent to start a spec (e.g. "create a spec for user authentication" or "let's plan out the new API"). The agent will initialize the `.specs/` directory if needed and guide you through defining requirements, creating a plan, and breaking work into tasks.
+
+No manual setup is needed.
 
 ## Workflow
 
-1. **Spec** - Define requirements in `.specs/active/{spec}/spec.md`
-2. **Plan** - Create technical approach in `plan.md`
-3. **Tasks** - Break down into actionable items in `tasks.yaml`
-4. **Implement** - Execute tasks with validation
-5. **Archive** - Move completed specs to `.specs/archived/`
+1. **Spec** — Define requirements in `.specs/active/{spec}/spec.md`
+2. **Plan** — Create technical approach in `plan.md`
+3. **Tasks** — Break down into actionable items in `tasks.yaml`
+4. **Implement** — Execute tasks with validation
+5. **Archive** — Move completed specs to `.specs/archived/`
 
 ## Directory Structure
 
@@ -49,40 +55,6 @@ npx skills add ThilinaTLM/agent-skills/specdev
 │       └── tasks.yaml   # Task breakdown
 └── archived/            # Completed specs
 ```
-
-## CLI Commands
-
-All commands output JSON by default. Use `--plain` for human-readable output.
-
-| Command                   | Description                                      |
-| ------------------------- | ------------------------------------------------ |
-| `specdev init`            | Initialize `.specs/` structure                   |
-| `specdev new <name>`      | Create new spec with templates                   |
-| `specdev list`            | List all active specs and progress               |
-| `specdev context [spec]`  | Show spec context for AI consumption             |
-| `specdev path [spec]`     | Analyze task dependencies and show critical path |
-| `specdev archive <spec>`  | Move completed spec to `.specs/archived/`        |
-| `specdev validate <path>` | Check spec file completeness                     |
-| `specdev hook <event>`    | Hook handlers for Claude Code integration        |
-
-### Global Options
-
-| Option              | Description                                   |
-| ------------------- | --------------------------------------------- |
-| `--root, -r <path>` | Project root directory (default: auto-detect) |
-| `--plain`           | Human-readable output instead of JSON         |
-
-### Command Options
-
-| Command    | Option                | Description                                   |
-| ---------- | --------------------- | --------------------------------------------- |
-| `context`  | `--level, -l <level>` | Context detail: min, standard (default), full |
-| `archive`  | `--force, -f`         | Archive even if not 100% complete             |
-| `archive`  | `--quiet, -q`         | Minimal output                                |
-| `path`     | `--quiet, -q`         | Minimal output (critical path only)           |
-| `list`     | `--quiet, -q`         | Minimal output                                |
-| `new`      | `--quiet, -q`         | Minimal output                                |
-| `validate` | `--quiet, -q`         | Minimal output (pass/fail + error count)      |
 
 ## License
 
