@@ -1,6 +1,6 @@
 # webnav
 
-A Claude Code plugin that gives Claude the ability to control your browser. It works through a Chrome extension and a native messaging bridge — Claude sends commands via the CLI, and the extension executes them in your browser.
+An AI agent plugin for controlling your browser. It works through a Chrome extension and a native messaging bridge — the agent sends commands via the CLI, and the extension executes them in your browser.
 
 ## What Can It Do?
 

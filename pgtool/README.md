@@ -1,6 +1,6 @@
 # pgtool
 
-A Claude Code plugin that gives Claude the ability to explore and query PostgreSQL databases. It connects using a simple config file and lets the agent inspect schemas, tables, relationships, and run queries.
+An AI agent plugin for exploring and querying PostgreSQL databases. It connects using a simple config file and lets the agent inspect schemas, tables, relationships, and run queries.
 
 ## What Can It Do?
 

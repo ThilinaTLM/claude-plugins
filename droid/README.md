@@ -1,6 +1,6 @@
 # droid
 
-A Claude Code plugin that gives Claude the ability to control Android devices. It works through ADB — Claude sends commands via the CLI, and actions are executed on your connected device or emulator.
+An AI agent plugin for controlling Android devices. It works through ADB — the agent sends commands via the CLI, and actions are executed on your connected device or emulator.
 
 ## What Can It Do?
 

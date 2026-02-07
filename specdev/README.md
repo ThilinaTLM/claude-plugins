@@ -1,6 +1,6 @@
 # specdev
 
-A Claude Code plugin for specification-driven development. It helps AI agents manage complex, multi-session software tasks by breaking them into structured specs, plans, and trackable tasks.
+An AI agent plugin for specification-driven development. It helps AI agents manage complex, multi-session software tasks by breaking them into structured specs, plans, and trackable tasks.
 
 ## What Can It Do?
 
